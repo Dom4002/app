@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SIRH Pro | Secure Access</title>
+    
+    <!-- Bibliothèques -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .admin-only, .rh-only, .management-only { display: none !important; }
+        body.role-admin .admin-only, body.role-admin .rh-only, body.role-admin .management-only { display: block !important; } 
+        body.role-rh .rh-only, body.role-rh .management-only { display: block !important; }       
+        body.role-manager .management-only { display: block !important; }
+
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        #reader { width: 100%; border-radius: 12px; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+
+        /* Ajout pour UX Mobile */
+        main header {
+            position: sticky; /* Reste collé en haut */
+            top: 0;
+            z-index: 40; /* Au-dessus du reste */
+            backdrop-filter: blur(12px); /* Effet verre plus prononcé */
+            background: rgba(255, 255, 255, 0.85);
+        }
+
+        /* Indicateur visuel hors ligne */
+        body.offline-mode header {
+            border-bottom: 2px solid #ef4444; /* Ligne rouge si hors ligne */
+        }
+        body.offline-mode::before {
+            content: "MODE HORS LIGNE";
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ef4444;
+            color: white;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body class="text-slate-900 overflow-hidden h-screen w-screen">
+
+    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/80 z-40 hidden md:hidden transition-opacity backdrop-blur-sm"></div>
+
+    <!-- ECRAN DE CONNEXION -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-900 flex items-center justify-center z-[100] transition-all duration-500 p-4">
+        <div class="bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/30 mb-6 text-white"><i class="fa-solid fa-fingerprint text-3xl"></i></div>
+                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight text-center">SIRH Secure</h1>
+                <p class="text-slate-400 mt-2 font-medium text-center">Portail Unifié</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-5">
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Identifiant</label><input type="text" id="login-user" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Mot de passe</label><input type="password" id="login-pass" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required></div>
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 shadow-lg transition-all active:scale-95 uppercase tracking-widest">Se Connecter</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP LAYOUT -->
+    <div id="app-layout" class="hidden h-screen flex flex-col md:flex-row overflow-hidden relative">
+        <aside id="sidebar" class="w-72 bg-slate-900 text-slate-300 flex flex-col fixed md:relative inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 border-r border-slate-800">
+            <div class="p-8 flex-1 overflow-y-auto">
+                <div class="flex items-center justify-between mb-10 text-white">
+                    <div class="flex items-center gap-3"><div class="p-2 bg-blue-600 rounded-lg shadow-lg"><i class="fa-solid fa-shield-halved"></i></div><span class="font-bold text-xl tracking-tighter">CORP-HR</span></div>
+                    <button onclick="toggleSidebar()" class="md:hidden text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                <nav class="space-y-2">
+                    <p class="text-[10px] font-black text-slate-500 uppercase mb-2 ml-4 tracking-widest">Personnel</p>
+                    <button onclick="switchView('my-profile')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group"><i class="fa-solid fa-id-badge w-5"></i> <span class="font-semibold">Mon Profil</span></button>
+                    <div id="nav-admin-section" class="management-only pt-4 border-t border-slate-800 mt-4">
+                        <p class="text-[10px] font-black text-slate-500 uppercase mb-2 ml-4 tracking-widest">Gestion</p>
+                        <button onclick="switchView('dash')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group"><i class="fa-solid fa-chart-pie w-5"></i> <span class="font-semibold">Tableau de Bord</span></button>
+                        <button onclick="switchView('employees')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group"><i class="fa-solid fa-user-group w-5"></i> <span class="font-semibold">Collaborateurs</span></button>
+                        <button onclick="switchView('add-new')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group rh-only"><i class="fa-solid fa-user-plus w-5"></i> <span class="font-semibold">Nouveau Profil</span></button>
+                        <button onclick="switchView('logs')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group admin-only"><i class="fa-solid fa-list-check w-5"></i> <span class="font-semibold">Audit Sécurité</span></button>
+                    </div>
+                </nav>
+            </div>
+            <div class="mt-auto p-6 border-t border-slate-800 bg-slate-900/50">
+                <div class="flex items-center gap-4 p-3 bg-slate-800/50 rounded-2xl mb-4 border border-slate-700/30">
+                    <div id="avatar-display" class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold uppercase shadow-lg">?</div>
+                    <div class="overflow-hidden"><p id="name-display" class="text-sm font-bold text-white truncate">User</p><p id="role-display" class="text-[10px] uppercase font-black text-blue-400">Rôle</p></div>
+                </div>
+                <button onclick="location.reload()" class="w-full flex items-center justify-center gap-2 p-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all uppercase tracking-tighter"><i class="fa-solid fa-power-off"></i> Déconnexion</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col min-w-0 bg-slate-50 overflow-hidden w-full">
+            <header class="h-20 glass border-b border-slate-200 px-8 flex justify-between items-center shrink-0 z-10">
+                <div class="flex items-center flex-1 max-w-2xl gap-3">
+                    <button onclick="toggleSidebar()" class="md:hidden p-2 text-slate-600 bg-white border border-slate-200 rounded-lg"><i class="fa-solid fa-bars text-lg"></i></button>
+                    <div id="global-search-container" class="relative w-full">
+                        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-input" onkeyup="filterTable()" placeholder="Rechercher..." class="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all">
+                    </div>
+                </div>
+                <button onclick="startScanner()" class="bg-slate-900 text-white px-5 py-2.5 rounded-xl text-sm font-bold ml-4 transition-all hover:scale-105 shadow-lg active:scale-95"><i class="fa-solid fa-qrcode mr-2"></i> SCANNER</button>
+            </header>
+
+            <div id="main-scroll-container" class="flex-1 overflow-y-auto p-8 scroll-smooth">
+                <!-- VUE 1: DASHBOARD -->
+                <section id="view-dash" class="view-section management-only">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-extrabold text-slate-800">Tableau de Bord</h2>
+                        <div class="flex gap-3 items-center">
+                            <button onclick="refreshAllData()" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95"><i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualiser</button>
+                            <div id="current-date" class="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-xl font-bold text-sm border border-blue-100 italic">--</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                        <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 stat-card"><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4"><i class="fa-solid fa-users text-xl"></i></div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Effectif Total</p><h3 id="stat-total" class="text-4xl font-black mt-2 text-slate-800">0</h3></div>
+                        <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 border-l-4 border-l-red-500 stat-card"><div class="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-4"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Alertes</p><h3 id="stat-alert" class="text-4xl font-black mt-2 text-red-600">0</h3></div>
+                        <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 border-l-4 border-l-emerald-500 stat-card"><div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4"><i class="fa-solid fa-user-check text-xl"></i></div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Actifs</p><h3 id="stat-active" class="text-4xl font-black mt-2 text-emerald-600">0</h3></div>
+                    </div>
+                    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+                        <div class="px-8 py-6 border-b border-slate-100 font-extrabold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-hourglass-half text-orange-500"></i> Alertes Fin de Contrat / Essai</div>
+                        <div class="overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-50/80 text-[10px] uppercase font-black text-slate-400"><tr><th class="px-8 py-4">Nom</th><th class="px-8 py-4">Poste</th><th class="px-8 py-4">Délai</th><th class="px-8 py-4 rh-only text-right">Action</th></tr></thead><tbody id="dashboard-body" class="divide-y divide-slate-50"></tbody></table></div>
+                    </div>
+                </section>
+
+                <!-- VUE 2: LISTE COLLABORATEURS -->
+                <section id="view-employees" class="view-section management-only">
+                    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-900 text-white text-[10px] uppercase font-bold"><tr><th class="px-8 py-5">Identité</th><th class="px-8 py-5">Poste</th><th class="px-8 py-5">Statut</th><th class="px-8 py-5 text-right rh-only">Dossier & Actions</th></tr></thead><tbody id="full-body" class="divide-y divide-slate-100"></tbody></table></div>
+                    </div>
+                </section>
+
+                <!-- VUE 3: AJOUT -->
+                <section id="view-add-new" class="view-section rh-only">
+                    <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border">
+                        <div class="bg-slate-900 px-10 py-6 text-white flex justify-between items-center"><h2 class="text-xl font-bold">Nouveau Profil</h2><i class="fa-solid fa-user-plus opacity-20 text-3xl"></i></div>
+                        <form id="form-onboarding" onsubmit="handleOnboarding(event)" class="p-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div class="md:col-span-2 space-y-4">
+                                <input type="text" id="f-nom" class="w-full p-4 bg-slate-50 border rounded-xl outline-none" placeholder="Nom Complet" required>
+                                <input type="email" id="f-email" class="w-full p-4 bg-slate-50 border rounded-xl outline-none" placeholder="Email Pro" required>
+                                <div class="grid grid-cols-2 gap-4"><input type="tel" id="f-phone" class="w-full p-4 bg-slate-50 border rounded-xl outline-none" placeholder="Téléphone"><input type="date" id="f-dob" class="w-full p-4 bg-slate-50 border rounded-xl outline-none"></div>
+                                <input type="text" id="f-address" class="w-full p-4 bg-slate-50 border rounded-xl outline-none" placeholder="Adresse complète">
+                                <div class="grid grid-cols-2 gap-4"><input type="date" id="f-date" class="w-full p-4 bg-slate-50 border rounded-xl outline-none" required><input type="text" id="f-poste" class="w-full p-4 bg-slate-50 border rounded-xl outline-none" placeholder="Poste" required></div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <select id="f-dept" class="w-full p-4 bg-slate-50 border rounded-xl font-medium"><option>IT & Tech</option><option>RH</option><option>Finance</option><option>Marketing</option></select>
+                                    <select id="f-limit" class="w-full p-4 bg-slate-50 border rounded-xl font-medium"><option value="365">CDI</option><option value="180">CDD</option><option value="90">Essai</option></select>
+                                    <select id="f-role" class="w-full p-4 bg-blue-50 border border-blue-200 rounded-xl font-bold text-blue-700"><option value="EMPLOYEE">EMPLOYE</option><option value="MANAGER">MANAGER</option><option value="RH">RH</option><option value="ADMIN">ADMIN</option></select>
+                                </div>
+                            </div>
+                            <div class="flex flex-col items-center justify-start p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                                <div class="w-full h-44 bg-slate-200 rounded-xl mb-4 overflow-hidden flex items-center justify-center"><video id="video-stream" class="w-full h-full object-cover hidden" autoplay playsinline></video><img id="captured-image" class="w-full h-full object-cover hidden"><i class="fa-solid fa-image text-slate-400 text-3xl" id="photo-placeholder"></i></div>
+                                <div id="initial-controls" class="flex flex-col w-full gap-2 mt-auto"><button type="button" onclick="startCameraFeed()" class="w-full text-[10px] font-bold text-slate-500 uppercase bg-white border py-2.5 rounded-lg shadow-sm">Caméra</button><button type="button" onclick="document.getElementById('file-upload').click()" class="w-full text-[10px] font-bold text-blue-600 uppercase bg-blue-50 border border-blue-200 py-2.5 rounded-lg">Téléverser</button></div>
+                                <canvas id="camera-canvas" class="hidden"></canvas><input type="file" id="file-upload" accept="image/*" class="hidden" onchange="handleFileUpload(event)"><button type="button" id="btn-capture" onclick="takeSnapshot()" class="hidden bg-blue-600 text-white py-2.5 rounded-lg w-full mt-2 font-bold text-xs">Prendre</button><button type="button" id="btn-retake" onclick="resetCamera()" class="hidden bg-slate-400 text-white py-2.5 rounded-lg w-full mt-2 font-bold text-xs">Refaire</button>
+                            </div>
+                            <button type="submit" class="md:col-span-3 w-full bg-slate-900 text-white py-4 rounded-xl font-bold uppercase hover:bg-slate-800 tracking-widest transition-all shadow-xl">CRÉER ET ENVOYER LES ACCÈS</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- VUE 4: LOGS -->
+                <section id="view-logs" class="view-section admin-only">
+                    <div class="bg-white rounded-3xl shadow-xl border overflow-hidden">
+                        <div class="p-8 border-b font-black text-slate-800 flex justify-between items-center uppercase text-sm">Journal d'Audit Système <button onclick="fetchLogs()" class="text-blue-600"><i class="fa-solid fa-rotate"></i></button></div>
+                        <div class="overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-900 text-white text-[10px] uppercase"><tr><th class="p-5">Date</th><th class="p-5">Agent</th><th class="p-5">Action</th><th class="p-5">Détails</th></tr></thead><tbody id="logs-body"></tbody></table></div>
+                    </div>
+                </section>
+
+                <!-- VUE 5: MON PROFIL -->
+                <section id="view-my-profile" class="view-section">
+                    <div class="max-w-6xl mx-auto">
+                        <h2 class="text-2xl font-extrabold text-slate-800 mb-8">Mon Espace Personnel</h2>
+
+                        <!-- WIDGET POINTAGE & ACTION -->
+                        <div class="bg-slate-900 rounded-3xl p-6 mb-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
+                            <!-- Déco d'arrière plan -->
+                            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-[80px] opacity-20 pointer-events-none"></div>
+                            
+                            <div class="z-10 mb-6 md:mb-0 text-center md:text-left">
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">État Actuel</p>
+                                <div class="flex items-center gap-3 justify-center md:justify-start">
+                                    <div id="clock-status-dot" class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                                    <h3 id="clock-status-text" class="text-2xl font-black">NON POINTÉ</h3>
+                                </div>
+                                <p id="clock-last-action" class="text-xs text-slate-500 mt-1 font-mono">Dernière action : Aucune</p>
+                            </div>
+
+                            <div class="flex gap-4 z-10 w-full md:w-auto">
+                                <button onclick="handleClockInOut()" id="btn-clock" class="flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-400 text-white px-8 py-4 rounded-2xl font-black uppercase transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-fingerprint"></i> <span>ENTRÉE</span>
+                                </button>
+                                <button onclick="openLeaveModal()" class="flex-1 md:flex-none bg-slate-800 hover:bg-slate-700 text-white px-6 py-4 rounded-2xl font-bold uppercase transition-all border border-slate-700 active:scale-95 text-xs">
+                                    <i class="fa-solid fa-plane-departure mr-2"></i> Demander Congé
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div class="space-y-6">
+                                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center relative overflow-hidden">
+                                    <div class="absolute top-0 left-0 w-full h-24 bg-blue-600/10"></div>
+                                    <div class="relative">
+                                        <div class="w-28 h-28 bg-white p-1 rounded-full mx-auto mb-4 shadow-lg overflow-hidden relative group">
+                                            <span id="emp-avatar" class="w-full h-full flex items-center justify-center text-3xl font-bold text-slate-300 bg-slate-50">?</span>
+                                            <img id="emp-photo-real" class="w-full h-full object-cover hidden">
+                                            <div onclick="triggerPhotoUpload()" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"><i class="fa-solid fa-camera text-white"></i></div>
+                                        </div>
+                                        <h3 id="emp-name" class="font-bold text-xl text-slate-800">...</h3>
+                                        <p id="emp-job" class="text-sm text-blue-600 font-bold mb-4 uppercase">...</p>
+                                        <div class="bg-slate-50 rounded-2xl p-4 text-xs space-y-2 text-left border border-slate-100">
+                                            <div class="flex justify-between font-bold uppercase tracking-tighter"><span>Début :</span> <span id="emp-start-date" class="text-slate-800">--/--/----</span></div>
+                                            <div class="flex justify-between font-bold uppercase tracking-tighter"><span>Fin :</span> <span id="emp-end-date" class="text-slate-800">--/--/----</span></div>
+                                        </div>
+                                        <button onclick="downloadMyBadge()" class="w-full bg-slate-900 text-white py-3.5 rounded-xl text-sm font-black mt-6 shadow-xl active:scale-95 transition-all"><i class="fa-solid fa-id-card mr-2"></i> MON BADGE D'ACCÈS</button>
+                                    </div>
+                                </div>
+                                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                    <h3 class="font-black text-[10px] uppercase text-slate-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open text-yellow-500"></i> Mes Documents</h3>
+                                    <div id="doc-container" class="space-y-3"></div>
+                                </div>
+                            </div>
+                            <div class="md:col-span-2 space-y-6">
+                                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                                    <div class="flex justify-between items-center mb-8"><h3 class="font-bold text-lg text-slate-800">Coordonnées</h3><button onclick="toggleEditMode()" class="text-blue-600 text-sm font-bold bg-blue-50 px-4 py-1.5 rounded-lg active:scale-95 transition-all">Modifier</button></div>
+                                    <form id="form-self-update" class="space-y-5">
+                                        <input type="file" id="emp-upload-photo" class="hidden" accept="image/*" onchange="previewPhoto(event)">
+                                        <div class="grid grid-cols-2 gap-6">
+                                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Date de Naissance</label><input type="date" id="emp-dob" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
+                                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Téléphone</label><input type="tel" id="emp-phone" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
+                                        </div>
+                                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Email Personnel</label><input type="email" id="emp-email" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
+                                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Adresse Résidentielle</label><textarea id="emp-address" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl resize-none outline-none" disabled></textarea></div>
+                                        <div id="save-btn-container" class="hidden pt-6 flex justify-end gap-3"><button type="button" onclick="toggleEditMode()" class="px-6 py-3 font-bold text-slate-400 text-sm">Annuler</button><button type="button" onclick="saveMyProfile()" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-black shadow-lg uppercase text-xs">Sauvegarder</button></div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL DOSSIER COMPLET -->
+    <div id="folder-modal" class="fixed inset-0 bg-slate-900/90 hidden flex items-center justify-center z-[150] p-4 backdrop-blur-md">
+        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto max-h-[95vh]">
+            <div class="md:w-1/3 bg-slate-900 p-8 text-white flex flex-col items-center text-center">
+                <div class="w-32 h-32 rounded-3xl bg-slate-800 mb-6 overflow-hidden border-2 border-slate-700 shadow-xl"><img id="folder-photo" class="w-full h-full object-cover"></div>
+                <h3 id="folder-name" class="text-2xl font-black mb-1 uppercase tracking-tight">...</h3>
+                <p id="folder-id" class="text-blue-500 font-mono text-xs mb-6 uppercase tracking-widest">...</p>
+                <div class="w-full space-y-3 text-left bg-white/5 p-4 rounded-2xl border border-white/10 mb-4">
+                    <div><p class="text-[10px] text-slate-500 font-bold uppercase">Poste Actuel</p><p id="folder-poste" class="text-sm font-bold">...</p></div>
+                    <div><p class="text-[10px] text-slate-500 font-bold uppercase">Département</p><p id="folder-dept" class="text-sm font-bold">...</p></div>
+                </div>
+                <div class="w-full space-y-3 text-left bg-blue-500/10 p-4 rounded-2xl border border-blue-500/20">
+                    <div><p class="text-[10px] text-blue-300 font-bold uppercase">Période Contrat</p><p class="text-xs font-bold"><span id="folder-start">--</span> ➔ <span id="folder-end">--</span></p></div>
+                </div>
+                <button onclick="closeFolderModal()" class="mt-8 w-full py-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-bold text-sm">FERMER LE DOSSIER</button>
+            </div>
+            <div class="flex-1 p-8 md:p-12 overflow-y-auto bg-slate-50">
+                <h4 class="text-slate-400 font-black text-xs uppercase tracking-widest mb-8 flex items-center gap-2"><div class="h-[1px] flex-1 bg-slate-200"></div> ARCHIVES NUMÉRIQUES <div class="h-[1px] flex-1 bg-slate-200"></div></h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10" id="folder-docs-grid"></div>
+                <h4 class="text-slate-400 font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-2"><div class="h-[1px] flex-1 bg-slate-200"></div> CONTACTS & COORDONNÉES <div class="h-[1px] flex-1 bg-slate-200"></div></h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                    <div class="bg-white p-4 rounded-2xl border shadow-sm"><p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Email Personnel</p><p id="folder-email" class="font-bold text-slate-800 italic">...</p></div>
+                    <div class="bg-white p-4 rounded-2xl border shadow-sm"><p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Téléphone Direct</p><p id="folder-phone" class="font-bold text-slate-800">...</p></div>
+                    <div class="bg-white p-4 rounded-2xl border shadow-sm md:col-span-2"><p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Adresse de Résidence</p><p id="folder-address" class="font-bold text-slate-800">...</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL STATUT -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[110] p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+            <h3 class="font-black mb-6 text-xl text-center uppercase text-slate-800">Mise à jour du Statut</h3>
+            <input type="hidden" id="edit-id-hidden">
+            <select id="edit-statut" class="w-full p-4 border rounded-2xl mb-8 font-bold outline-none bg-slate-50 focus:ring-2 focus:ring-blue-500 transition-all"><option value="Actif">Actif</option><option value="Congé">En Congé</option><option value="Sortie">Sortie Définitive</option></select>
+            <div class="flex gap-4"><button onclick="submitUpdate(event)" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">VALIDER</button><button onclick="closeEditModal()" class="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-bold">ANNULER</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL CONTRAT SIGNE -->
+    <div id="contract-modal" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[110] p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
+            <h3 class="font-black mb-2 text-xl text-center uppercase text-slate-800">Ajouter le Contrat Signé</h3>
+            <p class="text-slate-400 text-sm text-center mb-8">Uploadez le scan ou prenez une photo du contrat cacheté.</p>
+            <input type="hidden" id="contract-id-hidden">
+            <div class="flex flex-col items-center p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 mb-8">
+                <div id="contract-preview-container" class="w-full h-48 bg-slate-200 rounded-xl mb-4 overflow-hidden flex items-center justify-center"><video id="contract-video" class="w-full h-full object-cover hidden" autoplay playsinline></video><img id="contract-img-preview" class="w-full h-full object-cover hidden"><i class="fa-solid fa-file-signature text-slate-400 text-4xl" id="contract-icon"></i></div>
+                <div class="flex gap-2 w-full"><button type="button" onclick="startContractCamera()" class="flex-1 text-[10px] font-black bg-white border py-3 rounded-xl uppercase"><i class="fa-solid fa-camera mr-2"></i>Photo</button><button type="button" onclick="document.getElementById('contract-upload').click()" class="flex-1 text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 py-3 rounded-xl uppercase"><i class="fa-solid fa-upload mr-2"></i>Fichier</button></div>
+                <input type="file" id="contract-upload" class="hidden" accept="image/*,application/pdf" onchange="previewContractFile(event)"><button type="button" id="btn-contract-capture" onclick="takeContractSnapshot()" class="hidden bg-blue-600 text-white py-3 rounded-xl w-full mt-4 font-black text-xs">CAPTURER LA PHOTO</button>
+            </div>
+            <div class="flex gap-4"><button onclick="submitSignedContract()" class="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black shadow-lg uppercase text-xs tracking-widest transition-all">Enregistrer le contrat</button><button onclick="closeContractModal()" class="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-bold uppercase text-xs">Annuler</button></div>
+        </div>
+    </div>
+
+    <!-- MODAL DEMANDE CONGÉ -->
+    <div id="leave-modal" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[120] p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-black text-xl uppercase text-slate-800">Demande d'Absence</h3>
+                <button onclick="document.getElementById('leave-modal').classList.add('hidden')" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form onsubmit="submitLeaveRequest(event)" class="space-y-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Type d'absence</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="cursor-pointer"><input type="radio" name="leave_type" value="Congé Payé" class="peer sr-only" checked><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all">🏖️ Congé</div></label>
+                        <label class="cursor-pointer"><input type="radio" name="leave_type" value="Maladie" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 transition-all">💊 Maladie</div></label>
+                        <label class="cursor-pointer"><input type="radio" name="leave_type" value="Télétravail" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-purple-500 peer-checked:text-white peer-checked:border-purple-500 transition-all">🏠 Home</div></label>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Du (Inclus)</label><input type="date" id="leave-start" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm" required></div>
+                    <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Au (Inclus)</label><input type="date" id="leave-end" class="w-full p-3 bg-slate-50 border rounded-xl font-bold text-sm" required></div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Motif (Optionnel)</label>
+                    <textarea id="leave-reason" rows="2" class="w-full p-3 bg-slate-50 border rounded-xl resize-none text-sm" placeholder="Précisions pour le manager..."></textarea>
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-slate-800 shadow-lg active:scale-95 transition-all">Envoyer la demande</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+                    // --- NOUVEAU CODE SÉCURISÉ ---
+            // L'adresse de ton gardien sur Render
+            const BASE_API = "https://mon-api-rh.onrender.com/api"; 
+
+            // On construit les routes vers ton serveur
+            const URL_LOGIN = `${BASE_API}/login`; 
+            const URL_READ = `${BASE_API}/read`; 
+            const URL_WRITE_POST = `${BASE_API}/write`; 
+            const URL_UPDATE = `${BASE_API}/update`; 
+            const URL_LOG = `${BASE_API}/log`; 
+            const URL_READ_LOGS = `${BASE_API}/read-logs`; 
+            const URL_GATEKEEPER = `${BASE_API}/gatekeeper`; 
+            const URL_BADGE_GEN = `${BASE_API}/badge`; 
+            const URL_EMPLOYEE_UPDATE = `${BASE_API}/emp-update`; 
+            const URL_CONTRACT_GENERATE = `${BASE_API}/contract-gen`;
+            const URL_UPLOAD_SIGNED_CONTRACT = `${BASE_API}/contract-upload`;
+            // Webhooks Make Mis à jour
+            const URL_LEAVE_REQUEST = `${BASE_API}/leave`;  
+            const URL_CLOCK_ACTION = `${BASE_API}/clock`;
+
+
+
+
+
+
+        
+        const SCAN_KEY = "SIGD_SECURE_2025"; 
+        const URL_REDIRECT_FAILURE = "https://google.com";
+
+        let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null;
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR');
+
+        async function handleLogin(e) { 
+            e.preventDefault(); 
+            if(!navigator.onLine) { Swal.fire('Erreur', 'Pas de connexion internet', 'warning'); return; }
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
+            const btn = document.getElementById('btn-login');
+            const originalBtnText = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Connexion...'; 
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); 
+
+            try {
+                const response = await fetch(`${URL_LOGIN}?u=${encodeURIComponent(u.toLowerCase())}&p=${encodeURIComponent(p)}`, { signal: controller.signal });
+                clearTimeout(timeoutId); 
+                const d = await response.json();
+                if(d.status === "success") { 
+                    let r = d.role || "EMPLOYEE"; if(Array.isArray(r)) r = r[0]; 
+                    const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
+                    Toast.fire({icon: 'success', title: 'Bienvenue ' + (d.nom || u)});
+                    setSession(d.nom || u, String(r).toUpperCase(), d.id); 
+                } else { Swal.fire('Refusé', 'Identifiant ou mot de passe incorrect', 'error'); }
+            } catch (error) {
+                if (error.name === 'AbortError') { Swal.fire('Délai dépassé', 'Serveur lent. Vérifiez votre connexion.', 'warning'); } 
+                else { Swal.fire('Erreur Système', 'Impossible de contacter le serveur.', 'error'); }
+            } finally {
+                btn.innerHTML = originalBtnText; btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function setSession(n, r, id){ 
+            currentUser = { nom: n, role: r, id: id }; 
+            document.getElementById('login-screen').classList.add('hidden'); 
+            document.getElementById('app-layout').classList.remove('hidden'); 
+            document.getElementById('name-display').innerText = n; document.getElementById('role-display').innerText = r; 
+            document.getElementById('avatar-display').innerText = n[0]; 
+            document.body.className = "text-slate-900 overflow-hidden h-screen w-screen role-" + r.toLowerCase(); 
+            if(r === 'EMPLOYEE') { switchView('my-profile'); } else { switchView('dash'); }
+
+            // SKELETON LOADING (Bonus Phase 3)
+            const skeletonHTML = Array(5).fill(0).map(() => 
+                `<tr class="animate-pulse border-b"><td class="p-4 flex gap-3"><div class="w-10 h-10 bg-slate-200 rounded-full"></div><div class="space-y-2"><div class="h-3 w-24 bg-slate-200 rounded"></div><div class="h-2 w-16 bg-slate-200 rounded"></div></div></td><td class="p-4"><div class="h-3 w-32 bg-slate-200 rounded"></div></td><td class="p-4"><div class="h-6 w-16 bg-slate-200 rounded-lg"></div></td><td class="p-4"></td></tr>`
+            ).join('');
+            document.getElementById('full-body').innerHTML = skeletonHTML;
+
+            // Appel de la data (mode auto : cache si possible)
+            fetchData(false);
+        }
+
+        // --- NOUVEAU SYSTÈME DE CACHE & CHARGEMENT (Phase 3) ---
+        async function refreshAllData() {
+            const icon = document.getElementById('refresh-icon'); 
+            if(icon) icon.classList.add('fa-spin');
+            
+            // On force le re-téléchargement (true)
+            await fetchData(true); 
+            
+            if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 800);
+            
+            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 1500});
+            Toast.fire({icon: 'success', title: 'Données actualisées'});
+        }
+
+        async function fetchData(forceUpdate = false){ 
+            const CACHE_KEY = 'sirh_data_v1';
+            const CACHE_TIME = 1000 * 60 * 60; // 1 heure de validité par défaut
+
+            // 1. Essayer de charger depuis le cache local si on ne force pas l'update
+            if (!forceUpdate) {
+                const cached = localStorage.getItem(CACHE_KEY);
+                const cachedTime = localStorage.getItem(CACHE_KEY + '_time');
+                
+                if (cached && cachedTime && (Date.now() - cachedTime < CACHE_TIME)) {
+                    console.log("🚀 Chargement depuis le cache (Ultra rapide)");
+                    employees = JSON.parse(cached);
+                    renderData();
+                    loadMyProfile(); // IMPORTANT : Mettre à jour le profil même en cache
+                    return; 
+                }
+            }
+
+            // 2. Si pas de cache ou forceUpdate, on télécharge
+            try{ 
+                console.log("🌐 Téléchargement depuis le serveur...");
+                const r = await fetch(URL_READ); 
+                const d = await r.json(); 
+                
+                employees = d.map(x => {
+                    return { 
+                        id:x.employee_id || x.id, nom:x.nom || x.Nom, date:x.date_embauche || x.date, poste:x.poste || x.Poste, 
+                        dept: x.département || x.departement || "Non défini", limit:x.type_contrat || 365, photo:x.photo, statut:x.Statut || 'Actif', 
+                        email:x.email, telephone:x.telephone || x.téléphone, adresse:x.adresse, date_naissance:x.date_naissance, 
+                        doc: x.contrat_pdf ? (Array.isArray(x.contrat_pdf) ? x.contrat_pdf[0].url : formatGoogleLink(x.contrat_pdf)) : '#',
+                        contract_status: x.contract_status || 'Non signé', cv_link: formatGoogleLink(x.cv_link) || '#',
+                        id_card_link: formatGoogleLink(x.id_card_link) || '#', diploma_link: formatGoogleLink(x.diploma_link) || '#'
+                    };
+                });
+
+                // 3. On sauvegarde dans le cache pour la prochaine fois
+                localStorage.setItem(CACHE_KEY, JSON.stringify(employees));
+                localStorage.setItem(CACHE_KEY + '_time', Date.now());
+
+                renderData(); 
+                loadMyProfile(); // IMPORTANT : Mettre à jour le profil après téléchargement
+            } catch(e){ 
+                console.error(e); 
+                // Si internet échoue mais qu'on a un vieux cache, on l'utilise en secours
+                const cached = localStorage.getItem(CACHE_KEY);
+                if(cached) {
+                    Swal.fire({toast:true, position:'top-end', icon:'warning', title:'Mode hors ligne', text:'Affichage des dernières données connues'});
+                    employees = JSON.parse(cached);
+                    renderData();
+                    loadMyProfile();
+                } else {
+                    Swal.fire('Erreur', 'Impossible de récupérer les données', 'error');
+                }
+            } 
+        }
+
+        function renderData() { 
+            const b=document.getElementById('full-body'), d=document.getElementById('dashboard-body'); b.innerHTML=''; d.innerHTML=''; 
+            let total = 0, alertes = 0, actifs = 0; 
+            employees.forEach(e=>{ 
+                total++; const isA = (e.statut||'Actif').toLowerCase().trim() === 'actif'; if(isA) actifs++; 
+                let dL = 999, isU = false;
+                if(e.date) {
+                    let sD = parseDateSmart(e.date); let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(e.limit) || 365));
+                    dL = Math.ceil((eD - new Date()) / 86400000); if(isA) { if(dL < 0) { alertes++; } else if(dL <= 15) { isU = true; alertes++; } }
+                }
+                
+                // LAZY LOADING (Phase 3)
+                const av = e.photo && e.photo.length > 10 
+                    ? `<img src="${formatGoogleLink(e.photo)}" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover bg-slate-200 border border-slate-200">` 
+                    : `<div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 rounded-full flex items-center justify-center text-xs font-black text-slate-500">${e.nom.substring(0,2).toUpperCase()}</div>`;
+                
+                const sStr = String(e.contract_status || '').toLowerCase().trim(); const isSigned = (sStr === 'signé' || sStr === 'signe');
+                const contractActions = `<div class="flex items-center justify-end gap-2"><button onclick="openFullFolder('${e.id}')" title="Dossier Complet" class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-500 hover:text-white transition-all"><i class="fa-solid fa-folder-open"></i></button><div class="h-4 w-[1px] bg-slate-200 mx-1"></div>${!isSigned ? `<button onclick="generateDraftContract('${e.id}')" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><i class="fa-solid fa-file-contract"></i></button>` : `<span class="text-[10px] font-black text-emerald-500 uppercase bg-emerald-50 px-2 py-1 rounded">Signé</span>`}<button onclick="openContractModal('${e.id}')" class="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-800 hover:text-white transition-all"><i class="fa-solid fa-upload"></i></button><div class="h-4 w-[1px] bg-slate-200 mx-1"></div><button onclick="printBadge('${e.id}')" class="text-slate-400 hover:text-blue-600 transition-all"><i class="fa-solid fa-print"></i></button><button onclick="openEditModal('${e.id}')" class="text-slate-400 hover:text-slate-800 transition-all"><i class="fa-solid fa-pen"></i></button></div>`;
+                b.innerHTML+=`<tr class="border-b hover:bg-slate-50 transition-colors"><td class="p-4 flex gap-3 items-center min-w-[200px]">${av}<div><div class="font-bold text-sm text-slate-800 uppercase">${e.nom}</div><div class="text-[10px] text-slate-400 font-mono tracking-tighter">${e.id}</div></div></td><td class="p-4 text-xs font-medium text-slate-500">${e.poste}</td><td class="p-4"><span class="px-3 py-1 border rounded-lg text-[10px] font-black uppercase ${dL < 0 && isA ? 'bg-red-100 text-red-700' : (isU ? 'bg-orange-100 text-orange-700 animate-pulse' : 'bg-green-100 text-green-700')}">${e.statut}</span></td><td class="p-4 rh-only">${contractActions}</td></tr>`; 
+                if(isU || (dL < 0 && isA)) d.innerHTML+=`<tr class="bg-white border-b"><td class="p-4 text-sm font-bold text-slate-700">${e.nom}</td><td class="p-4 text-xs text-slate-500">${e.poste}</td><td class="p-4 ${dL<0?'text-red-600':'text-orange-600'} font-bold text-xs uppercase">${dL<0?'Expiré':dL+' jours'}</td><td class="p-4 rh-only text-right"><button class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold" onclick="openEditModal('${e.id}')">GÉRER</button></td></tr>`; 
+            }); 
+            document.getElementById('stat-total').innerText = total; document.getElementById('stat-alert').innerText = alertes; document.getElementById('stat-active').innerText = actifs; 
+        }
+
+        // --- NOUVELLE VERSION : GESTION DES CONGÉS (WAITING FOR WEBHOOK) ---
+        function openLeaveModal() {
+            document.getElementById('leave-modal').classList.remove('hidden');
+            document.getElementById('leave-start').valueAsDate = new Date();
+            document.getElementById('leave-end').valueAsDate = new Date();
+        }
+
+        async function submitLeaveRequest(e) {
+            e.preventDefault();
+            
+            const type = document.querySelector('input[name="leave_type"]:checked').value;
+            const start = document.getElementById('leave-start').value;
+            const end = document.getElementById('leave-end').value;
+            const reason = document.getElementById('leave-reason').value;
+
+            const data = {
+                employee_id: currentUser.id,
+                nom: currentUser.nom,
+                type: type,
+                date_debut: start,
+                date_fin: end,
+                motif: reason,
+                date_demande: new Date().toISOString()
+            };
+
+            // Blocage de l'UI
+            Swal.fire({
+                title: 'Envoi de la demande...',
+                text: 'Veuillez patienter',
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false
+            });
+
+            try {
+                // Appel réel au Webhook Make
+                const response = await fetch(URL_LEAVE_REQUEST, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    // Succès seulement si Make répond 200 OK
+                    document.getElementById('leave-modal').classList.add('hidden');
+                    e.target.reset();
+                    Swal.fire('Succès', 'Votre demande a bien été transmise.', 'success');
+                } else {
+                    throw new Error('Erreur serveur Make');
+                }
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Erreur', 'Impossible d\'envoyer la demande. Vérifiez votre connexion.', 'error');
+            }
+        }
+
+        // --- NOUVELLE VERSION : GESTION DU POINTAGE (WAITING FOR WEBHOOK) ---
+        window.addEventListener('load', () => {
+            const status = localStorage.getItem('clock_status_' + (currentUser ? currentUser.id : 'temp'));
+            updateClockUI(status === 'IN');
+        });
+
+        function updateClockUI(isIn) {
+            const btn = document.getElementById('btn-clock');
+            const dot = document.getElementById('clock-status-dot');
+            const text = document.getElementById('clock-status-text');
+            if(!btn) return; 
+            if (isIn) {
+                btn.classList.remove('bg-emerald-500', 'hover:bg-emerald-400');
+                btn.classList.add('bg-red-500', 'hover:bg-red-400');
+                btn.innerHTML = '<i class="fa-solid fa-person-walking-arrow-right"></i> <span>SORTIE</span>';
+                dot.classList.remove('bg-red-500'); dot.classList.add('bg-emerald-500', 'shadow-emerald-500/50');
+                text.innerText = "EN POSTE"; text.classList.add('text-emerald-500'); text.classList.remove('text-slate-800');
+            } else {
+                btn.classList.remove('bg-red-500', 'hover:bg-red-400');
+                btn.classList.add('bg-emerald-500', 'hover:bg-emerald-400');
+                btn.innerHTML = '<i class="fa-solid fa-fingerprint"></i> <span>ENTRÉE</span>';
+                dot.classList.remove('bg-emerald-500'); dot.classList.add('bg-red-500', 'shadow-red-500/50');
+                text.innerText = "NON POINTÉ"; text.classList.remove('text-emerald-500'); text.classList.add('text-slate-800');
+            }
+        }
+
+        async function handleClockInOut() {
+            // 1. Logique action
+            const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
+            const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
+            
+            // 2. GPS (avec petit timeout pour ne pas bloquer trop longtemps)
+            let locationCoords = "Non autorisé";
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 4000});
+                });
+                locationCoords = `${pos.coords.latitude},${pos.coords.longitude}`;
+            } catch(e) { console.log("GPS ignoré"); }
+
+            // 3. Blocage UI
+            Swal.fire({
+                title: 'Enregistrement...', 
+                text: 'Connexion au serveur de pointage',
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false
+            });
+            
+            const payload = {
+                id: currentUser.id,
+                nom: currentUser.nom,
+                action: action, 
+                time: new Date().toISOString(),
+                gps: locationCoords
+            };
+
+            try {
+                // Appel réel au Webhook Make
+                const response = await fetch(URL_CLOCK_ACTION, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    // Succès : On met à jour l'interface seulement maintenant
+                    const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
+                    localStorage.setItem('clock_status_' + currentUser.id, newStatus);
+                    localStorage.setItem('clock_last_' + currentUser.id, new Date().toLocaleTimeString());
+                    
+                    updateClockUI(newStatus === 'IN');
+                    document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString();
+                    
+                    Swal.fire({
+                        icon: 'success', 
+                        title: action === 'CLOCK_IN' ? 'Pointage Entrée OK' : 'Pointage Sortie OK',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    throw new Error('Erreur serveur Make');
+                }
+            } catch (e) {
+                Swal.fire('Echec', 'Le pointage n\'a pas pu être enregistré. Vérifiez votre connexion.', 'error');
+            }
+        }
+
+        // --- FIN DES MISES À JOUR ---
+
+        function openFullFolder(id) {
+            const e = employees.find(x => x.id === id); if(!e) return;
+            document.getElementById('folder-photo').src = formatGoogleLink(e.photo) || 'https://via.placeholder.com/150';
+            document.getElementById('folder-name').innerText = e.nom; document.getElementById('folder-id').innerText = "IDENTIFIANT : " + e.id;
+            document.getElementById('folder-poste').innerText = e.poste; document.getElementById('folder-dept').innerText = e.dept;
+            document.getElementById('folder-email').innerText = e.email || "Non renseigné"; document.getElementById('folder-phone').innerText = e.telephone || "Non renseigné";
+            document.getElementById('folder-address').innerText = e.adresse || "Non renseignée";
+            if(e.date) { let sD = parseDateSmart(e.date); document.getElementById('folder-start').innerText = sD.toLocaleDateString('fr-FR'); let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(e.limit) || 365)); document.getElementById('folder-end').innerText = eD.toLocaleDateString('fr-FR'); }
+            const grid = document.getElementById('folder-docs-grid'); grid.innerHTML = '';
+            const docs = [ { label: 'Contrat Actuel', link: e.doc, icon: 'fa-file-signature', color: 'blue' }, { label: 'Curriculum Vitae', link: e.cv_link, icon: 'fa-file-pdf', color: 'indigo' }, { label: 'Pièce d\'Identité', link: e.id_card_link, icon: 'fa-id-card', color: 'slate' }, { label: 'Diplômes/Certifs', link: e.diploma_link, icon: 'fa-graduation-cap', color: 'emerald' } ];
+            docs.forEach(doc => { const hasLink = doc.link && doc.link !== '#'; grid.innerHTML += `<div class="p-4 rounded-2xl border ${hasLink ? 'bg-white shadow-sm border-slate-200' : 'bg-slate-100 opacity-50 border-transparent'} flex items-center justify-between group transition-all"><div class="flex items-center gap-3"><div class="p-2.5 rounded-xl ${hasLink ? 'bg-'+doc.color+'-50 text-'+doc.color+'-600' : 'bg-slate-200 text-slate-400'}"><i class="fa-solid ${doc.icon}"></i></div><p class="text-xs font-bold text-slate-700">${doc.label}</p></div>${hasLink ? `<a href="${doc.link}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><i class="fa-solid fa-up-right-from-square"></i></a>` : `<i class="fa-solid fa-lock text-slate-300 text-xs mr-2"></i>`}</div>`; });
+            document.getElementById('folder-modal').classList.remove('hidden');
+        }
+
+        function closeFolderModal() { document.getElementById('folder-modal').classList.add('hidden'); }
+        function formatGoogleLink(l){ if(!l) return null; if(!l.startsWith('http')) return `https://lh3.googleusercontent.com/d/${l}`; const m = l.match(/\/d\/([a-zA-Z0-9_-]+)/) || l.match(/id=([a-zA-Z0-9_-]+)/); return m ? `https://lh3.googleusercontent.com/d/${m[1]}` : l; }
+        
+        function loadMyProfile() {
+            const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+            if (myData) {
+                document.getElementById('emp-name').innerText = myData.nom; 
+                document.getElementById('emp-job').innerText = myData.poste;
+                if(myData.photo && myData.photo.length > 10) { 
+                    document.getElementById('emp-photo-real').src = formatGoogleLink(myData.photo); 
+                    document.getElementById('emp-photo-real').classList.remove('hidden'); 
+                    document.getElementById('emp-avatar').classList.add('hidden'); 
+                }
+                if(myData.date) { 
+                    let sD = parseDateSmart(myData.date); 
+                    document.getElementById('emp-start-date').innerText = sD.toLocaleDateString('fr-FR'); 
+                    let eD = new Date(sD); 
+                    eD.setDate(eD.getDate() + (parseInt(myData.limit) || 365)); 
+                    document.getElementById('emp-end-date').innerText = eD.toLocaleDateString('fr-FR'); 
+                }
+                document.getElementById('emp-email').value = myData.email || ""; 
+                document.getElementById('emp-phone').value = myData.telephone || ""; 
+                document.getElementById('emp-address').value = myData.adresse || ""; 
+                document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
+
+                const dC = document.getElementById('doc-container');
+                dC.innerHTML = '';
+                const allDocs = [
+                    { label: 'Contrat Signé', link: myData.doc, icon: 'fa-file-signature', color: 'blue' },
+                    { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo' },
+                    { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate' },
+                    { label: 'Diplômes & Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald' }
+                ];
+                let docFound = false;
+                allDocs.forEach(doc => {
+                    if(doc.link && doc.link.length > 5 && doc.link !== '#') {
+                        docFound = true;
+                        dC.innerHTML += `<a href="${doc.link}" target="_blank" class="flex items-center justify-between p-3 border border-slate-100 bg-white rounded-xl hover:bg-slate-50 transition-all group mb-3 shadow-sm"><div class="flex items-center gap-3"><div class="bg-${doc.color}-50 text-${doc.color}-600 p-2.5 rounded-lg group-hover:scale-110 transition-transform"><i class="fa-solid ${doc.icon}"></i></div><p class="text-xs font-bold text-slate-700">${doc.label}</p></div><i class="fa-solid fa-arrow-up-right-from-square text-slate-300 group-hover:text-${doc.color}-600 transition-colors"></i></a>`;
+                    }
+                });
+                if(!docFound) {
+                    dC.innerHTML = `<div class="text-center p-6 border-2 border-dashed border-slate-200 rounded-xl"><i class="fa-solid fa-folder-open text-slate-300 text-2xl mb-2"></i><p class="text-xs text-slate-400 font-medium">Aucun document numérique disponible</p></div>`;
+                }
+            }
+        }        
+        
+        function switchView(v){ if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;} document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('bg-blue-600','text-white')); const ab=document.querySelector(`button[onclick="switchView('${v}')"]`); if(ab)ab.classList.add('bg-blue-600','text-white'); if(window.innerWidth<768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleSidebar(); }
+        function toggleSidebar(){const sb=document.getElementById('sidebar'), o=document.getElementById('sidebar-overlay'); if(sb.classList.contains('-translate-x-full')){sb.classList.remove('-translate-x-full');o.classList.remove('hidden');}else{sb.classList.add('-translate-x-full');o.classList.add('hidden');}}
+        function filterTable(){const t=document.getElementById('search-input').value.toLowerCase(); const s=document.querySelector('.view-section.active'); if(s)s.querySelectorAll('tbody tr').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(t)?'':'none'})}
+        function parseDateSmart(d){if(!d)return new Date();if(!isNaN(d)&&!String(d).includes('/'))return new Date((d-25569)*86400000);if(String(d).includes('/')){const p=d.split('/'); return new Date(p[2],p[1]-1,p[0]);}return new Date(d);}
+        function convertToInputDate(dStr){if(!dStr) return ""; if(dStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dStr; if(dStr.includes('/')){const p=dStr.split('/'); return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;} return "";}
+        function openEditModal(id){const e=employees.find(x=>x.id===id); if(e){document.getElementById('edit-modal').classList.remove('hidden'); document.getElementById('edit-id-hidden').value=id; document.getElementById('edit-statut').value=e.statut;}}
+        function closeEditModal(){document.getElementById('edit-modal').classList.add('hidden');}
+        async function submitUpdate(e){e.preventDefault(); const id=document.getElementById('edit-id-hidden').value, s=document.getElementById('edit-statut').value; Swal.fire({title:'Mise à jour...', didOpen:()=>Swal.showLoading()}); fetch(`${URL_UPDATE}?id=${id}&new_statut=${s}`).then(()=>{closeEditModal();Swal.fire('OK','Statut mis à jour','success');refreshAllData();});}
+        function printBadge(id){const e=employees.find(x=>x.id===id); if(!e)return; window.open(`${URL_BADGE_GEN}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&photo=${encodeURIComponent(formatGoogleLink(e.photo)||'')}`,'_blank','width=400,height=600');}
+        async function startCameraFeed(){try{videoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});const v=document.getElementById('video-stream');v.srcObject=videoStream;v.classList.remove('hidden');document.getElementById('captured-image').classList.add('hidden');document.getElementById('btn-capture').classList.remove('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}catch(e){Swal.fire('Erreur', 'Caméra bloquée', 'error');}}
+        function handleFileUpload(e){const f=e.target.files[0];if(f){capturedBlob=f;const i=document.getElementById('captured-image');i.src=URL.createObjectURL(f);i.classList.remove('hidden');document.getElementById('video-stream').classList.add('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('btn-retake').classList.remove('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}}
+        function takeSnapshot(){const v=document.getElementById('video-stream'),c=document.getElementById('camera-canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);c.toBlob(b=>{capturedBlob=b;const i=document.getElementById('captured-image');i.src=URL.createObjectURL(b);i.classList.remove('hidden');v.classList.add('hidden');document.getElementById('btn-capture').classList.add('hidden');document.getElementById('btn-retake').classList.remove('hidden');if(videoStream)videoStream.getTracks().forEach(t=>t.stop());},'image/jpeg',0.8);}
+        function resetCamera(){document.getElementById('captured-image').classList.add('hidden');document.getElementById('btn-retake').classList.add('hidden');document.getElementById('btn-capture').classList.add('hidden');document.getElementById('video-stream').classList.add('hidden');document.getElementById('initial-controls').classList.remove('hidden');document.getElementById('file-upload').value='';document.getElementById('photo-placeholder').classList.remove('hidden');capturedBlob=null;if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;}}
+        function triggerPhotoUpload(){document.getElementById('emp-upload-photo').click();}
+        function previewPhoto(e){const f=e.target.files[0];if(f){const r=new FileReader();r.onload=function(ev){document.getElementById('emp-photo-real').src=ev.target.result;document.getElementById('emp-photo-real').classList.remove('hidden');document.getElementById('emp-avatar').classList.add('hidden');document.getElementById('save-btn-container').classList.remove('hidden');};r.readAsDataURL(f);}}
+        function toggleEditMode(){const ids=['emp-email','emp-phone','emp-address','emp-dob'], btn=document.getElementById('save-btn-container'), dis=document.getElementById('emp-email').disabled; ids.forEach(i=>{const el=document.getElementById(i); el.disabled=!dis; if(!dis)el.classList.add('bg-white','ring-2','ring-blue-100'); else el.classList.remove('bg-white','ring-2','ring-blue-100');}); if(dis){btn.classList.remove('hidden');document.getElementById('emp-email').focus();}else{btn.classList.add('hidden');loadMyProfile();}}
+        async function saveMyProfile(){Swal.fire({title:'Sauvegarde...',didOpen:()=>Swal.showLoading()}); const fd=new FormData(); fd.append('id',currentUser.id); fd.append('email',document.getElementById('emp-email').value); fd.append('phone',document.getElementById('emp-phone').value); fd.append('address',document.getElementById('emp-address').value); fd.append('dob',document.getElementById('emp-dob').value); const pI=document.getElementById('emp-upload-photo'); if(pI.files[0]) fd.append('new_photo',pI.files[0]); try{await fetch(URL_EMPLOYEE_UPDATE,{method:'POST',body:fd}); Swal.fire('OK','Profil à jour','success'); toggleEditMode(); refreshAllData();}catch(e){Swal.fire('Erreur','Échec sauvegarde','error');}}
+        async function handleOnboarding(e){e.preventDefault();if(!capturedBlob){Swal.fire('Attention','Photo requise','warning');return;}const fd=new FormData();fd.append('nom',document.getElementById('f-nom').value);fd.append('email',document.getElementById('f-email').value);fd.append('telephone',document.getElementById('f-phone').value);fd.append('dob',document.getElementById('f-dob').value);fd.append('adresse',document.getElementById('f-address').value);fd.append('date',document.getElementById('f-date').value);fd.append('poste',document.getElementById('f-poste').value);fd.append('dept',document.getElementById('f-dept').value);fd.append('limit',document.getElementById('f-limit').value);fd.append('role',document.getElementById('f-role').value);fd.append('photo',capturedBlob,'photo.jpg');Swal.fire({title:'Création profil...',didOpen:()=>Swal.showLoading()});try{const r=await fetch(URL_WRITE_POST,{method:'POST',body:fd});if(r.ok){Swal.fire('Succès','Compte créé avec succès','success');e.target.reset();resetCamera();switchView('employees');fetchData();}else throw new Error();}catch(e){Swal.fire('Erreur','Échec serveur','error');}}
+        function startScanner(){Swal.fire({title:'SCANNER',html:'<div id="reader"></div>',didOpen:()=>{const q=new Html5Qrcode("reader"); q.start({facingMode:"environment"},{fps:10},d=>{q.stop(); let id=d; try{id=new URL(d).searchParams.get("id")}catch(e){} fetch(`${URL_GATEKEEPER}?id=${encodeURIComponent(id)}&key=${SCAN_KEY}`).then(r=>r.json()).then(d=>{if(d.status==="valid") Swal.fire('ACCÈS OK',d.nom,'success'); else {Swal.fire({icon:'error',title:'REFUSÉ'}).then(()=>location.href=URL_REDIRECT_FAILURE);}});});}}); }
+        async function fetchLogs(){const tb=document.getElementById('logs-body'); tb.innerHTML='<tr><td colspan="4" class="p-4 italic text-center">Recherche des logs...</td></tr>'; try{const r=await fetch(URL_READ_LOGS); const w=await r.json(); tb.innerHTML=''; w.reverse().forEach(l=>{const df=l.date?new Date(l.date).toLocaleString():'-'; tb.innerHTML+=`<tr class="border-b"><td class="p-4 text-xs font-mono">${df}</td><td class="p-4 font-bold text-slate-700">${l.agent||'Système'}</td><td class="p-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black">${l.action}</span></td><td class="p-4 text-xs text-slate-500">${l.details||'-'}</td></tr>`;});}catch(e){tb.innerHTML='<tr><td colspan="4" class="text-red-500 p-4">Échec lecture logs</td></tr>';}}
+        function generateDraftContract(id) { const e = employees.find(x => x.id === id); if(!e) return; window.open(`${URL_CONTRACT_GENERATE}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&date=${encodeURIComponent(e.date)}`, '_blank'); }
+        function openContractModal(id) { document.getElementById('contract-id-hidden').value = id; document.getElementById('contract-modal').classList.remove('hidden'); resetContractCamera(); }
+        function closeContractModal() { if(contractStream) contractStream.getTracks().forEach(t => t.stop()); document.getElementById('contract-modal').classList.add('hidden'); }
+        async function startContractCamera() { try { contractStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); const v = document.getElementById('contract-video'); v.srcObject = contractStream; v.classList.remove('hidden'); document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-icon').classList.add('hidden'); document.getElementById('btn-contract-capture').classList.remove('hidden'); } catch(e) { Swal.fire('Erreur', 'Caméra inaccessible', 'error'); } }
+        function takeContractSnapshot() { const v = document.getElementById('contract-video'); const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); c.toBlob(blob => { contractBlob = blob; const img = document.getElementById('contract-img-preview'); img.src = URL.createObjectURL(blob); img.classList.remove('hidden'); v.classList.add('hidden'); document.getElementById('btn-contract-capture').classList.add('hidden'); }, 'image/jpeg', 0.8); }
+        function previewContractFile(e) { const file = e.target.files[0]; if(!file) return; contractBlob = file; if(file.type.includes('image')) { const img = document.getElementById('contract-img-preview'); img.src = URL.createObjectURL(file); img.classList.remove('hidden'); document.getElementById('contract-icon').classList.add('hidden'); } }
+        function resetContractCamera() { contractBlob = null; document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-video').classList.add('hidden'); document.getElementById('contract-icon').classList.remove('hidden'); document.getElementById('btn-contract-capture').classList.add('hidden'); if(contractStream) contractStream.getTracks().forEach(t => t.stop()); }
+        async function submitSignedContract() { if(!contractBlob) { Swal.fire('Erreur', 'Document requis', 'warning'); return; } const id = document.getElementById('contract-id-hidden').value; Swal.fire({ title: 'Upload...', didOpen: () => Swal.showLoading() }); const fd = new FormData(); fd.append('id', id); fd.append('contract_file', contractBlob, 'contrat.jpg'); try { const r = await fetch(URL_UPLOAD_SIGNED_CONTRACT, { method: 'POST', body: fd }); if(r.ok) { Swal.fire('Succès', 'Contrat enregistré', 'success'); closeContractModal(); refreshAllData(); } else throw new Error(); } catch(e) { Swal.fire('Erreur', 'Échec upload', 'error'); } }
+        
+        // Listeners Online/Offline
+        window.addEventListener('offline', () => { Swal.fire({ icon: 'warning', title: 'Connexion Perdue', text: 'Vous êtes en mode hors ligne.', toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 }); document.body.classList.add('offline-mode'); });
+        window.addEventListener('online', () => { Swal.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Tout est opérationnel.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); document.body.classList.remove('offline-mode'); });
+    </script>
+</body>
+</html>
