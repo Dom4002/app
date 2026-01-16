@@ -101,7 +101,11 @@
                     <div id="avatar-display" class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold uppercase shadow-lg">?</div>
                     <div class="overflow-hidden"><p id="name-display" class="text-sm font-bold text-white truncate">User</p><p id="role-display" class="text-[10px] uppercase font-black text-blue-400">Rôle</p></div>
                 </div>
-                <button onclick="location.reload()" class="w-full flex items-center justify-center gap-2 p-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all uppercase tracking-tighter"><i class="fa-solid fa-power-off"></i> Déconnexion</button>
+              
+                
+<!-- Remplace la ligne du bouton déconnexion par celle-ci -->
+<button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 p-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all uppercase tracking-tighter"><i class="fa-solid fa-power-off"></i> Déconnexion</button>           
+            
             </div>
         </aside>
 
@@ -834,25 +838,26 @@ function startScanner(){
                 didOpen:()=>{
                     scannerInstance = new Html5Qrcode("reader");
                     scannerInstance.start({facingMode:"environment"},{fps:10},d=>{
-                        scannerInstance.stop(); // Arrêt sur succès
-                        let id=d; try{id=new URL(d).searchParams.get("id")}catch(e){} 
-                        secureFetch(`${URL_GATEKEEPER}?id=${encodeURIComponent(id)}&key=${SCAN_KEY}&agent=${encodeURIComponent(currentUser.nom)}`)
-                        .then(r=>r.json())
-                        .then(d=>{
-                            if(d.status==="valid") Swal.fire('ACCÈS OK',d.nom,'success'); 
-                            else {Swal.fire({icon:'error',title:'REFUSÉ'}).then(()=>location.href=URL_REDIRECT_FAILURE);}
+                        // Arrêt immédiat dès que le code est lu
+                        scannerInstance.stop().then(() => {
+                            let id=d; try{id=new URL(d).searchParams.get("id")}catch(e){} 
+                            secureFetch(`${URL_GATEKEEPER}?id=${encodeURIComponent(id)}&key=${SCAN_KEY}&agent=${encodeURIComponent(currentUser.nom)}`)
+                            .then(r=>r.json())
+                            .then(d=>{
+                                if(d.status==="valid") Swal.fire('ACCÈS OK',d.nom,'success'); 
+                                else {Swal.fire({icon:'error',title:'REFUSÉ'}).then(()=>location.href=URL_REDIRECT_FAILURE);}
+                            });
                         });
                     });
                 },
                 willClose: () => {
-                    // FORCE L'ARRÊT SI ON FERME LA FENÊTRE MANUELLEMENT
+                    // C'est ici le réglage : Si on ferme la fenêtre sans scanner, on éteint la caméra
                     if(scannerInstance) {
                         scannerInstance.stop().catch(err => console.log("Déjà arrêté"));
                     }
                 }
             }); 
         }
-        
         
 
         async function fetchLogs(){
@@ -873,7 +878,33 @@ function startScanner(){
         function openContractModal(id) { document.getElementById('contract-id-hidden').value = id; document.getElementById('contract-modal').classList.remove('hidden'); resetContractCamera(); }
         function closeContractModal() { if(contractStream) contractStream.getTracks().forEach(t => t.stop()); document.getElementById('contract-modal').classList.add('hidden'); }
         async function startContractCamera() { try { contractStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); const v = document.getElementById('contract-video'); v.srcObject = contractStream; v.classList.remove('hidden'); document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-icon').classList.add('hidden'); document.getElementById('btn-contract-capture').classList.remove('hidden'); } catch(e) { Swal.fire('Erreur', 'Caméra inaccessible', 'error'); } }
-        function takeContractSnapshot() { const v = document.getElementById('contract-video'); const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); c.toBlob(blob => { contractBlob = blob; const img = document.getElementById('contract-img-preview'); img.src = URL.createObjectURL(blob); img.classList.remove('hidden'); v.classList.add('hidden'); document.getElementById('btn-contract-capture').classList.add('hidden'); }, 'image/jpeg', 0.8); }
+
+
+
+
+function takeContractSnapshot() { 
+            const v = document.getElementById('contract-video'); 
+            const c = document.createElement('canvas'); 
+            c.width = v.videoWidth; c.height = v.videoHeight; 
+            c.getContext('2d').drawImage(v, 0, 0); 
+            c.toBlob(blob => { 
+                contractBlob = blob; 
+                const img = document.getElementById('contract-img-preview'); 
+                img.src = URL.createObjectURL(blob); 
+                img.classList.remove('hidden'); 
+                v.classList.add('hidden'); 
+                document.getElementById('btn-contract-capture').classList.add('hidden'); 
+                // ON COUPE ET ON VIDE
+                if(contractStream) {
+                    contractStream.getTracks().forEach(t => t.stop()); 
+                    contractStream = null;
+                }
+            }, 'image/jpeg', 0.8); 
+        }
+
+
+        
+        
         function previewContractFile(e) { const file = e.target.files[0]; if(!file) return; contractBlob = file; if(file.type.includes('image')) { const img = document.getElementById('contract-img-preview'); img.src = URL.createObjectURL(file); img.classList.remove('hidden'); document.getElementById('contract-icon').classList.add('hidden'); } }
         function resetContractCamera() { contractBlob = null; document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-video').classList.add('hidden'); document.getElementById('contract-icon').classList.remove('hidden'); document.getElementById('btn-contract-capture').classList.add('hidden'); if(contractStream) contractStream.getTracks().forEach(t => t.stop()); }
         
@@ -886,7 +917,18 @@ function startScanner(){
         }
         
         window.addEventListener('offline', () => { Swal.fire({ icon: 'warning', title: 'Connexion Perdue', text: 'Mode hors ligne.', toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 }); document.body.classList.add('offline-mode'); });
+       
         window.addEventListener('online', () => { Swal.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Opérationnel.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); document.body.classList.remove('offline-mode'); });
+    
+    
+    function handleLogout() {
+            // Coupe toutes les caméras avant de quitter
+            if(videoStream) videoStream.getTracks().forEach(t => t.stop());
+            if(contractStream) contractStream.getTracks().forEach(t => t.stop());
+            localStorage.removeItem('sirh_token');
+            location.reload();
+        }
+    
     </script>
 </body>
 </html>
