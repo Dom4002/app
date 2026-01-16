@@ -29,18 +29,16 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
-        /* Ajout pour UX Mobile */
         main header {
-            position: sticky; /* Reste collé en haut */
+            position: sticky; 
             top: 0;
-            z-index: 40; /* Au-dessus du reste */
-            backdrop-filter: blur(12px); /* Effet verre plus prononcé */
+            z-index: 40; 
+            backdrop-filter: blur(12px); 
             background: rgba(255, 255, 255, 0.85);
         }
 
-        /* Indicateur visuel hors ligne */
         body.offline-mode header {
-            border-bottom: 2px solid #ef4444; /* Ligne rouge si hors ligne */
+            border-bottom: 2px solid #ef4444; 
         }
         body.offline-mode::before {
             content: "MODE HORS LIGNE";
@@ -343,38 +341,61 @@
     </div>
 
     <script>
+        // --- CONFIGURATION ---
+        const BASE_API = "https://mon-api-rh.onrender.com/api"; 
 
-                    // --- NOUVEAU CODE SÉCURISÉ ---
-            // L'adresse de ton gardien sur Render
-            const BASE_API = "https://mon-api-rh.onrender.com/api"; 
+        const URL_LOGIN = `${BASE_API}/login`; 
+        const URL_READ = `${BASE_API}/read`; 
+        const URL_WRITE_POST = `${BASE_API}/write`; 
+        const URL_UPDATE = `${BASE_API}/update`; 
+        const URL_LOG = `${BASE_API}/log`; 
+        const URL_READ_LOGS = `${BASE_API}/read-logs`; 
+        const URL_GATEKEEPER = `${BASE_API}/gatekeeper`; 
+        const URL_BADGE_GEN = `${BASE_API}/badge`; 
+        const URL_EMPLOYEE_UPDATE = `${BASE_API}/emp-update`; 
+        const URL_CONTRACT_GENERATE = `${BASE_API}/contract-gen`;
+        const URL_UPLOAD_SIGNED_CONTRACT = `${BASE_API}/contract-upload`;
+        const URL_LEAVE_REQUEST = `${BASE_API}/leave`;  
+        const URL_CLOCK_ACTION = `${BASE_API}/clock`;
 
-            // On construit les routes vers ton serveur
-            const URL_LOGIN = `${BASE_API}/login`; 
-            const URL_READ = `${BASE_API}/read`; 
-            const URL_WRITE_POST = `${BASE_API}/write`; 
-            const URL_UPDATE = `${BASE_API}/update`; 
-            const URL_LOG = `${BASE_API}/log`; 
-            const URL_READ_LOGS = `${BASE_API}/read-logs`; 
-            const URL_GATEKEEPER = `${BASE_API}/gatekeeper`; 
-            const URL_BADGE_GEN = `${BASE_API}/badge`; 
-            const URL_EMPLOYEE_UPDATE = `${BASE_API}/emp-update`; 
-            const URL_CONTRACT_GENERATE = `${BASE_API}/contract-gen`;
-            const URL_UPLOAD_SIGNED_CONTRACT = `${BASE_API}/contract-upload`;
-            // Webhooks Make Mis à jour
-            const URL_LEAVE_REQUEST = `${BASE_API}/leave`;  
-            const URL_CLOCK_ACTION = `${BASE_API}/clock`;
-
-
-
-
-
-
-        
         const SCAN_KEY = "SIGD_SECURE_2025"; 
         const URL_REDIRECT_FAILURE = "https://google.com";
 
         let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null;
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR');
+
+
+
+function downloadMyBadge() {
+    // On cherche les données de l'utilisateur connecté dans la liste des employés
+    const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+    
+    if(!myData) {
+        return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
+    }
+
+    const token = localStorage.getItem('sirh_token');
+    const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
+    
+    window.open(url, '_blank', 'width=400,height=600');
+}
+
+
+
+        // --- NOUVEAU : HELPER DE REQUÊTE SÉCURISÉE ---
+        async function secureFetch(url, options = {}) {
+            const token = localStorage.getItem('sirh_token');
+            const headers = options.headers || {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            const response = await fetch(url, { ...options, headers });
+            if (response.status === 401 || response.status === 403) {
+                 const errData = await response.json();
+                 throw new Error(errData.error || "Accès refusé");
+            }
+            return response;
+        }
 
         async function handleLogin(e) { 
             e.preventDefault(); 
@@ -390,10 +411,14 @@
             const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
             try {
+                // Le login est le seul appel direct (sans secureFetch)
                 const response = await fetch(`${URL_LOGIN}?u=${encodeURIComponent(u.toLowerCase())}&p=${encodeURIComponent(p)}`, { signal: controller.signal });
                 clearTimeout(timeoutId); 
                 const d = await response.json();
                 if(d.status === "success") { 
+                    // SAUVEGARDE DU TOKEN JWT
+                    if(d.token) localStorage.setItem('sirh_token', d.token);
+
                     let r = d.role || "EMPLOYEE"; if(Array.isArray(r)) r = r[0]; 
                     const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
                     Toast.fire({icon: 'success', title: 'Bienvenue ' + (d.nom || u)});
@@ -416,52 +441,41 @@
             document.body.className = "text-slate-900 overflow-hidden h-screen w-screen role-" + r.toLowerCase(); 
             if(r === 'EMPLOYEE') { switchView('my-profile'); } else { switchView('dash'); }
 
-            // SKELETON LOADING (Bonus Phase 3)
             const skeletonHTML = Array(5).fill(0).map(() => 
                 `<tr class="animate-pulse border-b"><td class="p-4 flex gap-3"><div class="w-10 h-10 bg-slate-200 rounded-full"></div><div class="space-y-2"><div class="h-3 w-24 bg-slate-200 rounded"></div><div class="h-2 w-16 bg-slate-200 rounded"></div></div></td><td class="p-4"><div class="h-3 w-32 bg-slate-200 rounded"></div></td><td class="p-4"><div class="h-6 w-16 bg-slate-200 rounded-lg"></div></td><td class="p-4"></td></tr>`
             ).join('');
             document.getElementById('full-body').innerHTML = skeletonHTML;
 
-            // Appel de la data (mode auto : cache si possible)
             fetchData(false);
         }
 
-        // --- NOUVEAU SYSTÈME DE CACHE & CHARGEMENT (Phase 3) ---
         async function refreshAllData() {
             const icon = document.getElementById('refresh-icon'); 
             if(icon) icon.classList.add('fa-spin');
-            
-            // On force le re-téléchargement (true)
             await fetchData(true); 
-            
             if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 800);
-            
             const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 1500});
             Toast.fire({icon: 'success', title: 'Données actualisées'});
         }
 
         async function fetchData(forceUpdate = false){ 
             const CACHE_KEY = 'sirh_data_v1';
-            const CACHE_TIME = 1000 * 60 * 60; // 1 heure de validité par défaut
+            const CACHE_TIME = 1000 * 60 * 60; 
 
-            // 1. Essayer de charger depuis le cache local si on ne force pas l'update
             if (!forceUpdate) {
                 const cached = localStorage.getItem(CACHE_KEY);
                 const cachedTime = localStorage.getItem(CACHE_KEY + '_time');
-                
                 if (cached && cachedTime && (Date.now() - cachedTime < CACHE_TIME)) {
-                    console.log("🚀 Chargement depuis le cache (Ultra rapide)");
                     employees = JSON.parse(cached);
                     renderData();
-                    loadMyProfile(); // IMPORTANT : Mettre à jour le profil même en cache
+                    loadMyProfile();
                     return; 
                 }
             }
 
-            // 2. Si pas de cache ou forceUpdate, on télécharge
             try{ 
-                console.log("🌐 Téléchargement depuis le serveur...");
-                const r = await fetch(URL_READ); 
+                let fetchUrl = `${URL_READ}?agent=${encodeURIComponent(currentUser.nom)}`;
+                const r = await secureFetch(fetchUrl); 
                 const d = await r.json(); 
                 
                 employees = d.map(x => {
@@ -475,18 +489,15 @@
                     };
                 });
 
-                // 3. On sauvegarde dans le cache pour la prochaine fois
                 localStorage.setItem(CACHE_KEY, JSON.stringify(employees));
                 localStorage.setItem(CACHE_KEY + '_time', Date.now());
 
                 renderData(); 
-                loadMyProfile(); // IMPORTANT : Mettre à jour le profil après téléchargement
+                loadMyProfile();
             } catch(e){ 
                 console.error(e); 
-                // Si internet échoue mais qu'on a un vieux cache, on l'utilise en secours
                 const cached = localStorage.getItem(CACHE_KEY);
                 if(cached) {
-                    Swal.fire({toast:true, position:'top-end', icon:'warning', title:'Mode hors ligne', text:'Affichage des dernières données connues'});
                     employees = JSON.parse(cached);
                     renderData();
                     loadMyProfile();
@@ -506,21 +517,26 @@
                     let sD = parseDateSmart(e.date); let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(e.limit) || 365));
                     dL = Math.ceil((eD - new Date()) / 86400000); if(isA) { if(dL < 0) { alertes++; } else if(dL <= 15) { isU = true; alertes++; } }
                 }
-                
-                // LAZY LOADING (Phase 3)
-                const av = e.photo && e.photo.length > 10 
-                    ? `<img src="${formatGoogleLink(e.photo)}" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover bg-slate-200 border border-slate-200">` 
-                    : `<div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 rounded-full flex items-center justify-center text-xs font-black text-slate-500">${e.nom.substring(0,2).toUpperCase()}</div>`;
-                
+                const av = e.photo && e.photo.length > 10 ? `<img src="${formatGoogleLink(e.photo)}" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover bg-slate-200 border border-slate-200">` : `<div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 rounded-full flex items-center justify-center text-xs font-black text-slate-500">${e.nom.substring(0,2).toUpperCase()}</div>`;
                 const sStr = String(e.contract_status || '').toLowerCase().trim(); const isSigned = (sStr === 'signé' || sStr === 'signe');
-                const contractActions = `<div class="flex items-center justify-end gap-2"><button onclick="openFullFolder('${e.id}')" title="Dossier Complet" class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-500 hover:text-white transition-all"><i class="fa-solid fa-folder-open"></i></button><div class="h-4 w-[1px] bg-slate-200 mx-1"></div>${!isSigned ? `<button onclick="generateDraftContract('${e.id}')" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><i class="fa-solid fa-file-contract"></i></button>` : `<span class="text-[10px] font-black text-emerald-500 uppercase bg-emerald-50 px-2 py-1 rounded">Signé</span>`}<button onclick="openContractModal('${e.id}')" class="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-800 hover:text-white transition-all"><i class="fa-solid fa-upload"></i></button><div class="h-4 w-[1px] bg-slate-200 mx-1"></div><button onclick="printBadge('${e.id}')" class="text-slate-400 hover:text-blue-600 transition-all"><i class="fa-solid fa-print"></i></button><button onclick="openEditModal('${e.id}')" class="text-slate-400 hover:text-slate-800 transition-all"><i class="fa-solid fa-pen"></i></button></div>`;
+                
+                const contractActions = `
+                <div class="flex items-center justify-end gap-2">
+                    <button onclick="openFullFolder('${e.id}')" title="Dossier Complet" class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-500 hover:text-white transition-all"><i class="fa-solid fa-folder-open"></i></button>
+                    <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
+                    ${!isSigned ? `<button onclick="generateDraftContract('${e.id}')" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><i class="fa-solid fa-file-contract"></i></button>` : `<span class="text-[10px] font-black text-emerald-500 uppercase bg-emerald-50 px-2 py-1 rounded">Signé</span>`}
+                    <button onclick="openContractModal('${e.id}')" class="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-800 hover:text-white transition-all"><i class="fa-solid fa-upload"></i></button>
+                    <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
+                    <button onclick="printBadge('${e.id}')" class="text-slate-400 hover:text-blue-600 transition-all"><i class="fa-solid fa-print"></i></button>
+                    <button onclick="openEditModal('${e.id}')" class="text-slate-400 hover:text-slate-800 transition-all"><i class="fa-solid fa-pen"></i></button>
+                </div>`;
+
                 b.innerHTML+=`<tr class="border-b hover:bg-slate-50 transition-colors"><td class="p-4 flex gap-3 items-center min-w-[200px]">${av}<div><div class="font-bold text-sm text-slate-800 uppercase">${e.nom}</div><div class="text-[10px] text-slate-400 font-mono tracking-tighter">${e.id}</div></div></td><td class="p-4 text-xs font-medium text-slate-500">${e.poste}</td><td class="p-4"><span class="px-3 py-1 border rounded-lg text-[10px] font-black uppercase ${dL < 0 && isA ? 'bg-red-100 text-red-700' : (isU ? 'bg-orange-100 text-orange-700 animate-pulse' : 'bg-green-100 text-green-700')}">${e.statut}</span></td><td class="p-4 rh-only">${contractActions}</td></tr>`; 
                 if(isU || (dL < 0 && isA)) d.innerHTML+=`<tr class="bg-white border-b"><td class="p-4 text-sm font-bold text-slate-700">${e.nom}</td><td class="p-4 text-xs text-slate-500">${e.poste}</td><td class="p-4 ${dL<0?'text-red-600':'text-orange-600'} font-bold text-xs uppercase">${dL<0?'Expiré':dL+' jours'}</td><td class="p-4 rh-only text-right"><button class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold" onclick="openEditModal('${e.id}')">GÉRER</button></td></tr>`; 
             }); 
             document.getElementById('stat-total').innerText = total; document.getElementById('stat-alert').innerText = alertes; document.getElementById('stat-active').innerText = actifs; 
         }
 
-        // --- NOUVELLE VERSION : GESTION DES CONGÉS (WAITING FOR WEBHOOK) ---
         function openLeaveModal() {
             document.getElementById('leave-modal').classList.remove('hidden');
             document.getElementById('leave-start').valueAsDate = new Date();
@@ -529,54 +545,31 @@
 
         async function submitLeaveRequest(e) {
             e.preventDefault();
-            
             const type = document.querySelector('input[name="leave_type"]:checked').value;
             const start = document.getElementById('leave-start').value;
             const end = document.getElementById('leave-end').value;
             const reason = document.getElementById('leave-reason').value;
 
             const data = {
-                employee_id: currentUser.id,
-                nom: currentUser.nom,
-                type: type,
-                date_debut: start,
-                date_fin: end,
-                motif: reason,
-                date_demande: new Date().toISOString()
+                employee_id: currentUser.id, nom: currentUser.nom, type: type,
+                date_debut: start, date_fin: end, motif: reason,
+                date_demande: new Date().toISOString(), agent: currentUser.nom 
             };
 
-            // Blocage de l'UI
-            Swal.fire({
-                title: 'Envoi de la demande...',
-                text: 'Veuillez patienter',
-                didOpen: () => Swal.showLoading(),
-                allowOutsideClick: false
-            });
+            Swal.fire({ title: 'Envoi...', text: 'Veuillez patienter', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
             try {
-                // Appel réel au Webhook Make
-                const response = await fetch(URL_LEAVE_REQUEST, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                const response = await secureFetch(URL_LEAVE_REQUEST, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) 
                 });
-
                 if (response.ok) {
-                    // Succès seulement si Make répond 200 OK
                     document.getElementById('leave-modal').classList.add('hidden');
                     e.target.reset();
                     Swal.fire('Succès', 'Votre demande a bien été transmise.', 'success');
-                } else {
-                    throw new Error('Erreur serveur Make');
                 }
-
-            } catch (error) {
-                console.error(error);
-                Swal.fire('Erreur', 'Impossible d\'envoyer la demande. Vérifiez votre connexion.', 'error');
-            }
+            } catch (error) { Swal.fire('Erreur', error.message, 'error'); }
         }
 
-        // --- NOUVELLE VERSION : GESTION DU POINTAGE (WAITING FOR WEBHOOK) ---
         window.addEventListener('load', () => {
             const status = localStorage.getItem('clock_status_' + (currentUser ? currentUser.id : 'temp'));
             updateClockUI(status === 'IN');
@@ -602,68 +595,73 @@
             }
         }
 
-        async function handleClockInOut() {
-            // 1. Logique action
-            const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
-            const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
-            
-            // 2. GPS (avec petit timeout pour ne pas bloquer trop longtemps)
-            let locationCoords = "Non autorisé";
-            try {
-                const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, {timeout: 4000});
-                });
-                locationCoords = `${pos.coords.latitude},${pos.coords.longitude}`;
-            } catch(e) { console.log("GPS ignoré"); }
 
-            // 3. Blocage UI
-            Swal.fire({
-                title: 'Enregistrement...', 
-                text: 'Connexion au serveur de pointage',
-                didOpen: () => Swal.showLoading(),
-                allowOutsideClick: false
+
+
+
+
+async function handleClockInOut() {
+    const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
+    const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
+    
+    let locationCoords = "Non autorisé ou Timeout";
+
+    // 1. On demande le GPS avec des options plus souples
+    try {
+        const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true, // Demande une haute précision
+                timeout: 10000,           // On attend jusqu'à 10 secondes (important pour mobile)
+                maximumAge: 0             // On veut une position fraîche
             });
+        });
+        locationCoords = `${pos.coords.latitude},${pos.coords.longitude}`;
+    } catch(e) { 
+        console.warn("Détail erreur GPS:", e.message);
+        // Si ça échoue, on continue quand même le pointage mais avec l'info d'échec GPS
+    }
+
+    Swal.fire({ 
+        title: 'Enregistrement...', 
+        text: 'Liaison avec le serveur sécurisé', 
+        didOpen: () => Swal.showLoading(), 
+        allowOutsideClick: false 
+    });
+    
+    const payload = {
+        id: currentUser.id,
+        nom: currentUser.nom,
+        action: action, 
+        time: new Date().toISOString(),
+        gps: locationCoords,
+        agent: currentUser.nom
+    };
+
+    try {
+        const response = await secureFetch(URL_CLOCK_ACTION, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        });
+
+        if (response.ok) {
+            const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
+            localStorage.setItem('clock_status_' + currentUser.id, newStatus);
+            updateClockUI(newStatus === 'IN');
+            document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString();
             
-            const payload = {
-                id: currentUser.id,
-                nom: currentUser.nom,
-                action: action, 
-                time: new Date().toISOString(),
-                gps: locationCoords
-            };
-
-            try {
-                // Appel réel au Webhook Make
-                const response = await fetch(URL_CLOCK_ACTION, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (response.ok) {
-                    // Succès : On met à jour l'interface seulement maintenant
-                    const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
-                    localStorage.setItem('clock_status_' + currentUser.id, newStatus);
-                    localStorage.setItem('clock_last_' + currentUser.id, new Date().toLocaleTimeString());
-                    
-                    updateClockUI(newStatus === 'IN');
-                    document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString();
-                    
-                    Swal.fire({
-                        icon: 'success', 
-                        title: action === 'CLOCK_IN' ? 'Pointage Entrée OK' : 'Pointage Sortie OK',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                } else {
-                    throw new Error('Erreur serveur Make');
-                }
-            } catch (e) {
-                Swal.fire('Echec', 'Le pointage n\'a pas pu être enregistré. Vérifiez votre connexion.', 'error');
-            }
+            Swal.fire({ 
+                icon: 'success', 
+                title: action === 'CLOCK_IN' ? 'Entrée Validée' : 'Sortie Validée', 
+                text: locationCoords.includes("Timeout") ? "Pointage OK (sans GPS)" : "Pointage et GPS OK",
+                timer: 2000, 
+                showConfirmButton: false 
+            });
         }
-
-        // --- FIN DES MISES À JOUR ---
+    } catch (e) { 
+        Swal.fire('Echec', 'Erreur serveur : ' + e.message, 'error'); 
+    }
+}
 
         function openFullFolder(id) {
             const e = employees.find(x => x.id === id); if(!e) return;
@@ -672,7 +670,12 @@
             document.getElementById('folder-poste').innerText = e.poste; document.getElementById('folder-dept').innerText = e.dept;
             document.getElementById('folder-email').innerText = e.email || "Non renseigné"; document.getElementById('folder-phone').innerText = e.telephone || "Non renseigné";
             document.getElementById('folder-address').innerText = e.adresse || "Non renseignée";
-            if(e.date) { let sD = parseDateSmart(e.date); document.getElementById('folder-start').innerText = sD.toLocaleDateString('fr-FR'); let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(e.limit) || 365)); document.getElementById('folder-end').innerText = eD.toLocaleDateString('fr-FR'); }
+            if(e.date) { 
+                let sD = parseDateSmart(e.date); 
+                document.getElementById('folder-start').innerText = sD.toLocaleDateString('fr-FR'); 
+                let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(e.limit) || 365)); 
+                document.getElementById('folder-end').innerText = eD.toLocaleDateString('fr-FR'); 
+            }
             const grid = document.getElementById('folder-docs-grid'); grid.innerHTML = '';
             const docs = [ { label: 'Contrat Actuel', link: e.doc, icon: 'fa-file-signature', color: 'blue' }, { label: 'Curriculum Vitae', link: e.cv_link, icon: 'fa-file-pdf', color: 'indigo' }, { label: 'Pièce d\'Identité', link: e.id_card_link, icon: 'fa-id-card', color: 'slate' }, { label: 'Diplômes/Certifs', link: e.diploma_link, icon: 'fa-graduation-cap', color: 'emerald' } ];
             docs.forEach(doc => { const hasLink = doc.link && doc.link !== '#'; grid.innerHTML += `<div class="p-4 rounded-2xl border ${hasLink ? 'bg-white shadow-sm border-slate-200' : 'bg-slate-100 opacity-50 border-transparent'} flex items-center justify-between group transition-all"><div class="flex items-center gap-3"><div class="p-2.5 rounded-xl ${hasLink ? 'bg-'+doc.color+'-50 text-'+doc.color+'-600' : 'bg-slate-200 text-slate-400'}"><i class="fa-solid ${doc.icon}"></i></div><p class="text-xs font-bold text-slate-700">${doc.label}</p></div>${hasLink ? `<a href="${doc.link}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><i class="fa-solid fa-up-right-from-square"></i></a>` : `<i class="fa-solid fa-lock text-slate-300 text-xs mr-2"></i>`}</div>`; });
@@ -687,53 +690,40 @@
             if (myData) {
                 document.getElementById('emp-name').innerText = myData.nom; 
                 document.getElementById('emp-job').innerText = myData.poste;
-                if(myData.photo && myData.photo.length > 10) { 
-                    document.getElementById('emp-photo-real').src = formatGoogleLink(myData.photo); 
-                    document.getElementById('emp-photo-real').classList.remove('hidden'); 
-                    document.getElementById('emp-avatar').classList.add('hidden'); 
-                }
-                if(myData.date) { 
-                    let sD = parseDateSmart(myData.date); 
-                    document.getElementById('emp-start-date').innerText = sD.toLocaleDateString('fr-FR'); 
-                    let eD = new Date(sD); 
-                    eD.setDate(eD.getDate() + (parseInt(myData.limit) || 365)); 
-                    document.getElementById('emp-end-date').innerText = eD.toLocaleDateString('fr-FR'); 
-                }
-                document.getElementById('emp-email').value = myData.email || ""; 
-                document.getElementById('emp-phone').value = myData.telephone || ""; 
-                document.getElementById('emp-address').value = myData.adresse || ""; 
-                document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
-
-                const dC = document.getElementById('doc-container');
-                dC.innerHTML = '';
-                const allDocs = [
-                    { label: 'Contrat Signé', link: myData.doc, icon: 'fa-file-signature', color: 'blue' },
-                    { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo' },
-                    { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate' },
-                    { label: 'Diplômes & Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald' }
-                ];
-                let docFound = false;
-                allDocs.forEach(doc => {
-                    if(doc.link && doc.link.length > 5 && doc.link !== '#') {
-                        docFound = true;
-                        dC.innerHTML += `<a href="${doc.link}" target="_blank" class="flex items-center justify-between p-3 border border-slate-100 bg-white rounded-xl hover:bg-slate-50 transition-all group mb-3 shadow-sm"><div class="flex items-center gap-3"><div class="bg-${doc.color}-50 text-${doc.color}-600 p-2.5 rounded-lg group-hover:scale-110 transition-transform"><i class="fa-solid ${doc.icon}"></i></div><p class="text-xs font-bold text-slate-700">${doc.label}</p></div><i class="fa-solid fa-arrow-up-right-from-square text-slate-300 group-hover:text-${doc.color}-600 transition-colors"></i></a>`;
-                    }
-                });
-                if(!docFound) {
-                    dC.innerHTML = `<div class="text-center p-6 border-2 border-dashed border-slate-200 rounded-xl"><i class="fa-solid fa-folder-open text-slate-300 text-2xl mb-2"></i><p class="text-xs text-slate-400 font-medium">Aucun document numérique disponible</p></div>`;
-                }
+                if(myData.photo && myData.photo.length > 10) { document.getElementById('emp-photo-real').src = formatGoogleLink(myData.photo); document.getElementById('emp-photo-real').classList.remove('hidden'); document.getElementById('emp-avatar').classList.add('hidden'); }
+                if(myData.date) { let sD = parseDateSmart(myData.date); document.getElementById('emp-start-date').innerText = sD.toLocaleDateString('fr-FR'); let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(myData.limit) || 365)); document.getElementById('emp-end-date').innerText = eD.toLocaleDateString('fr-FR'); }
+                document.getElementById('emp-email').value = myData.email || ""; document.getElementById('emp-phone').value = myData.telephone || ""; 
+                document.getElementById('emp-address').value = myData.adresse || ""; document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
+                const dC = document.getElementById('doc-container'); dC.innerHTML = '';
+                const allDocs = [ { label: 'Contrat Signé', link: myData.doc, icon: 'fa-file-signature', color: 'blue' }, { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo' }, { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate' }, { label: 'Diplômes & Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald' } ];
+                allDocs.forEach(doc => { if(doc.link && doc.link.length > 5 && doc.link !== '#') { dC.innerHTML += `<a href="${doc.link}" target="_blank" class="flex items-center justify-between p-3 border border-slate-100 bg-white rounded-xl hover:bg-slate-50 transition-all group mb-3 shadow-sm"><div class="flex items-center gap-3"><div class="bg-${doc.color}-50 text-${doc.color}-600 p-2.5 rounded-lg group-hover:scale-110 transition-transform"><i class="fa-solid ${doc.icon}"></i></div><p class="text-xs font-bold text-slate-700">${doc.label}</p></div><i class="fa-solid fa-arrow-up-right-from-square text-slate-300 group-hover:text-${doc.color}-600 transition-colors"></i></a>`; } });
             }
         }        
         
-        function switchView(v){ if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;} document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('bg-blue-600','text-white')); const ab=document.querySelector(`button[onclick="switchView('${v}')"]`); if(ab)ab.classList.add('bg-blue-600','text-white'); if(window.innerWidth<768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleSidebar(); }
+        function switchView(v){ if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;} document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('bg-blue-600','text-white')); const ab=document.querySelector(`button[onclick="switchView('${v}')"]`); if(ab)ab.classList.add('bg-blue-600','text-white'); if(window.innerWidth<768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleSidebar(); if(v==='logs') fetchLogs(); }
         function toggleSidebar(){const sb=document.getElementById('sidebar'), o=document.getElementById('sidebar-overlay'); if(sb.classList.contains('-translate-x-full')){sb.classList.remove('-translate-x-full');o.classList.remove('hidden');}else{sb.classList.add('-translate-x-full');o.classList.add('hidden');}}
         function filterTable(){const t=document.getElementById('search-input').value.toLowerCase(); const s=document.querySelector('.view-section.active'); if(s)s.querySelectorAll('tbody tr').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(t)?'':'none'})}
         function parseDateSmart(d){if(!d)return new Date();if(!isNaN(d)&&!String(d).includes('/'))return new Date((d-25569)*86400000);if(String(d).includes('/')){const p=d.split('/'); return new Date(p[2],p[1]-1,p[0]);}return new Date(d);}
         function convertToInputDate(dStr){if(!dStr) return ""; if(dStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dStr; if(dStr.includes('/')){const p=dStr.split('/'); return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;} return "";}
         function openEditModal(id){const e=employees.find(x=>x.id===id); if(e){document.getElementById('edit-modal').classList.remove('hidden'); document.getElementById('edit-id-hidden').value=id; document.getElementById('edit-statut').value=e.statut;}}
         function closeEditModal(){document.getElementById('edit-modal').classList.add('hidden');}
-        async function submitUpdate(e){e.preventDefault(); const id=document.getElementById('edit-id-hidden').value, s=document.getElementById('edit-statut').value; Swal.fire({title:'Mise à jour...', didOpen:()=>Swal.showLoading()}); fetch(`${URL_UPDATE}?id=${id}&new_statut=${s}`).then(()=>{closeEditModal();Swal.fire('OK','Statut mis à jour','success');refreshAllData();});}
-        function printBadge(id){const e=employees.find(x=>x.id===id); if(!e)return; window.open(`${URL_BADGE_GEN}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&photo=${encodeURIComponent(formatGoogleLink(e.photo)||'')}`,'_blank','width=400,height=600');}
+        
+        async function submitUpdate(e){
+            e.preventDefault(); 
+            const id=document.getElementById('edit-id-hidden').value, s=document.getElementById('edit-statut').value; 
+            Swal.fire({title:'Mise à jour...', didOpen:()=>Swal.showLoading()}); 
+            try {
+                await secureFetch(`${URL_UPDATE}?id=${id}&new_statut=${s}&agent=${encodeURIComponent(currentUser.nom)}`);
+                closeEditModal(); Swal.fire('OK','Statut mis à jour','success'); refreshAllData();
+            } catch(e) { Swal.fire('Erreur', e.message, 'error'); }
+        }
+        
+        function printBadge(id){
+            const e=employees.find(x=>x.id===id); if(!e)return; 
+            const token = localStorage.getItem('sirh_token');
+            window.open(`${URL_BADGE_GEN}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&photo=${encodeURIComponent(e.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`,'_blank','width=400,height=600');
+        }
+        
         async function startCameraFeed(){try{videoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});const v=document.getElementById('video-stream');v.srcObject=videoStream;v.classList.remove('hidden');document.getElementById('captured-image').classList.add('hidden');document.getElementById('btn-capture').classList.remove('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}catch(e){Swal.fire('Erreur', 'Caméra bloquée', 'error');}}
         function handleFileUpload(e){const f=e.target.files[0];if(f){capturedBlob=f;const i=document.getElementById('captured-image');i.src=URL.createObjectURL(f);i.classList.remove('hidden');document.getElementById('video-stream').classList.add('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('btn-retake').classList.remove('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}}
         function takeSnapshot(){const v=document.getElementById('video-stream'),c=document.getElementById('camera-canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);c.toBlob(b=>{capturedBlob=b;const i=document.getElementById('captured-image');i.src=URL.createObjectURL(b);i.classList.remove('hidden');v.classList.add('hidden');document.getElementById('btn-capture').classList.add('hidden');document.getElementById('btn-retake').classList.remove('hidden');if(videoStream)videoStream.getTracks().forEach(t=>t.stop());},'image/jpeg',0.8);}
@@ -741,22 +731,64 @@
         function triggerPhotoUpload(){document.getElementById('emp-upload-photo').click();}
         function previewPhoto(e){const f=e.target.files[0];if(f){const r=new FileReader();r.onload=function(ev){document.getElementById('emp-photo-real').src=ev.target.result;document.getElementById('emp-photo-real').classList.remove('hidden');document.getElementById('emp-avatar').classList.add('hidden');document.getElementById('save-btn-container').classList.remove('hidden');};r.readAsDataURL(f);}}
         function toggleEditMode(){const ids=['emp-email','emp-phone','emp-address','emp-dob'], btn=document.getElementById('save-btn-container'), dis=document.getElementById('emp-email').disabled; ids.forEach(i=>{const el=document.getElementById(i); el.disabled=!dis; if(!dis)el.classList.add('bg-white','ring-2','ring-blue-100'); else el.classList.remove('bg-white','ring-2','ring-blue-100');}); if(dis){btn.classList.remove('hidden');document.getElementById('emp-email').focus();}else{btn.classList.add('hidden');loadMyProfile();}}
-        async function saveMyProfile(){Swal.fire({title:'Sauvegarde...',didOpen:()=>Swal.showLoading()}); const fd=new FormData(); fd.append('id',currentUser.id); fd.append('email',document.getElementById('emp-email').value); fd.append('phone',document.getElementById('emp-phone').value); fd.append('address',document.getElementById('emp-address').value); fd.append('dob',document.getElementById('emp-dob').value); const pI=document.getElementById('emp-upload-photo'); if(pI.files[0]) fd.append('new_photo',pI.files[0]); try{await fetch(URL_EMPLOYEE_UPDATE,{method:'POST',body:fd}); Swal.fire('OK','Profil à jour','success'); toggleEditMode(); refreshAllData();}catch(e){Swal.fire('Erreur','Échec sauvegarde','error');}}
-        async function handleOnboarding(e){e.preventDefault();if(!capturedBlob){Swal.fire('Attention','Photo requise','warning');return;}const fd=new FormData();fd.append('nom',document.getElementById('f-nom').value);fd.append('email',document.getElementById('f-email').value);fd.append('telephone',document.getElementById('f-phone').value);fd.append('dob',document.getElementById('f-dob').value);fd.append('adresse',document.getElementById('f-address').value);fd.append('date',document.getElementById('f-date').value);fd.append('poste',document.getElementById('f-poste').value);fd.append('dept',document.getElementById('f-dept').value);fd.append('limit',document.getElementById('f-limit').value);fd.append('role',document.getElementById('f-role').value);fd.append('photo',capturedBlob,'photo.jpg');Swal.fire({title:'Création profil...',didOpen:()=>Swal.showLoading()});try{const r=await fetch(URL_WRITE_POST,{method:'POST',body:fd});if(r.ok){Swal.fire('Succès','Compte créé avec succès','success');e.target.reset();resetCamera();switchView('employees');fetchData();}else throw new Error();}catch(e){Swal.fire('Erreur','Échec serveur','error');}}
-        function startScanner(){Swal.fire({title:'SCANNER',html:'<div id="reader"></div>',didOpen:()=>{const q=new Html5Qrcode("reader"); q.start({facingMode:"environment"},{fps:10},d=>{q.stop(); let id=d; try{id=new URL(d).searchParams.get("id")}catch(e){} fetch(`${URL_GATEKEEPER}?id=${encodeURIComponent(id)}&key=${SCAN_KEY}`).then(r=>r.json()).then(d=>{if(d.status==="valid") Swal.fire('ACCÈS OK',d.nom,'success'); else {Swal.fire({icon:'error',title:'REFUSÉ'}).then(()=>location.href=URL_REDIRECT_FAILURE);}});});}}); }
-        async function fetchLogs(){const tb=document.getElementById('logs-body'); tb.innerHTML='<tr><td colspan="4" class="p-4 italic text-center">Recherche des logs...</td></tr>'; try{const r=await fetch(URL_READ_LOGS); const w=await r.json(); tb.innerHTML=''; w.reverse().forEach(l=>{const df=l.date?new Date(l.date).toLocaleString():'-'; tb.innerHTML+=`<tr class="border-b"><td class="p-4 text-xs font-mono">${df}</td><td class="p-4 font-bold text-slate-700">${l.agent||'Système'}</td><td class="p-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black">${l.action}</span></td><td class="p-4 text-xs text-slate-500">${l.details||'-'}</td></tr>`;});}catch(e){tb.innerHTML='<tr><td colspan="4" class="text-red-500 p-4">Échec lecture logs</td></tr>';}}
-        function generateDraftContract(id) { const e = employees.find(x => x.id === id); if(!e) return; window.open(`${URL_CONTRACT_GENERATE}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&date=${encodeURIComponent(e.date)}`, '_blank'); }
+        
+        async function saveMyProfile(){
+            Swal.fire({title:'Sauvegarde...',didOpen:()=>Swal.showLoading()}); 
+            const fd=new FormData(); 
+            fd.append('id',currentUser.id); fd.append('email',document.getElementById('emp-email').value); 
+            fd.append('phone',document.getElementById('emp-phone').value); fd.append('address',document.getElementById('emp-address').value); 
+            fd.append('dob',document.getElementById('emp-dob').value); fd.append('agent', currentUser.nom);
+            const pI=document.getElementById('emp-upload-photo'); if(pI.files[0]) fd.append('photo',pI.files[0]); 
+            try{ await secureFetch(URL_EMPLOYEE_UPDATE,{method:'POST',body:fd}); Swal.fire('OK','Profil à jour','success'); toggleEditMode(); refreshAllData(); } catch(e){Swal.fire('Erreur',e.message,'error');}
+        }
+        
+        async function handleOnboarding(e){
+            e.preventDefault(); if(!capturedBlob){Swal.fire('Attention','Photo requise','warning');return;}
+            const fd=new FormData();
+            fd.append('nom',document.getElementById('f-nom').value); fd.append('email',document.getElementById('f-email').value);
+            fd.append('telephone',document.getElementById('f-phone').value); fd.append('dob',document.getElementById('f-dob').value);
+            fd.append('adresse',document.getElementById('f-address').value); fd.append('date',document.getElementById('f-date').value);
+            fd.append('poste',document.getElementById('f-poste').value); fd.append('dept',document.getElementById('f-dept').value);
+            fd.append('limit',document.getElementById('f-limit').value); fd.append('role',document.getElementById('f-role').value);
+            fd.append('photo',capturedBlob,'photo.jpg'); fd.append('agent', currentUser.nom);
+            Swal.fire({title:'Création profil...',didOpen:()=>Swal.showLoading()});
+            try{ const r=await secureFetch(URL_WRITE_POST,{method:'POST',body:fd}); if(r.ok){ Swal.fire('Succès','Compte créé','success'); e.target.reset(); resetCamera(); switchView('employees'); refreshAllData(); } } catch(e){Swal.fire('Erreur',e.message,'error');}
+        }
+        
+        function startScanner(){Swal.fire({title:'SCANNER',html:'<div id="reader"></div>',didOpen:()=>{const q=new Html5Qrcode("reader"); q.start({facingMode:"environment"},{fps:10},d=>{q.stop(); let id=d; try{id=new URL(d).searchParams.get("id")}catch(e){} secureFetch(`${URL_GATEKEEPER}?id=${encodeURIComponent(id)}&key=${SCAN_KEY}&agent=${encodeURIComponent(currentUser.nom)}`).then(r=>r.json()).then(d=>{if(d.status==="valid") Swal.fire('ACCÈS OK',d.nom,'success'); else {Swal.fire({icon:'error',title:'REFUSÉ'}).then(()=>location.href=URL_REDIRECT_FAILURE);}});});}}); }
+        
+        async function fetchLogs(){
+            const tb=document.getElementById('logs-body'); tb.innerHTML='<tr><td colspan="4" class="p-4 italic text-center">Recherche des logs...</td></tr>'; 
+            try{
+                const r=await secureFetch(`${URL_READ_LOGS}?agent=${encodeURIComponent(currentUser.nom)}`); 
+                const w=await r.json(); tb.innerHTML=''; 
+                [...w].reverse().forEach(l=>{const df=l.date?new Date(l.date).toLocaleString():'-'; tb.innerHTML+=`<tr class="border-b"><td class="p-4 text-xs font-mono">${df}</td><td class="p-4 font-bold text-slate-700">${l.agent||'Système'}</td><td class="p-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black">${l.action}</span></td><td class="p-4 text-xs text-slate-500">${l.details||l.détails||'-'}</td></tr>`;});
+            }catch(e){tb.innerHTML=`<tr><td colspan="4" class="text-red-500 p-4 font-bold text-center">${e.message}</td></tr>`;}
+        }
+        
+        function generateDraftContract(id) { 
+            const e = employees.find(x => x.id === id); if(!e) return; 
+            const token = localStorage.getItem('sirh_token');
+            window.open(`${URL_CONTRACT_GENERATE}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&date=${encodeURIComponent(e.date)}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`, '_blank'); 
+        }
+        
         function openContractModal(id) { document.getElementById('contract-id-hidden').value = id; document.getElementById('contract-modal').classList.remove('hidden'); resetContractCamera(); }
         function closeContractModal() { if(contractStream) contractStream.getTracks().forEach(t => t.stop()); document.getElementById('contract-modal').classList.add('hidden'); }
         async function startContractCamera() { try { contractStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); const v = document.getElementById('contract-video'); v.srcObject = contractStream; v.classList.remove('hidden'); document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-icon').classList.add('hidden'); document.getElementById('btn-contract-capture').classList.remove('hidden'); } catch(e) { Swal.fire('Erreur', 'Caméra inaccessible', 'error'); } }
         function takeContractSnapshot() { const v = document.getElementById('contract-video'); const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); c.toBlob(blob => { contractBlob = blob; const img = document.getElementById('contract-img-preview'); img.src = URL.createObjectURL(blob); img.classList.remove('hidden'); v.classList.add('hidden'); document.getElementById('btn-contract-capture').classList.add('hidden'); }, 'image/jpeg', 0.8); }
         function previewContractFile(e) { const file = e.target.files[0]; if(!file) return; contractBlob = file; if(file.type.includes('image')) { const img = document.getElementById('contract-img-preview'); img.src = URL.createObjectURL(file); img.classList.remove('hidden'); document.getElementById('contract-icon').classList.add('hidden'); } }
         function resetContractCamera() { contractBlob = null; document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-video').classList.add('hidden'); document.getElementById('contract-icon').classList.remove('hidden'); document.getElementById('btn-contract-capture').classList.add('hidden'); if(contractStream) contractStream.getTracks().forEach(t => t.stop()); }
-        async function submitSignedContract() { if(!contractBlob) { Swal.fire('Erreur', 'Document requis', 'warning'); return; } const id = document.getElementById('contract-id-hidden').value; Swal.fire({ title: 'Upload...', didOpen: () => Swal.showLoading() }); const fd = new FormData(); fd.append('id', id); fd.append('contract_file', contractBlob, 'contrat.jpg'); try { const r = await fetch(URL_UPLOAD_SIGNED_CONTRACT, { method: 'POST', body: fd }); if(r.ok) { Swal.fire('Succès', 'Contrat enregistré', 'success'); closeContractModal(); refreshAllData(); } else throw new Error(); } catch(e) { Swal.fire('Erreur', 'Échec upload', 'error'); } }
         
-        // Listeners Online/Offline
-        window.addEventListener('offline', () => { Swal.fire({ icon: 'warning', title: 'Connexion Perdue', text: 'Vous êtes en mode hors ligne.', toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 }); document.body.classList.add('offline-mode'); });
-        window.addEventListener('online', () => { Swal.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Tout est opérationnel.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); document.body.classList.remove('offline-mode'); });
+        async function submitSignedContract() { 
+            if(!contractBlob && !document.getElementById('contract-upload').files[0]) { Swal.fire('Erreur', 'Document requis', 'warning'); return; } 
+            const id = document.getElementById('contract-id-hidden').value; 
+            Swal.fire({ title: 'Upload...', didOpen: () => Swal.showLoading() }); 
+            const fd = new FormData(); fd.append('id', id); fd.append('contract_file', contractBlob || document.getElementById('contract-upload').files[0], 'contrat.jpg'); fd.append('agent', currentUser.nom);
+            try { const r = await secureFetch(URL_UPLOAD_SIGNED_CONTRACT, { method: 'POST', body: fd }); if(r.ok) { Swal.fire('Succès', 'Contrat enregistré', 'success'); closeContractModal(); refreshAllData(); } } catch(e) { Swal.fire('Erreur', e.message, 'error'); } 
+        }
+        
+        window.addEventListener('offline', () => { Swal.fire({ icon: 'warning', title: 'Connexion Perdue', text: 'Mode hors ligne.', toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 }); document.body.classList.add('offline-mode'); });
+        window.addEventListener('online', () => { Swal.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Opérationnel.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); document.body.classList.remove('offline-mode'); });
     </script>
 </body>
 </html>
