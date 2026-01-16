@@ -700,7 +700,25 @@ async function handleClockInOut() {
             }
         }        
         
-        function switchView(v){ if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;} document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); document.getElementById('view-'+v).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('bg-blue-600','text-white')); const ab=document.querySelector(`button[onclick="switchView('${v}')"]`); if(ab)ab.classList.add('bg-blue-600','text-white'); if(window.innerWidth<768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleSidebar(); if(v==='logs') fetchLogs(); }
+function switchView(v){ 
+            // Arrête tous les flux vidéo actifs avant de changer de page
+            if(videoStream){ videoStream.getTracks().forEach(t=>t.stop()); videoStream=null; }
+            if(contractStream){ contractStream.getTracks().forEach(t=>t.stop()); contractStream=null; }
+            
+            document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); 
+            document.getElementById('view-'+v).classList.add('active'); 
+            document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('bg-blue-600','text-white')); 
+            const ab=document.querySelector(`button[onclick="switchView('${v}')"]`); 
+            if(ab)ab.classList.add('bg-blue-600','text-white'); 
+            if(window.innerWidth<768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleSidebar(); 
+            if(v==='logs') fetchLogs(); 
+        }       
+       
+       
+       
+       
+       
+       
         function toggleSidebar(){const sb=document.getElementById('sidebar'), o=document.getElementById('sidebar-overlay'); if(sb.classList.contains('-translate-x-full')){sb.classList.remove('-translate-x-full');o.classList.remove('hidden');}else{sb.classList.add('-translate-x-full');o.classList.add('hidden');}}
         function filterTable(){const t=document.getElementById('search-input').value.toLowerCase(); const s=document.querySelector('.view-section.active'); if(s)s.querySelectorAll('tbody tr').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(t)?'':'none'})}
         function parseDateSmart(d){if(!d)return new Date();if(!isNaN(d)&&!String(d).includes('/'))return new Date((d-25569)*86400000);if(String(d).includes('/')){const p=d.split('/'); return new Date(p[2],p[1]-1,p[0]);}return new Date(d);}
@@ -725,8 +743,30 @@ async function handleClockInOut() {
         }
         
         async function startCameraFeed(){try{videoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});const v=document.getElementById('video-stream');v.srcObject=videoStream;v.classList.remove('hidden');document.getElementById('captured-image').classList.add('hidden');document.getElementById('btn-capture').classList.remove('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}catch(e){Swal.fire('Erreur', 'Caméra bloquée', 'error');}}
+        
         function handleFileUpload(e){const f=e.target.files[0];if(f){capturedBlob=f;const i=document.getElementById('captured-image');i.src=URL.createObjectURL(f);i.classList.remove('hidden');document.getElementById('video-stream').classList.add('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('btn-retake').classList.remove('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}}
-        function takeSnapshot(){const v=document.getElementById('video-stream'),c=document.getElementById('camera-canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);c.toBlob(b=>{capturedBlob=b;const i=document.getElementById('captured-image');i.src=URL.createObjectURL(b);i.classList.remove('hidden');v.classList.add('hidden');document.getElementById('btn-capture').classList.add('hidden');document.getElementById('btn-retake').classList.remove('hidden');if(videoStream)videoStream.getTracks().forEach(t=>t.stop());},'image/jpeg',0.8);}
+        
+        
+function takeSnapshot(){
+            const v=document.getElementById('video-stream'),c=document.getElementById('camera-canvas');
+            c.width=v.videoWidth;c.height=v.videoHeight;
+            c.getContext('2d').drawImage(v,0,0);
+            c.toBlob(b=>{
+                capturedBlob=b;
+                const i=document.getElementById('captured-image');
+                i.src=URL.createObjectURL(b);
+                i.classList.remove('hidden');
+                v.classList.add('hidden');
+                document.getElementById('btn-capture').classList.add('hidden');
+                document.getElementById('btn-retake').classList.remove('hidden');
+                // COUPE LE FLUX IMMEDIATEMENT
+                if(videoStream){
+                    videoStream.getTracks().forEach(t => t.stop());
+                    videoStream = null;
+                }
+            },'image/jpeg',0.8);
+        }       
+       
         function resetCamera(){document.getElementById('captured-image').classList.add('hidden');document.getElementById('btn-retake').classList.add('hidden');document.getElementById('btn-capture').classList.add('hidden');document.getElementById('video-stream').classList.add('hidden');document.getElementById('initial-controls').classList.remove('hidden');document.getElementById('file-upload').value='';document.getElementById('photo-placeholder').classList.remove('hidden');capturedBlob=null;if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;}}
         function triggerPhotoUpload(){document.getElementById('emp-upload-photo').click();}
         function previewPhoto(e){const f=e.target.files[0];if(f){const r=new FileReader();r.onload=function(ev){document.getElementById('emp-photo-real').src=ev.target.result;document.getElementById('emp-photo-real').classList.remove('hidden');document.getElementById('emp-avatar').classList.add('hidden');document.getElementById('save-btn-container').classList.remove('hidden');};r.readAsDataURL(f);}}
@@ -755,8 +795,35 @@ async function handleClockInOut() {
             try{ const r=await secureFetch(URL_WRITE_POST,{method:'POST',body:fd}); if(r.ok){ Swal.fire('Succès','Compte créé','success'); e.target.reset(); resetCamera(); switchView('employees'); refreshAllData(); } } catch(e){Swal.fire('Erreur',e.message,'error');}
         }
         
-        function startScanner(){Swal.fire({title:'SCANNER',html:'<div id="reader"></div>',didOpen:()=>{const q=new Html5Qrcode("reader"); q.start({facingMode:"environment"},{fps:10},d=>{q.stop(); let id=d; try{id=new URL(d).searchParams.get("id")}catch(e){} secureFetch(`${URL_GATEKEEPER}?id=${encodeURIComponent(id)}&key=${SCAN_KEY}&agent=${encodeURIComponent(currentUser.nom)}`).then(r=>r.json()).then(d=>{if(d.status==="valid") Swal.fire('ACCÈS OK',d.nom,'success'); else {Swal.fire({icon:'error',title:'REFUSÉ'}).then(()=>location.href=URL_REDIRECT_FAILURE);}});});}}); }
+function startScanner(){
+            let scannerInstance = null;
+            Swal.fire({
+                title:'SCANNER',
+                html:'<div id="reader"></div>',
+                didOpen:()=>{
+                    scannerInstance = new Html5Qrcode("reader");
+                    scannerInstance.start({facingMode:"environment"},{fps:10},d=>{
+                        scannerInstance.stop(); // Arrêt sur succès
+                        let id=d; try{id=new URL(d).searchParams.get("id")}catch(e){} 
+                        secureFetch(`${URL_GATEKEEPER}?id=${encodeURIComponent(id)}&key=${SCAN_KEY}&agent=${encodeURIComponent(currentUser.nom)}`)
+                        .then(r=>r.json())
+                        .then(d=>{
+                            if(d.status==="valid") Swal.fire('ACCÈS OK',d.nom,'success'); 
+                            else {Swal.fire({icon:'error',title:'REFUSÉ'}).then(()=>location.href=URL_REDIRECT_FAILURE);}
+                        });
+                    });
+                },
+                willClose: () => {
+                    // FORCE L'ARRÊT SI ON FERME LA FENÊTRE MANUELLEMENT
+                    if(scannerInstance) {
+                        scannerInstance.stop().catch(err => console.log("Déjà arrêté"));
+                    }
+                }
+            }); 
+        }
         
+        
+
         async function fetchLogs(){
             const tb=document.getElementById('logs-body'); tb.innerHTML='<tr><td colspan="4" class="p-4 italic text-center">Recherche des logs...</td></tr>'; 
             try{
