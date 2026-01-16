@@ -364,6 +364,22 @@
         let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null;
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR');
 
+        // Fonction mathématique pour calculer la distance entre deux points GPS
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Rayon de la terre en mètres
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Résultat en mètres
+}
+
 
 
 function downloadMyBadge() {
@@ -604,40 +620,54 @@ async function handleClockInOut() {
     const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
     const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
     
-    let locationCoords = "Non autorisé ou Timeout";
-
-    // 1. On demande le GPS avec des options plus souples
-    try {
-        const pos = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-                enableHighAccuracy: true, // Demande une haute précision
-                timeout: 10000,           // On attend jusqu'à 10 secondes (important pour mobile)
-                maximumAge: 0             // On veut une position fraîche
-            });
-        });
-        locationCoords = `${pos.coords.latitude},${pos.coords.longitude}`;
-    } catch(e) { 
-        console.warn("Détail erreur GPS:", e.message);
-        // Si ça échoue, on continue quand même le pointage mais avec l'info d'échec GPS
-    }
+    // --- CONFIGURATION GEOFENCING (Tes coordonnées Maps) ---
+    const OFFICE_LAT = 6.379139; 
+    const OFFICE_LON = 2.363250; 
+    const ALLOWED_RADIUS = 200; // Rayon de 200m autorisé
+    // -------------------------------------------------------
 
     Swal.fire({ 
-        title: 'Enregistrement...', 
-        text: 'Liaison avec le serveur sécurisé', 
+        title: 'Localisation en cours...', 
+        text: 'Vérification de votre présence au bureau',
         didOpen: () => Swal.showLoading(), 
         allowOutsideClick: false 
     });
-    
-    const payload = {
-        id: currentUser.id,
-        nom: currentUser.nom,
-        action: action, 
-        time: new Date().toISOString(),
-        gps: locationCoords,
-        agent: currentUser.nom
-    };
 
     try {
+        // Récupération de la position de l'employé
+        const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true,
+                timeout: 10000
+            });
+        });
+
+        const userLat = pos.coords.latitude;
+        const userLon = pos.coords.longitude;
+        
+        // Calcul de la distance réelle
+        const distance = getDistance(userLat, userLon, OFFICE_LAT, OFFICE_LON);
+
+        // Blocage si trop loin (uniquement pour l'ENTRÉE)
+        if (action === 'CLOCK_IN' && distance > ALLOWED_RADIUS) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'Pointage refusé',
+                html: `Vous êtes trop loin du bureau (<b>${Math.round(distance)}m</b>).<br>Revenez dans la zone des 200m pour pointer.`
+            });
+        }
+
+        // Si OK, on envoie les infos au serveur Render
+        const payload = {
+            id: currentUser.id,
+            nom: currentUser.nom,
+            action: action, 
+            time: new Date().toISOString(),
+            gps: `${userLat},${userLon}`,
+            distance: Math.round(distance) + "m",
+            agent: currentUser.nom
+        };
+
         const response = await secureFetch(URL_CLOCK_ACTION, { 
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' }, 
@@ -652,14 +682,15 @@ async function handleClockInOut() {
             
             Swal.fire({ 
                 icon: 'success', 
-                title: action === 'CLOCK_IN' ? 'Entrée Validée' : 'Sortie Validée', 
-                text: locationCoords.includes("Timeout") ? "Pointage OK (sans GPS)" : "Pointage et GPS OK",
-                timer: 2000, 
+                title: 'Pointage enregistré', 
+                text: action === 'CLOCK_IN' ? 'Bon service !' : 'Bonne soirée !',
+                timer: 2500, 
                 showConfirmButton: false 
             });
         }
-    } catch (e) { 
-        Swal.fire('Echec', 'Erreur serveur : ' + e.message, 'error'); 
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Erreur GPS', 'Impossible de vous localiser. Vérifiez que votre GPS est activé et que vous avez autorisé l\'accès.', 'error');
     }
 }
 
