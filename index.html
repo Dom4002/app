@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
@@ -54,6 +55,22 @@
             padding: 2px;
             z-index: 9999;
         }
+
+
+
+        /* Animation Skeleton Loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite linear;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+
+
     </style>
 </head>
 <body class="text-slate-900 overflow-hidden h-screen w-screen">
@@ -101,11 +118,8 @@
                     <div id="avatar-display" class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold uppercase shadow-lg">?</div>
                     <div class="overflow-hidden"><p id="name-display" class="text-sm font-bold text-white truncate">User</p><p id="role-display" class="text-[10px] uppercase font-black text-blue-400">Rôle</p></div>
                 </div>
-              
                 
-<!-- Remplace la ligne du bouton déconnexion par celle-ci -->
-<button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 p-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all uppercase tracking-tighter"><i class="fa-solid fa-power-off"></i> Déconnexion</button>           
-            
+                <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 p-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all uppercase tracking-tighter"><i class="fa-solid fa-power-off"></i> Déconnexion</button>           
             </div>
         </aside>
 
@@ -123,24 +137,51 @@
 
             <div id="main-scroll-container" class="flex-1 overflow-y-auto p-8 scroll-smooth">
                 <!-- VUE 1: DASHBOARD -->
-                <section id="view-dash" class="view-section management-only">
-                    <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-2xl font-extrabold text-slate-800">Tableau de Bord</h2>
-                        <div class="flex gap-3 items-center">
-                            <button onclick="refreshAllData()" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95"><i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualiser</button>
-                            <div id="current-date" class="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-xl font-bold text-sm border border-blue-100 italic">--</div>
-                        </div>
+            <section id="view-dash" class="view-section management-only">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-2xl font-extrabold text-slate-800">Analyse de l'Effectif</h2>
+                    <div class="flex gap-3 items-center">
+                        <button onclick="refreshAllData()" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95">
+                            <i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualiser
+                        </button>
+                        <div id="current-date" class="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-xl font-bold text-sm border border-blue-100 italic">--</div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                        <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 stat-card"><div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-4"><i class="fa-solid fa-users text-xl"></i></div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Effectif Total</p><h3 id="stat-total" class="text-4xl font-black mt-2 text-slate-800">0</h3></div>
-                        <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 border-l-4 border-l-red-500 stat-card"><div class="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mb-4"><i class="fa-solid fa-triangle-exclamation text-xl"></i></div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Alertes</p><h3 id="stat-alert" class="text-4xl font-black mt-2 text-red-600">0</h3></div>
-                        <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100 border-l-4 border-l-emerald-500 stat-card"><div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4"><i class="fa-solid fa-user-check text-xl"></i></div><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Actifs</p><h3 id="stat-active" class="text-4xl font-black mt-2 text-emerald-600">0</h3></div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Effectif Total</p><h3 id="stat-total" class="text-4xl font-black mt-2 text-slate-800">0</h3></div>
+                    <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Alertes Contrats</p><h3 id="stat-alert" class="text-4xl font-black mt-2 text-red-600">0</h3></div>
+                    <div class="bg-white p-7 rounded-3xl shadow-sm border border-slate-100"><p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Collaborateurs Actifs</p><h3 id="stat-active" class="text-4xl font-black mt-2 text-emerald-600">0</h3></div>
+                </div>
+
+                <!-- NOUVEAU : ZONE GRAPHIQUES -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                    <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+                        <p class="font-bold text-slate-700 mb-4 uppercase text-xs tracking-widest">Répartition par Statut</p>
+                        <canvas id="chartStatus" height="200"></canvas>
                     </div>
-                    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-                        <div class="px-8 py-6 border-b border-slate-100 font-extrabold text-slate-700 flex items-center gap-2"><i class="fa-solid fa-hourglass-half text-orange-500"></i> Alertes Fin de Contrat / Essai</div>
-                        <div class="overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-50/80 text-[10px] uppercase font-black text-slate-400"><tr><th class="px-8 py-4">Nom</th><th class="px-8 py-4">Poste</th><th class="px-8 py-4">Délai</th><th class="px-8 py-4 rh-only text-right">Action</th></tr></thead><tbody id="dashboard-body" class="divide-y divide-slate-50"></tbody></table></div>
+                    <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+                        <p class="font-bold text-slate-700 mb-4 uppercase text-xs tracking-widest">Répartition par Département</p>
+                        <canvas id="chartDept" height="200"></canvas>
                     </div>
-                </section>
+                </div>
+
+                <!-- Alert Table -->
+                <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 font-extrabold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-hourglass-half text-orange-500"></i> Alertes Fin de Contrat / Essai
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-50/80 text-[10px] uppercase font-black text-slate-400">
+                                <tr><th class="px-8 py-4">Nom</th><th class="px-8 py-4">Poste</th><th class="px-8 py-4">Délai</th><th class="px-8 py-4 rh-only text-right">Action</th></tr>
+                            </thead>
+                            <tbody id="dashboard-body" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
 
                 <!-- VUE 2: LISTE COLLABORATEURS -->
                 <section id="view-employees" class="view-section management-only">
@@ -368,41 +409,35 @@
         let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null;
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR');
 
+
+                let chartStatusInstance = null;
+                let chartDeptInstance = null;
+
         // Fonction mathématique pour calculer la distance entre deux points GPS
-function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // Rayon de la terre en mètres
-    const φ1 = lat1 * Math.PI/180;
-    const φ2 = lat2 * Math.PI/180;
-    const Δφ = (lat2-lat1) * Math.PI/180;
-    const Δλ = (lon2-lon1) * Math.PI/180;
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3; // Rayon de la terre en mètres
+            const φ1 = lat1 * Math.PI/180;
+            const φ2 = lat2 * Math.PI/180;
+            const Δφ = (lat2-lat1) * Math.PI/180;
+            const Δλ = (lon2-lon1) * Math.PI/180;
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                      Math.cos(φ1) * Math.cos(φ2) *
+                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c; // Résultat en mètres
+        }
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        function downloadMyBadge() {
+            const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+            if(!myData) {
+                return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
+            }
+            const token = localStorage.getItem('sirh_token');
+            const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
+            window.open(url, '_blank', 'width=400,height=600');
+        }
 
-    return R * c; // Résultat en mètres
-}
-
-
-
-function downloadMyBadge() {
-    // On cherche les données de l'utilisateur connecté dans la liste des employés
-    const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
-    
-    if(!myData) {
-        return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
-    }
-
-    const token = localStorage.getItem('sirh_token');
-    const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
-    
-    window.open(url, '_blank', 'width=400,height=600');
-}
-
-
-
-        // --- NOUVEAU : HELPER DE REQUÊTE SÉCURISÉE ---
+        // --- HELPER DE REQUÊTE SÉCURISÉE ---
         async function secureFetch(url, options = {}) {
             const token = localStorage.getItem('sirh_token');
             const headers = options.headers || {};
@@ -431,14 +466,11 @@ function downloadMyBadge() {
             const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
             try {
-                // Le login est le seul appel direct (sans secureFetch)
                 const response = await fetch(`${URL_LOGIN}?u=${encodeURIComponent(u.toLowerCase())}&p=${encodeURIComponent(p)}`, { signal: controller.signal });
                 clearTimeout(timeoutId); 
                 const d = await response.json();
                 if(d.status === "success") { 
-                    // SAUVEGARDE DU TOKEN JWT
                     if(d.token) localStorage.setItem('sirh_token', d.token);
-
                     let r = d.role || "EMPLOYEE"; if(Array.isArray(r)) r = r[0]; 
                     const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
                     Toast.fire({icon: 'success', title: 'Bienvenue ' + (d.nom || u)});
@@ -456,24 +488,33 @@ function downloadMyBadge() {
             currentUser = { nom: n, role: r, id: id }; 
             document.getElementById('login-screen').classList.add('hidden'); 
             document.getElementById('app-layout').classList.remove('hidden'); 
-            document.getElementById('name-display').innerText = n; document.getElementById('role-display').innerText = r; 
+            document.getElementById('name-display').innerText = n; 
+            document.getElementById('role-display').innerText = r; 
             document.getElementById('avatar-display').innerText = n[0]; 
             document.body.className = "text-slate-900 overflow-hidden h-screen w-screen role-" + r.toLowerCase(); 
+            
             if(r === 'EMPLOYEE') { switchView('my-profile'); } else { switchView('dash'); }
 
-            const skeletonHTML = Array(5).fill(0).map(() => 
-                `<tr class="animate-pulse border-b"><td class="p-4 flex gap-3"><div class="w-10 h-10 bg-slate-200 rounded-full"></div><div class="space-y-2"><div class="h-3 w-24 bg-slate-200 rounded"></div><div class="h-2 w-16 bg-slate-200 rounded"></div></div></td><td class="p-4"><div class="h-3 w-32 bg-slate-200 rounded"></div></td><td class="p-4"><div class="h-6 w-16 bg-slate-200 rounded-lg"></div></td><td class="p-4"></td></tr>`
-            ).join('');
-            document.getElementById('full-body').innerHTML = skeletonHTML;
-
+            // AFFICHAGE DES SKELETONS
+            const skeletonRow = `<tr class="border-b"><td class="p-4 flex gap-3 items-center"><div class="w-10 h-10 rounded-full skeleton"></div><div class="space-y-2"><div class="h-3 w-24 rounded skeleton"></div><div class="h-2 w-16 rounded skeleton"></div></div></td><td class="p-4"><div class="h-3 w-32 rounded skeleton"></div></td><td class="p-4"><div class="h-6 w-16 rounded-lg skeleton"></div></td><td class="p-4"></td></tr>`;
+            document.getElementById('full-body').innerHTML = Array(6).fill(skeletonRow).join('');
+            
             fetchData(false);
         }
 
-        async function refreshAllData() {
+async function refreshAllData() {
             const icon = document.getElementById('refresh-icon'); 
             if(icon) icon.classList.add('fa-spin');
+            
+            // 1. On affiche les skeletons pendant le chargement
+            const skeletonRow = `<tr class="border-b"><td class="p-4 flex gap-3 items-center"><div class="w-10 h-10 rounded-full skeleton"></div><div class="space-y-2"><div class="h-3 w-24 rounded skeleton"></div><div class="h-2 w-16 rounded skeleton"></div></div></td><td class="p-4"><div class="h-3 w-32 rounded skeleton"></div></td><td class="p-4"><div class="h-6 w-16 rounded-lg skeleton"></div></td><td class="p-4"></td></tr>`;
+            document.getElementById('full-body').innerHTML = Array(6).fill(skeletonRow).join('');
+
+            // 2. On force le téléchargement
             await fetchData(true); 
+            
             if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 800);
+            
             const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 1500});
             Toast.fire({icon: 'success', title: 'Données actualisées'});
         }
@@ -481,7 +522,6 @@ function downloadMyBadge() {
         async function fetchData(forceUpdate = false){ 
             const CACHE_KEY = 'sirh_data_v1';
             const CACHE_TIME = 1000 * 60 * 60; 
-
             if (!forceUpdate) {
                 const cached = localStorage.getItem(CACHE_KEY);
                 const cachedTime = localStorage.getItem(CACHE_KEY + '_time');
@@ -489,15 +529,14 @@ function downloadMyBadge() {
                     employees = JSON.parse(cached);
                     renderData();
                     loadMyProfile();
+                    renderCharts(); // Ajouté pour le cache
                     return; 
                 }
             }
-
             try{ 
                 let fetchUrl = `${URL_READ}?agent=${encodeURIComponent(currentUser.nom)}`;
                 const r = await secureFetch(fetchUrl); 
                 const d = await r.json(); 
-                
                 employees = d.map(x => {
                     return { 
                         id:x.employee_id || x.id, nom:x.nom || x.Nom, date:x.date_embauche || x.date, poste:x.poste || x.Poste, 
@@ -508,22 +547,18 @@ function downloadMyBadge() {
                         id_card_link: formatGoogleLink(x.id_card_link) || '#', diploma_link: formatGoogleLink(x.diploma_link) || '#'
                     };
                 });
-
                 localStorage.setItem(CACHE_KEY, JSON.stringify(employees));
                 localStorage.setItem(CACHE_KEY + '_time', Date.now());
-
                 renderData(); 
                 loadMyProfile();
+                renderCharts(); // <--- AJOUTÉ ICI : Pour dessiner les graphiques après le téléchargement
             } catch(e){ 
                 console.error(e); 
                 const cached = localStorage.getItem(CACHE_KEY);
                 if(cached) {
                     employees = JSON.parse(cached);
-                    renderData();
-                    loadMyProfile();
-                } else {
-                    Swal.fire('Erreur', 'Impossible de récupérer les données', 'error');
-                }
+                    renderData(); loadMyProfile(); renderCharts();
+                } else { Swal.fire('Erreur', 'Impossible de récupérer les données', 'error'); }
             } 
         }
 
@@ -539,7 +574,6 @@ function downloadMyBadge() {
                 }
                 const av = e.photo && e.photo.length > 10 ? `<img src="${formatGoogleLink(e.photo)}" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover bg-slate-200 border border-slate-200">` : `<div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 rounded-full flex items-center justify-center text-xs font-black text-slate-500">${e.nom.substring(0,2).toUpperCase()}</div>`;
                 const sStr = String(e.contract_status || '').toLowerCase().trim(); const isSigned = (sStr === 'signé' || sStr === 'signe');
-                
                 const contractActions = `
                 <div class="flex items-center justify-end gap-2">
                     <button onclick="openFullFolder('${e.id}')" title="Dossier Complet" class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-500 hover:text-white transition-all"><i class="fa-solid fa-folder-open"></i></button>
@@ -550,7 +584,6 @@ function downloadMyBadge() {
                     <button onclick="printBadge('${e.id}')" class="text-slate-400 hover:text-blue-600 transition-all"><i class="fa-solid fa-print"></i></button>
                     <button onclick="openEditModal('${e.id}')" class="text-slate-400 hover:text-slate-800 transition-all"><i class="fa-solid fa-pen"></i></button>
                 </div>`;
-
                 b.innerHTML+=`<tr class="border-b hover:bg-slate-50 transition-colors"><td class="p-4 flex gap-3 items-center min-w-[200px]">${av}<div><div class="font-bold text-sm text-slate-800 uppercase">${e.nom}</div><div class="text-[10px] text-slate-400 font-mono tracking-tighter">${e.id}</div></div></td><td class="p-4 text-xs font-medium text-slate-500">${e.poste}</td><td class="p-4"><span class="px-3 py-1 border rounded-lg text-[10px] font-black uppercase ${dL < 0 && isA ? 'bg-red-100 text-red-700' : (isU ? 'bg-orange-100 text-orange-700 animate-pulse' : 'bg-green-100 text-green-700')}">${e.statut}</span></td><td class="p-4 rh-only">${contractActions}</td></tr>`; 
                 if(isU || (dL < 0 && isA)) d.innerHTML+=`<tr class="bg-white border-b"><td class="p-4 text-sm font-bold text-slate-700">${e.nom}</td><td class="p-4 text-xs text-slate-500">${e.poste}</td><td class="p-4 ${dL<0?'text-red-600':'text-orange-600'} font-bold text-xs uppercase">${dL<0?'Expiré':dL+' jours'}</td><td class="p-4 rh-only text-right"><button class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold" onclick="openEditModal('${e.id}')">GÉRER</button></td></tr>`; 
             }); 
@@ -569,15 +602,12 @@ function downloadMyBadge() {
             const start = document.getElementById('leave-start').value;
             const end = document.getElementById('leave-end').value;
             const reason = document.getElementById('leave-reason').value;
-
             const data = {
                 employee_id: currentUser.id, nom: currentUser.nom, type: type,
                 date_debut: start, date_fin: end, motif: reason,
                 date_demande: new Date().toISOString(), agent: currentUser.nom 
             };
-
             Swal.fire({ title: 'Envoi...', text: 'Veuillez patienter', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
             try {
                 const response = await secureFetch(URL_LEAVE_REQUEST, { 
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) 
@@ -615,88 +645,42 @@ function downloadMyBadge() {
             }
         }
 
-
-
-
-
-
-async function handleClockInOut() {
-    const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
-    const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
-    
-    // --- CONFIGURATION GEOFENCING (Tes coordonnées Maps) ---
-    const OFFICE_LAT = 6.390449;
-    const OFFICE_LON = 2.383351; 
-    const ALLOWED_RADIUS = 200; // Rayon de 200m autorisé
-    // -------------------------------------------------------
-
-    Swal.fire({ 
-        title: 'Localisation en cours...', 
-        text: 'Vérification de votre présence au bureau',
-        didOpen: () => Swal.showLoading(), 
-        allowOutsideClick: false 
-    });
-
-    try {
-        // Récupération de la position de l'employé
-        const pos = await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-                enableHighAccuracy: true,
-                timeout: 10000
-            });
-        });
-
-        const userLat = pos.coords.latitude;
-        const userLon = pos.coords.longitude;
-        
-        // Calcul de la distance réelle
-        const distance = getDistance(userLat, userLon, OFFICE_LAT, OFFICE_LON);
-
-        // Blocage si trop loin (uniquement pour l'ENTRÉE)
-        if (action === 'CLOCK_IN' && distance > ALLOWED_RADIUS) {
-            return Swal.fire({
-                icon: 'error',
-                title: 'Pointage refusé',
-                html: `Vous êtes trop loin du bureau (<b>${Math.round(distance)}m</b>).<br>Revenez dans la zone des 200m pour pointer.`
-            });
+        async function handleClockInOut() {
+            const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
+            const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
+            let locationCoords = "Non autorisé ou Timeout";
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    });
+                });
+                locationCoords = `${pos.coords.latitude},${pos.coords.longitude}`;
+            } catch(e) { console.warn("GPS erreur:", e.message); }
+            Swal.fire({ title: 'Enregistrement...', text: 'Liaison avec le serveur sécurisé', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+            const payload = {
+                id: currentUser.id, nom: currentUser.nom, action: action, 
+                time: new Date().toISOString(), gps: locationCoords, agent: currentUser.nom
+            };
+            try {
+                const response = await secureFetch(URL_CLOCK_ACTION, { 
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
+                });
+                if (response.ok) {
+                    const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
+                    localStorage.setItem('clock_status_' + currentUser.id, newStatus);
+                    updateClockUI(newStatus === 'IN');
+                    document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString();
+                    Swal.fire({ 
+                        icon: 'success', title: action === 'CLOCK_IN' ? 'Entrée Validée' : 'Sortie Validée', 
+                        text: locationCoords.includes("Timeout") ? "Pointage OK (sans GPS)" : "Pointage et GPS OK",
+                        timer: 2000, showConfirmButton: false 
+                    });
+                }
+            } catch (e) { Swal.fire('Echec', 'Erreur serveur : ' + e.message, 'error'); }
         }
-
-        // Si OK, on envoie les infos au serveur Render
-        const payload = {
-            id: currentUser.id,
-            nom: currentUser.nom,
-            action: action, 
-            time: new Date().toISOString(),
-            gps: `${userLat},${userLon}`,
-            distance: Math.round(distance) + "m",
-            agent: currentUser.nom
-        };
-
-        const response = await secureFetch(URL_CLOCK_ACTION, { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(payload) 
-        });
-
-        if (response.ok) {
-            const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
-            localStorage.setItem('clock_status_' + currentUser.id, newStatus);
-            updateClockUI(newStatus === 'IN');
-            document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString();
-            
-            Swal.fire({ 
-                icon: 'success', 
-                title: 'Pointage enregistré', 
-                text: action === 'CLOCK_IN' ? 'Bon service !' : 'Bonne soirée !',
-                timer: 2500, 
-                showConfirmButton: false 
-            });
-        }
-    } catch (e) {
-        console.error(e);
-        Swal.fire('Erreur GPS', 'Impossible de vous localiser. Vérifiez que votre GPS est activé et que vous avez autorisé l\'accès.', 'error');
-    }
-}
 
         function openFullFolder(id) {
             const e = employees.find(x => x.id === id); if(!e) return;
@@ -735,11 +719,9 @@ async function handleClockInOut() {
             }
         }        
         
-function switchView(v){ 
-            // Arrête tous les flux vidéo actifs avant de changer de page
+        function switchView(v){ 
             if(videoStream){ videoStream.getTracks().forEach(t=>t.stop()); videoStream=null; }
             if(contractStream){ contractStream.getTracks().forEach(t=>t.stop()); contractStream=null; }
-            
             document.querySelectorAll('.view-section').forEach(e=>e.classList.remove('active')); 
             document.getElementById('view-'+v).classList.add('active'); 
             document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('bg-blue-600','text-white')); 
@@ -748,11 +730,6 @@ function switchView(v){
             if(window.innerWidth<768 && !document.getElementById('sidebar').classList.contains('-translate-x-full')) toggleSidebar(); 
             if(v==='logs') fetchLogs(); 
         }       
-       
-       
-       
-       
-       
        
         function toggleSidebar(){const sb=document.getElementById('sidebar'), o=document.getElementById('sidebar-overlay'); if(sb.classList.contains('-translate-x-full')){sb.classList.remove('-translate-x-full');o.classList.remove('hidden');}else{sb.classList.add('-translate-x-full');o.classList.add('hidden');}}
         function filterTable(){const t=document.getElementById('search-input').value.toLowerCase(); const s=document.querySelector('.view-section.active'); if(s)s.querySelectorAll('tbody tr').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(t)?'':'none'})}
@@ -778,11 +755,9 @@ function switchView(v){
         }
         
         async function startCameraFeed(){try{videoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});const v=document.getElementById('video-stream');v.srcObject=videoStream;v.classList.remove('hidden');document.getElementById('captured-image').classList.add('hidden');document.getElementById('btn-capture').classList.remove('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}catch(e){Swal.fire('Erreur', 'Caméra bloquée', 'error');}}
-        
         function handleFileUpload(e){const f=e.target.files[0];if(f){capturedBlob=f;const i=document.getElementById('captured-image');i.src=URL.createObjectURL(f);i.classList.remove('hidden');document.getElementById('video-stream').classList.add('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('btn-retake').classList.remove('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}}
         
-        
-function takeSnapshot(){
+        function takeSnapshot(){
             const v=document.getElementById('video-stream'),c=document.getElementById('camera-canvas');
             c.width=v.videoWidth;c.height=v.videoHeight;
             c.getContext('2d').drawImage(v,0,0);
@@ -794,72 +769,78 @@ function takeSnapshot(){
                 v.classList.add('hidden');
                 document.getElementById('btn-capture').classList.add('hidden');
                 document.getElementById('btn-retake').classList.remove('hidden');
-                // COUPE LE FLUX IMMEDIATEMENT
-                if(videoStream){
-                    videoStream.getTracks().forEach(t => t.stop());
-                    videoStream = null;
-                }
+                if(videoStream){ videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
             },'image/jpeg',0.8);
         }       
        
         function resetCamera(){document.getElementById('captured-image').classList.add('hidden');document.getElementById('btn-retake').classList.add('hidden');document.getElementById('btn-capture').classList.add('hidden');document.getElementById('video-stream').classList.add('hidden');document.getElementById('initial-controls').classList.remove('hidden');document.getElementById('file-upload').value='';document.getElementById('photo-placeholder').classList.remove('hidden');capturedBlob=null;if(videoStream){videoStream.getTracks().forEach(t=>t.stop());videoStream=null;}}
         function triggerPhotoUpload(){document.getElementById('emp-upload-photo').click();}
         function previewPhoto(e){const f=e.target.files[0];if(f){const r=new FileReader();r.onload=function(ev){document.getElementById('emp-photo-real').src=ev.target.result;document.getElementById('emp-photo-real').classList.remove('hidden');document.getElementById('emp-avatar').classList.add('hidden');document.getElementById('save-btn-container').classList.remove('hidden');};r.readAsDataURL(f);}}
+        
+        
         function toggleEditMode(){const ids=['emp-email','emp-phone','emp-address','emp-dob'], btn=document.getElementById('save-btn-container'), dis=document.getElementById('emp-email').disabled; ids.forEach(i=>{const el=document.getElementById(i); el.disabled=!dis; if(!dis)el.classList.add('bg-white','ring-2','ring-blue-100'); else el.classList.remove('bg-white','ring-2','ring-blue-100');}); if(dis){btn.classList.remove('hidden');document.getElementById('emp-email').focus();}else{btn.classList.add('hidden');loadMyProfile();}}
         
-        async function saveMyProfile(){
-            Swal.fire({title:'Sauvegarde...',didOpen:()=>Swal.showLoading()}); 
-            const fd=new FormData(); 
-            fd.append('id',currentUser.id); fd.append('email',document.getElementById('emp-email').value); 
-            fd.append('phone',document.getElementById('emp-phone').value); fd.append('address',document.getElementById('emp-address').value); 
-            fd.append('dob',document.getElementById('emp-dob').value); fd.append('agent', currentUser.nom);
-            const pI=document.getElementById('emp-upload-photo'); if(pI.files[0]) fd.append('photo',pI.files[0]); 
-            try{ await secureFetch(URL_EMPLOYEE_UPDATE,{method:'POST',body:fd}); Swal.fire('OK','Profil à jour','success'); toggleEditMode(); refreshAllData(); } catch(e){Swal.fire('Erreur',e.message,'error');}
-        }
+async function saveMyProfile() {
+    Swal.fire({ title: 'Sauvegarde...', didOpen: () => Swal.showLoading() });
+
+    // On récupère le MATRICULE (ex: BA-47889) pour que Make trouve le bon dossier
+    const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+
+    const fd = new FormData();
+    fd.append('id', myData ? myData.id : currentUser.id); // On envoie le matricule à Make
+    fd.append('email', document.getElementById('emp-email').value);
+    fd.append('phone', document.getElementById('emp-phone').value);
+    fd.append('address', document.getElementById('emp-address').value);
+    fd.append('dob', document.getElementById('emp-dob').value);
+    fd.append('agent', currentUser.nom);
+
+    const pI = document.getElementById('emp-upload-photo');
+    if (pI.files[0]) {
+        // "new_photo" car c'est le nom utilisé dans le filtre de ton scénario Make
+        fd.append('new_photo', pI.files[0]); 
+    }
+
+    try {
+        const response = await secureFetch(URL_EMPLOYEE_UPDATE, { 
+            method: 'POST', 
+            body: fd 
+        });
         
-        async function handleOnboarding(e){
-            e.preventDefault(); if(!capturedBlob){Swal.fire('Attention','Photo requise','warning');return;}
-            const fd=new FormData();
-            fd.append('nom',document.getElementById('f-nom').value); fd.append('email',document.getElementById('f-email').value);
-            fd.append('telephone',document.getElementById('f-phone').value); fd.append('dob',document.getElementById('f-dob').value);
-            fd.append('adresse',document.getElementById('f-address').value); fd.append('date',document.getElementById('f-date').value);
-            fd.append('poste',document.getElementById('f-poste').value); fd.append('dept',document.getElementById('f-dept').value);
-            fd.append('limit',document.getElementById('f-limit').value); fd.append('role',document.getElementById('f-role').value);
-            fd.append('photo',capturedBlob,'photo.jpg'); fd.append('agent', currentUser.nom);
-            Swal.fire({title:'Création profil...',didOpen:()=>Swal.showLoading()});
-            try{ const r=await secureFetch(URL_WRITE_POST,{method:'POST',body:fd}); if(r.ok){ Swal.fire('Succès','Compte créé','success'); e.target.reset(); resetCamera(); switchView('employees'); refreshAllData(); } } catch(e){Swal.fire('Erreur',e.message,'error');}
+        if (response.ok) {
+            Swal.fire('Succès', 'Votre profil a été mis à jour', 'success');
+            toggleEditMode(); // Verrouille les champs
+            refreshAllData(); // Recharge les données et les graphiques
+        } else {
+            throw new Error("Erreur serveur");
         }
+    } catch (e) {
+        Swal.fire('Erreur', 'Échec de l\'enregistrement : ' + e.message, 'error');
+    }
+}       
+       
+        async function handleOnboarding(e){e.preventDefault(); if(!capturedBlob){Swal.fire('Attention','Photo requise','warning');return;}const fd=new FormData();fd.append('nom',document.getElementById('f-nom').value); fd.append('email',document.getElementById('f-email').value);fd.append('telephone',document.getElementById('f-phone').value); fd.append('dob',document.getElementById('f-dob').value);fd.append('adresse',document.getElementById('f-address').value); fd.append('date',document.getElementById('f-date').value);fd.append('poste',document.getElementById('f-poste').value); fd.append('dept',document.getElementById('f-dept').value);fd.append('limit',document.getElementById('f-limit').value); fd.append('role',document.getElementById('f-role').value);fd.append('photo',capturedBlob,'photo.jpg'); fd.append('agent', currentUser.nom);Swal.fire({title:'Création profil...',didOpen:()=>Swal.showLoading()});try{ const r=await secureFetch(URL_WRITE_POST,{method:'POST',body:fd}); if(r.ok){ Swal.fire('Succès','Compte créé','success'); e.target.reset(); resetCamera(); switchView('employees'); refreshAllData(); } } catch(e){Swal.fire('Erreur',e.message,'error');}}
         
-function startScanner(){
+        function startScanner(){
             let scannerInstance = null;
             Swal.fire({
-                title:'SCANNER',
-                html:'<div id="reader"></div>',
+                title:'SCANNER', html:'<div id="reader"></div>',
                 didOpen:()=>{
                     scannerInstance = new Html5Qrcode("reader");
                     scannerInstance.start({facingMode:"environment"},{fps:10},d=>{
-                        // Arrêt immédiat dès que le code est lu
                         scannerInstance.stop().then(() => {
                             let id=d; try{id=new URL(d).searchParams.get("id")}catch(e){} 
                             secureFetch(`${URL_GATEKEEPER}?id=${encodeURIComponent(id)}&key=${SCAN_KEY}&agent=${encodeURIComponent(currentUser.nom)}`)
-                            .then(r=>r.json())
-                            .then(d=>{
+                            .then(r=>r.json()).then(d=>{
                                 if(d.status==="valid") Swal.fire('ACCÈS OK',d.nom,'success'); 
                                 else {Swal.fire({icon:'error',title:'REFUSÉ'}).then(()=>location.href=URL_REDIRECT_FAILURE);}
                             });
                         });
                     });
                 },
-                willClose: () => {
-                    // C'est ici le réglage : Si on ferme la fenêtre sans scanner, on éteint la caméra
-                    if(scannerInstance) {
-                        scannerInstance.stop().catch(err => console.log("Déjà arrêté"));
-                    }
-                }
+                willClose: () => { if(scannerInstance) { scannerInstance.stop().catch(err => console.log("Stop Qr")); } }
             }); 
         }
         
-
         async function fetchLogs(){
             const tb=document.getElementById('logs-body'); tb.innerHTML='<tr><td colspan="4" class="p-4 italic text-center">Recherche des logs...</td></tr>'; 
             try{
@@ -878,32 +859,17 @@ function startScanner(){
         function openContractModal(id) { document.getElementById('contract-id-hidden').value = id; document.getElementById('contract-modal').classList.remove('hidden'); resetContractCamera(); }
         function closeContractModal() { if(contractStream) contractStream.getTracks().forEach(t => t.stop()); document.getElementById('contract-modal').classList.add('hidden'); }
         async function startContractCamera() { try { contractStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); const v = document.getElementById('contract-video'); v.srcObject = contractStream; v.classList.remove('hidden'); document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-icon').classList.add('hidden'); document.getElementById('btn-contract-capture').classList.remove('hidden'); } catch(e) { Swal.fire('Erreur', 'Caméra inaccessible', 'error'); } }
-
-
-
-
-function takeContractSnapshot() { 
-            const v = document.getElementById('contract-video'); 
-            const c = document.createElement('canvas'); 
-            c.width = v.videoWidth; c.height = v.videoHeight; 
-            c.getContext('2d').drawImage(v, 0, 0); 
+        
+        function takeContractSnapshot() { 
+            const v = document.getElementById('contract-video'); const c = document.createElement('canvas'); 
+            c.width = v.videoWidth; c.height = v.videoHeight; c.getContext('2d').drawImage(v, 0, 0); 
             c.toBlob(blob => { 
-                contractBlob = blob; 
-                const img = document.getElementById('contract-img-preview'); 
-                img.src = URL.createObjectURL(blob); 
-                img.classList.remove('hidden'); 
-                v.classList.add('hidden'); 
+                contractBlob = blob; const img = document.getElementById('contract-img-preview'); 
+                img.src = URL.createObjectURL(blob); img.classList.remove('hidden'); v.classList.add('hidden'); 
                 document.getElementById('btn-contract-capture').classList.add('hidden'); 
-                // ON COUPE ET ON VIDE
-                if(contractStream) {
-                    contractStream.getTracks().forEach(t => t.stop()); 
-                    contractStream = null;
-                }
+                if(contractStream) { contractStream.getTracks().forEach(t => t.stop()); contractStream = null; }
             }, 'image/jpeg', 0.8); 
         }
-
-
-        
         
         function previewContractFile(e) { const file = e.target.files[0]; if(!file) return; contractBlob = file; if(file.type.includes('image')) { const img = document.getElementById('contract-img-preview'); img.src = URL.createObjectURL(file); img.classList.remove('hidden'); document.getElementById('contract-icon').classList.add('hidden'); } }
         function resetContractCamera() { contractBlob = null; document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-video').classList.add('hidden'); document.getElementById('contract-icon').classList.remove('hidden'); document.getElementById('btn-contract-capture').classList.add('hidden'); if(contractStream) contractStream.getTracks().forEach(t => t.stop()); }
@@ -916,18 +882,68 @@ function takeContractSnapshot() {
             try { const r = await secureFetch(URL_UPLOAD_SIGNED_CONTRACT, { method: 'POST', body: fd }); if(r.ok) { Swal.fire('Succès', 'Contrat enregistré', 'success'); closeContractModal(); refreshAllData(); } } catch(e) { Swal.fire('Erreur', e.message, 'error'); } 
         }
         
-        window.addEventListener('offline', () => { Swal.fire({ icon: 'warning', title: 'Connexion Perdue', text: 'Mode hors ligne.', toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 }); document.body.classList.add('offline-mode'); });
-       
-        window.addEventListener('online', () => { Swal.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Opérationnel.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); document.body.classList.remove('offline-mode'); });
-    
-    
-    function handleLogout() {
-            // Coupe toutes les caméras avant de quitter
+        function handleLogout() {
             if(videoStream) videoStream.getTracks().forEach(t => t.stop());
             if(contractStream) contractStream.getTracks().forEach(t => t.stop());
             localStorage.removeItem('sirh_token');
             location.reload();
         }
+
+        window.addEventListener('offline', () => { Swal.fire({ icon: 'warning', title: 'Connexion Perdue', text: 'Mode hors ligne.', toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 }); document.body.classList.add('offline-mode'); });
+        window.addEventListener('online', () => { Swal.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Opérationnel.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); document.body.classList.remove('offline-mode'); });
+    
+    
+    
+    
+    
+    
+        function renderCharts() {
+        // 1. Calcul des données par Statut
+        const statusCounts = {};
+        employees.forEach(e => { statusCounts[e.statut] = (statusCounts[e.statut] || 0) + 1; });
+
+        // 2. Calcul des données par Département
+        const deptCounts = {};
+        employees.forEach(e => { deptCounts[e.dept] = (deptCounts[e.dept] || 0) + 1; });
+
+        // Graphique Statut (Pie)
+        if (chartStatusInstance) chartStatusInstance.destroy();
+        const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+        chartStatusInstance = new Chart(ctxStatus, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    data: Object.values(statusCounts),
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#6366f1'],
+                    borderWidth: 0
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
+        });
+
+        // Graphique Département (Bar)
+        if (chartDeptInstance) chartDeptInstance.destroy();
+        const ctxDept = document.getElementById('chartDept').getContext('2d');
+        chartDeptInstance = new Chart(ctxDept, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(deptCounts),
+                datasets: [{
+                    label: 'Nombre d\'employés',
+                    data: Object.values(deptCounts),
+                    backgroundColor: '#6366f1',
+                    borderRadius: 8
+                }]
+            },
+            options: { 
+                scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+    
+    
     
     </script>
 </body>
