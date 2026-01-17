@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -166,6 +166,34 @@
                         <canvas id="chartDept" height="200"></canvas>
                     </div>
                 </div>
+
+
+
+
+                            <!-- NOUVEAU : SECTION VALIDATION CONGÉS (Visible uniquement pour Managers/RH/Admin) -->
+                <div id="manager-leave-section" class="management-only bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden mb-10 hidden">
+                    <div class="px-8 py-6 border-b border-slate-100 font-extrabold text-slate-700 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-blue-500"></i> Demandes de congés à valider
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-50/80 text-[10px] uppercase font-black text-slate-400">
+                                <tr>
+                                    <th class="px-8 py-4">Employé</th>
+                                    <th class="px-8 py-4">Dates</th>
+                                    <th class="px-8 py-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leave-requests-body" class="divide-y divide-slate-50">
+                                <!-- Les demandes apparaîtront ici via le JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+
+
 
                 <!-- Alert Table -->
                 <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
@@ -402,6 +430,8 @@
         const URL_UPLOAD_SIGNED_CONTRACT = `${BASE_API}/contract-upload`;
         const URL_LEAVE_REQUEST = `${BASE_API}/leave`;  
         const URL_CLOCK_ACTION = `${BASE_API}/clock`;
+        const URL_READ_LEAVES = `${BASE_API}/read-leaves`;
+        const URL_LEAVE_ACTION = `${BASE_API}/leave-action`;
 
         const SCAN_KEY = "SIGD_SECURE_2025"; 
         const URL_REDIRECT_FAILURE = "https://google.com";
@@ -427,15 +457,15 @@
             return R * c; // Résultat en mètres
         }
 
-        function downloadMyBadge() {
-            const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
-            if(!myData) {
-                return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
-            }
-            const token = localStorage.getItem('sirh_token');
-            const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
-            window.open(url, '_blank', 'width=400,height=600');
-        }
+                function downloadMyBadge() {
+    const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+    if(!myData) {
+        return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
+    }
+    const token = localStorage.getItem('sirh_token');
+    const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
+    window.open(url, '_blank', 'width=400,height=600');
+}
 
         // --- HELPER DE REQUÊTE SÉCURISÉE ---
         async function secureFetch(url, options = {}) {
@@ -519,6 +549,17 @@ async function refreshAllData() {
             Toast.fire({icon: 'success', title: 'Données actualisées'});
         }
 
+
+        
+
+
+
+
+
+
+
+
+
         async function fetchData(forceUpdate = false){ 
             const CACHE_KEY = 'sirh_data_v1';
             const CACHE_TIME = 1000 * 60 * 60; 
@@ -529,7 +570,8 @@ async function refreshAllData() {
                     employees = JSON.parse(cached);
                     renderData();
                     loadMyProfile();
-                    renderCharts(); // Ajouté pour le cache
+                    renderCharts();
+                    fetchLeaveRequests(); // <--- AJOUTÉ : Pour charger les congés depuis le cache
                     return; 
                 }
             }
@@ -537,30 +579,37 @@ async function refreshAllData() {
                 let fetchUrl = `${URL_READ}?agent=${encodeURIComponent(currentUser.nom)}`;
                 const r = await secureFetch(fetchUrl); 
                 const d = await r.json(); 
-                employees = d.map(x => {
-                    return { 
+                employees = d.map(x => ({ 
                         id:x.employee_id || x.id, nom:x.nom || x.Nom, date:x.date_embauche || x.date, poste:x.poste || x.Poste, 
                         dept: x.département || x.departement || "Non défini", limit:x.type_contrat || 365, photo:x.photo, statut:x.Statut || 'Actif', 
                         email:x.email, telephone:x.telephone || x.téléphone, adresse:x.adresse, date_naissance:x.date_naissance, 
                         doc: x.contrat_pdf ? (Array.isArray(x.contrat_pdf) ? x.contrat_pdf[0].url : formatGoogleLink(x.contrat_pdf)) : '#',
                         contract_status: x.contract_status || 'Non signé', cv_link: formatGoogleLink(x.cv_link) || '#',
                         id_card_link: formatGoogleLink(x.id_card_link) || '#', diploma_link: formatGoogleLink(x.diploma_link) || '#'
-                    };
-                });
+                }));
                 localStorage.setItem(CACHE_KEY, JSON.stringify(employees));
                 localStorage.setItem(CACHE_KEY + '_time', Date.now());
                 renderData(); 
                 loadMyProfile();
-                renderCharts(); // <--- AJOUTÉ ICI : Pour dessiner les graphiques après le téléchargement
+                renderCharts();
+                fetchLeaveRequests(); // <--- AJOUTÉ : Pour charger les congés en direct
             } catch(e){ 
                 console.error(e); 
                 const cached = localStorage.getItem(CACHE_KEY);
                 if(cached) {
                     employees = JSON.parse(cached);
-                    renderData(); loadMyProfile(); renderCharts();
+                    renderData(); loadMyProfile(); renderCharts(); fetchLeaveRequests();
                 } else { Swal.fire('Erreur', 'Impossible de récupérer les données', 'error'); }
             } 
         }
+
+
+
+
+
+
+
+
 
         function renderData() { 
             const b=document.getElementById('full-body'), d=document.getElementById('dashboard-body'); b.innerHTML=''; d.innerHTML=''; 
@@ -701,9 +750,34 @@ async function refreshAllData() {
             document.getElementById('folder-modal').classList.remove('hidden');
         }
 
-        function closeFolderModal() { document.getElementById('folder-modal').classList.add('hidden'); }
-        function formatGoogleLink(l){ if(!l) return null; if(!l.startsWith('http')) return `https://lh3.googleusercontent.com/d/${l}`; const m = l.match(/\/d\/([a-zA-Z0-9_-]+)/) || l.match(/id=([a-zA-Z0-9_-]+)/); return m ? `https://lh3.googleusercontent.com/d/${m[1]}` : l; }
         
+        
+        
+        function closeFolderModal() { document.getElementById('folder-modal').classList.add('hidden'); }
+     
+     
+
+
+        function formatGoogleLink(l) { 
+    if(!l || l === '#' || l === '') return 'https://ui-avatars.com/api/?background=cbd5e1&color=fff&size=128'; 
+    
+    // Si c'est une pièce jointe Airtable (Format Tableau)
+    if (Array.isArray(l) && l[0] && l[0].url) return l[0].url;
+    
+    // Si c'est une pièce jointe Airtable (Format Objet direct)
+    if (typeof l === 'object' && l.url) return l.url;
+
+    // Si c'est un lien Google Drive (Format Texte)
+    if (typeof l === 'string' && l.includes('drive.google.com')){ 
+        const idMatch = l.match(/\/d\/([a-zA-Z0-9_-]+)/) || l.match(/id=([a-zA-Z0-9_-]+)/);
+        return idMatch ? `https://lh3.googleusercontent.com/d/${idMatch[1]}` : l; 
+    } 
+    return l; 
+}
+     
+
+
+
         function loadMyProfile() {
             const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
             if (myData) {
@@ -882,6 +956,48 @@ async function saveMyProfile() {
             try { const r = await secureFetch(URL_UPLOAD_SIGNED_CONTRACT, { method: 'POST', body: fd }); if(r.ok) { Swal.fire('Succès', 'Contrat enregistré', 'success'); closeContractModal(); refreshAllData(); } } catch(e) { Swal.fire('Erreur', e.message, 'error'); } 
         }
         
+
+
+                function showLeaveDetail(nom, type, debut, fin, motif) {
+    Swal.fire({
+        title: 'Détails de la demande',
+        html: `
+            <div class="text-left space-y-4 p-2">
+                <div class="pb-2 border-b">
+                    <p class="text-[10px] font-black text-slate-400 uppercase">Collaborateur</p>
+                    <p class="font-bold text-slate-800">${nom}</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 pb-2 border-b">
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Type</p>
+                        <p class="text-sm font-bold text-blue-600">${type}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase">Période</p>
+                        <p class="text-xs font-bold text-slate-700">${debut} au ${fin}</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Motif de l'absence</p>
+                    <div class="bg-slate-50 p-4 rounded-xl italic text-sm text-slate-600 border border-slate-100">
+                        "${motif}"
+                    </div>
+                </div>
+            </div>
+        `,
+        confirmButtonText: 'Fermer',
+        confirmButtonColor: '#1e293b',
+        customClass: {
+            popup: 'rounded-3xl'
+        }
+    });
+}
+
+
+
+
+
+
         function handleLogout() {
             if(videoStream) videoStream.getTracks().forEach(t => t.stop());
             if(contractStream) contractStream.getTracks().forEach(t => t.stop());
@@ -942,8 +1058,114 @@ async function saveMyProfile() {
             }
         });
     }
-    
-    
+   
+
+
+
+
+
+
+
+
+
+
+    async function fetchLeaveRequests() {
+    if (currentUser.role === 'EMPLOYEE') return;
+    try {
+        const r = await secureFetch(`${URL_READ_LEAVES}?agent=${encodeURIComponent(currentUser.nom)}`);
+        const leaves = await r.json();
+        const body = document.getElementById('leave-requests-body');
+        const section = document.getElementById('manager-leave-section');
+        body.innerHTML = '';
+        const pending = leaves.filter(l => l.statut === 'En attente');
+        
+        if (pending.length > 0) {
+            section.classList.remove('hidden');
+            pending.forEach(l => {
+                // On prépare les données pour la popup (en protégeant les apostrophes)
+                const motifEscaped = (l.motif || "Aucun motif précisé").replace(/'/g, "\\'");
+                
+                body.innerHTML += `
+                <tr>
+                    <td class="px-8 py-4 font-bold text-sm text-slate-700">${l.nom}</td>
+                    <td class="px-8 py-4 text-xs text-slate-500">${l.debut} au ${l.fin}</td>
+                    <td class="px-8 py-4 text-right space-x-2">
+                        <!-- NOUVEAU BOUTON VOIR -->
+                        <button onclick="showLeaveDetail('${l.nom}', '${l.type}', '${l.debut}', '${l.fin}', '${motifEscaped}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                        <button onclick="processLeave('${l.record_id}', 'Validé')" class="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">OUI</button>
+                        <button onclick="processLeave('${l.record_id}', 'Refusé')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">NON</button>
+                    </td>
+                </tr>`;
+            });
+        } else { section.classList.add('hidden'); }
+    } catch (e) { console.log("Erreur chargement congés"); }
+}
+
+
+
+
+
+
+
+
+async function processLeave(recordId, decision) {
+    // 1. Demander confirmation à l'utilisateur
+    const confirmation = await Swal.fire({
+        title: decision === 'Validé' ? 'Approuver ce congé ?' : 'Refuser ce congé ?',
+        text: "L'employé sera informé de cette décision.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Oui, confirmer',
+        cancelButtonText: 'Annuler',
+        confirmButtonColor: decision === 'Validé' ? '#10b981' : '#ef4444'
+    });
+
+    if (confirmation.isConfirmed) {
+        // 2. Afficher un chargement
+        Swal.fire({ 
+            title: 'Traitement en cours...', 
+            allowOutsideClick: false, 
+            didOpen: () => Swal.showLoading() 
+        });
+
+        try {
+            // 3. Envoyer l'ordre au serveur Render -> Make
+            const response = await secureFetch(URL_LEAVE_ACTION, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id: recordId, 
+                    decision: decision, 
+                    agent: currentUser.nom 
+                })
+            });
+
+            if (response.ok) {
+                // 4. Succès
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Terminé',
+                    text: `La demande a été marquée comme ${decision.toLowerCase()}.`,
+                    timer: 2000
+                });
+                
+                // 5. Rafraîchir le tableau des congés pour faire disparaître la ligne traitée
+                fetchLeaveRequests(); 
+            } else {
+                throw new Error("Erreur du serveur");
+            }
+        } catch (e) {
+            console.error("Erreur action congé:", e);
+            Swal.fire('Erreur', "Impossible de valider l'action : " + e.message, 'error');
+        }
+    }
+}
+
+
+
+
     
     </script>
 </body>
