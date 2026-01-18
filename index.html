@@ -104,11 +104,24 @@
                 <nav class="space-y-2">
                     <p class="text-[10px] font-black text-slate-500 uppercase mb-2 ml-4 tracking-widest">Personnel</p>
                     <button onclick="switchView('my-profile')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group"><i class="fa-solid fa-id-badge w-5"></i> <span class="font-semibold">Mon Profil</span></button>
+                    
+                                        <!-- Dans la <nav>, juste après le bouton "Mon Profil" -->
+                    <button onclick="switchView('help')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group">
+                        <i class="fa-solid fa-circle-info w-5"></i> 
+                        <span class="font-semibold">Infos & Aide</span>
+                    </button>
+                                        
                     <div id="nav-admin-section" class="management-only pt-4 border-t border-slate-800 mt-4">
                         <p class="text-[10px] font-black text-slate-500 uppercase mb-2 ml-4 tracking-widest">Gestion</p>
                         <button onclick="switchView('dash')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group"><i class="fa-solid fa-chart-pie w-5"></i> <span class="font-semibold">Tableau de Bord</span></button>
                         <button onclick="switchView('employees')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group"><i class="fa-solid fa-user-group w-5"></i> <span class="font-semibold">Collaborateurs</span></button>
                         <button onclick="switchView('add-new')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group rh-only"><i class="fa-solid fa-user-plus w-5"></i> <span class="font-semibold">Nouveau Profil</span></button>
+                        <!-- BOUTON RECRUTEMENT -->
+                        <button onclick="switchView('recruitment')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group rh-only">
+                            <i class="fa-solid fa-briefcase w-5"></i> 
+                            <span class="font-semibold">Recrutement</span>
+                        </button>
+                                                
                         <button onclick="switchView('logs')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group admin-only"><i class="fa-solid fa-list-check w-5"></i> <span class="font-semibold">Audit Sécurité</span></button>
                     </div>
                 </nav>
@@ -240,8 +253,88 @@
                                 <div id="initial-controls" class="flex flex-col w-full gap-2 mt-auto"><button type="button" onclick="startCameraFeed()" class="w-full text-[10px] font-bold text-slate-500 uppercase bg-white border py-2.5 rounded-lg shadow-sm">Caméra</button><button type="button" onclick="document.getElementById('file-upload').click()" class="w-full text-[10px] font-bold text-blue-600 uppercase bg-blue-50 border border-blue-200 py-2.5 rounded-lg">Téléverser</button></div>
                                 <canvas id="camera-canvas" class="hidden"></canvas><input type="file" id="file-upload" accept="image/*" class="hidden" onchange="handleFileUpload(event)"><button type="button" id="btn-capture" onclick="takeSnapshot()" class="hidden bg-blue-600 text-white py-2.5 rounded-lg w-full mt-2 font-bold text-xs">Prendre</button><button type="button" id="btn-retake" onclick="resetCamera()" class="hidden bg-slate-400 text-white py-2.5 rounded-lg w-full mt-2 font-bold text-xs">Refaire</button>
                             </div>
+
+
+
+                                                        <!-- SECTION DOCUMENTS KYC -->
+                            <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-slate-100 rounded-2xl border-2 border-dashed border-slate-200 mt-4">
+                                <p class="md:col-span-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Documents obligatoires (Photo ou PDF)</p>
+                                
+                                <!-- Pièce d'Identité -->
+                                <div class="space-y-2">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase">Pièce d'Identité</label>
+                                    <div class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer" onclick="openDocCamera('id_card')">
+                                        <img id="preview-id_card" class="hidden h-full w-full object-cover">
+                                        <i id="icon-id_card" class="fa-solid fa-id-card text-slate-300"></i>
+                                    </div>
+                                    <input type="file" id="f-id_card" class="hidden" onchange="previewDocFile(event, 'id_card')">
+                                </div>
+
+                                <!-- CV -->
+                                <div class="space-y-2">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase">Curriculum Vitae</label>
+                                    <div class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer" onclick="openDocCamera('cv')">
+                                        <img id="preview-cv" class="hidden h-full w-full object-cover">
+                                        <i id="icon-cv" class="fa-solid fa-file-pdf text-slate-300"></i>
+                                    </div>
+                                    <input type="file" id="f-cv" class="hidden" onchange="previewDocFile(event, 'cv')">
+                                </div>
+
+                                <!-- Diplôme -->
+                                <div class="space-y-2">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase">Dernier Diplôme</label>
+                                    <div class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer" onclick="openDocCamera('diploma')">
+                                        <img id="preview-diploma" class="hidden h-full w-full object-cover">
+                                        <i id="icon-diploma" class="fa-solid fa-graduation-cap text-slate-300"></i>
+                                    </div>
+                                    <input type="file" id="f-diploma" class="hidden" onchange="previewDocFile(event, 'diploma')">
+                                </div>
+
+                                <!-- Attestation -->
+                                <div class="space-y-2">
+                                    <label class="block text-[9px] font-bold text-slate-400 uppercase">Attestation / Autres</label>
+                                    <div class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer" onclick="openDocCamera('attestation')">
+                                        <img id="preview-attestation" class="hidden h-full w-full object-cover">
+                                        <i id="icon-attestation" class="fa-solid fa-file-invoice text-slate-300"></i>
+                                    </div>
+                                    <input type="file" id="f-attestation" class="hidden" onchange="previewDocFile(event, 'attestation')">
+                                </div>
+                            </div>
+
+
+
                             <button type="submit" class="md:col-span-3 w-full bg-slate-900 text-white py-4 rounded-xl font-bold uppercase hover:bg-slate-800 tracking-widest transition-all shadow-xl">CRÉER ET ENVOYER LES ACCÈS</button>
                         </form>
+                    </div>
+                </section>
+
+
+
+                        <!-- VUE 7: RECRUTEMENT / ATS -->
+                <section id="view-recruitment" class="view-section rh-only">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-extrabold text-slate-800">Candidatures (Google Form)</h2>
+                        <button onclick="fetchCandidates()" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm font-bold text-sm">
+                            <i class="fa-solid fa-rotate mr-2"></i> Actualiser
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead class="bg-slate-900 text-white text-[10px] uppercase font-bold">
+                                    <tr>
+                                        <th class="px-6 py-5">Candidat</th>
+                                        <th class="px-6 py-5">Poste visé</th>
+                                        <th class="px-6 py-5 text-center">Statut Actuel</th>
+                                        <th class="px-6 py-5 text-right">Dossier & Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="candidates-body" class="divide-y divide-slate-100">
+                                    <!-- Rempli par JS -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -324,6 +417,97 @@
                         </div>
                     </div>
                 </section>
+
+
+
+
+                <!-- VUE 6: AIDE & INFOS -->
+<section id="view-help" class="view-section">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-2xl font-extrabold text-slate-800 mb-8">Centre d'Information</h2>
+
+        <!-- ZONE 1 : FLASH INFO / ANNONCE GÉNÉRALE -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-8 text-white shadow-xl mb-10 relative overflow-hidden">
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/30">Note de service</span>
+                    <span class="text-xs font-medium opacity-80"><i class="fa-regular fa-clock mr-1"></i> Mis à jour le 18/01/2026</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Bienvenue sur le nouveau portail SIRH !</h3>
+                <p class="text-blue-100 text-sm leading-relaxed max-w-2xl">
+                    Cette application est désormais votre outil unique pour la gestion de vos présences et de vos congés.
+                    Pensez à bien <strong>activer la géolocalisation</strong> sur votre téléphone pour valider vos pointages.
+                    Pour toute question technique, référez-vous aux guides ci-dessous.
+                </p>
+            </div>
+            <!-- Déco fond -->
+            <i class="fa-solid fa-bullhorn absolute -right-6 -bottom-6 text-9xl opacity-10 rotate-[-20deg]"></i>
+        </div>
+
+        <!-- ZONE 2 : GUIDES D'UTILISATION (FAQ) -->
+        <h3 class="font-black text-slate-700 uppercase text-sm tracking-widest mb-6">Guides Rapides</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            
+            <!-- Carte 1 : Pointage -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-fingerprint"></i>
+                </div>
+                <h4 class="font-bold text-slate-800 mb-2">Comment pointer ?</h4>
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">
+                    Le pointage est obligatoire à l'arrivée et au départ.
+                    <br>1. Allez sur "Mon Profil".
+                    <br>2. Cliquez sur le gros bouton <strong>ENTRÉE</strong>.
+                    <br>3. Autorisez la localisation si demandé.
+                    <br><em>Note : Le bouton devient ROUGE quand vous êtes en poste.</em>
+                </p>
+            </div>
+
+            <!-- Carte 2 : Congés -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-plane-departure"></i>
+                </div>
+                <h4 class="font-bold text-slate-800 mb-2">Demander un congé</h4>
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">
+                    Les demandes doivent être faites 48h à l'avance.
+                    <br>1. Sur "Mon Profil", cliquez sur "Demander Congé".
+                    <br>2. Remplissez les dates et le motif.
+                    <br>3. <strong>Joignez un justificatif</strong> (PDF ou Photo) si c'est une maladie.
+                    <br>Vous recevrez la réponse de votre manager ici même.
+                </p>
+            </div>
+
+            <!-- Carte 3 : Documents -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <h4 class="font-bold text-slate-800 mb-2">Mes Documents</h4>
+                <p class="text-sm text-slate-500 leading-relaxed mb-4">
+                    Votre contrat signé et vos pièces d'identité sont stockés dans la section "Mes Documents".
+                    Vous pouvez cliquer sur l'icône <i class="fa-solid fa-file-arrow-up text-xs"></i> pour mettre à jour une pièce périmée (ex: nouveau passeport).
+                </p>
+            </div>
+
+            <!-- Carte 4 : Support -->
+            <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-sm text-white">
+                <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-headset"></i>
+                </div>
+                <h4 class="font-bold text-white mb-2">Besoin d'aide ?</h4>
+                <p class="text-sm text-slate-400 leading-relaxed mb-4">
+                    Si vous rencontrez un bug ou si vous avez perdu vos accès, contactez le service IT ou RH.
+                </p>
+                <div class="bg-white/10 p-3 rounded-xl flex items-center gap-3">
+                    <i class="fa-solid fa-envelope text-blue-400"></i>
+                    <span class="font-mono text-xs">support-rh@entreprise.com</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
             </div>
         </main>
     </div>
@@ -358,14 +542,92 @@
     </div>
 
     <!-- MODAL STATUT -->
-    <div id="edit-modal" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[110] p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
-            <h3 class="font-black mb-6 text-xl text-center uppercase text-slate-800">Mise à jour du Statut</h3>
-            <input type="hidden" id="edit-id-hidden">
-            <select id="edit-statut" class="w-full p-4 border rounded-2xl mb-8 font-bold outline-none bg-slate-50 focus:ring-2 focus:ring-blue-500 transition-all"><option value="Actif">Actif</option><option value="Congé">En Congé</option><option value="Sortie">Sortie Définitive</option></select>
-            <div class="flex gap-4"><button onclick="submitUpdate(event)" class="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg">VALIDER</button><button onclick="closeEditModal()" class="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-bold">ANNULER</button></div>
+<!-- MODAL ADMINISTRATION (GÉRER) -->
+<div id="edit-modal" class="fixed inset-0 bg-slate-900/90 hidden flex items-center justify-center z-[110] p-4 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-black text-xl uppercase text-slate-800">Administration Employé</h3>
+            <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        
+        <input type="hidden" id="edit-id-hidden">
+        
+        <form onsubmit="submitUpdate(event)" class="space-y-6">
+            <!-- 1. STATUT & RÔLE -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Statut Actuel</label>
+                    <select id="edit-statut" class="w-full p-3 border rounded-xl font-bold bg-slate-50 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Actif">🟢 Actif</option>
+                        <option value="Congé">🟡 En Congé</option>
+                        <option value="Sortie">🔴 Sortie Définitive</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Rôle Système</label>
+                    <select id="edit-role" class="w-full p-3 border rounded-xl font-bold bg-blue-50 text-blue-700 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="EMPLOYEE">Employé</option>
+                        <option value="MANAGER">Manager</option>
+                        <option value="RH">RH</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 2. DÉPARTEMENT -->
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Département / Service</label>
+                <select id="edit-dept" class="w-full p-3 border rounded-xl font-medium bg-slate-50 outline-none">
+                    <option value="IT & Tech">IT & Tech</option>
+                    <option value="RH">Ressources Humaines</option>
+                    <option value="Finance">Finance & Compta</option>
+                    <option value="Marketing">Marketing & Vente</option>
+                    <option value="Opérations">Opérations</option>
+                    <option value="Sécurité">Sécurité</option>
+                </select>
+            </div>
+
+            <!-- 3. CONTRAT (Prolongation) -->
+<!-- 3. GESTION CONTRAT (Initialisation / Renouvellement) -->
+<div class="p-4 bg-orange-50 rounded-xl border border-orange-100">
+    <p class="text-[10px] font-black text-orange-500 uppercase mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-file-contract"></i> Cycle de vie du Contrat
+    </p>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Durée / Type</label>
+            <select id="edit-type-contrat" class="w-full p-2 bg-white border rounded-lg text-sm font-bold text-slate-700">
+                <option value="365">CDI (1 an renouvel.)</option>
+                <option value="180">CDD (6 mois)</option>
+                <option value="90">Essai (3 mois)</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Date de début (Effet)</label>
+            <!-- Ici, on permet de choisir la date précise -->
+            <input type="date" id="edit-start-date" class="w-full p-2 bg-white border rounded-lg text-sm font-bold text-slate-700">
         </div>
     </div>
+    <div class="mt-3 flex items-start gap-2">
+        <input type="checkbox" id="edit-init-check" class="mt-1 w-4 h-4 text-orange-600 rounded border-gray-300 focus:ring-orange-500">
+        <label for="edit-init-check" class="text-[10px] text-slate-600 leading-tight">
+            <strong>Forcer l'initialisation :</strong> Cocher cette case pour réinitialiser le contrat avec la date ci-dessus (Utiliser pour une <u>nouvelle embauche</u> ou un <u>renouvellement</u>).
+        </label>
+    </div>
+</div>
+
+
+
+
+
+
+
+            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-bold shadow-lg uppercase tracking-widest hover:bg-slate-800 transition-all">
+                SAUVEGARDER LES MODIFICATIONS
+            </button>
+        </form>
+    </div>
+</div>
 
     <!-- MODAL CONTRAT SIGNE -->
     <div id="contract-modal" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[110] p-4 backdrop-blur-sm">
@@ -406,7 +668,20 @@
                     <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Motif (Optionnel)</label>
                     <textarea id="leave-reason" rows="2" class="w-full p-3 bg-slate-50 border rounded-xl resize-none text-sm" placeholder="Précisions pour le manager..."></textarea>
                 </div>
-                <div class="pt-4">
+
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Justificatif (Optionnel)</label>
+                    <div class="flex gap-2">
+                        <div id="leave-doc-preview" class="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center border text-slate-400">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        <button type="button" onclick="openDocCamera('leave_justif')" class="flex-1 bg-slate-100 text-slate-600 text-[10px] font-bold py-2 rounded-lg border uppercase">Prendre Photo</button>
+                        <button type="button" onclick="document.getElementById('f-leave_justif').click()" class="flex-1 bg-blue-50 text-blue-600 text-[10px] font-bold py-2 rounded-lg border border-blue-100 uppercase">Uploader</button>
+                    </div>
+                    <input type="file" id="f-leave_justif" class="hidden" onchange="previewDocFile(event, 'leave_justif')">
+                </div>
+                            <div class="pt-4">
                     <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-slate-800 shadow-lg active:scale-95 transition-all">Envoyer la demande</button>
                 </div>
             </form>
@@ -414,6 +689,18 @@
     </div>
 
     <script>
+
+
+        let docBlobs = {
+            id_card: null,
+            cv: null,
+            diploma: null,
+            attestation: null,
+            leave_justif: null
+        };
+
+
+
         // --- CONFIGURATION ---
         const BASE_API = "https://mon-api-rh.onrender.com/api"; 
 
@@ -432,6 +719,9 @@
         const URL_CLOCK_ACTION = `${BASE_API}/clock`;
         const URL_READ_LEAVES = `${BASE_API}/read-leaves`;
         const URL_LEAVE_ACTION = `${BASE_API}/leave-action`;
+        // --- AJOUTER ICI ---
+        const URL_READ_CANDIDATES = `${BASE_API}/read-candidates`; 
+        const URL_CANDIDATE_ACTION = `${BASE_API}/candidate-action`;
 
         const SCAN_KEY = "SIGD_SECURE_2025"; 
         const URL_REDIRECT_FAILURE = "https://google.com";
@@ -467,20 +757,73 @@
     window.open(url, '_blank', 'width=400,height=600');
 }
 
-        // --- HELPER DE REQUÊTE SÉCURISÉE ---
-        async function secureFetch(url, options = {}) {
-            const token = localStorage.getItem('sirh_token');
-            const headers = options.headers || {};
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-            const response = await fetch(url, { ...options, headers });
+
+
+
+async function secureFetch(url, options = {}) {
+    const token = localStorage.getItem('sirh_token');
+    const headers = options.headers || {};
+    
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    // 1. CONFIGURATION DU TIMEOUT (25 secondes)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25000ms = 25s
+
+    try {
+        // 2. APPEL RÉSEAU
+        const response = await fetch(url, { 
+            ...options, 
+            headers, 
+            signal: controller.signal // On lie le contrôleur d'annulation
+        });
+
+        clearTimeout(timeoutId); // On annule le timer si la réponse arrive
+
+        // 3. GESTION FINE DES ERREURS HTTP
+        if (!response.ok) {
+            // On essaie de lire le message d'erreur du serveur (JSON), sinon texte générique
+            let errorMessage = `Erreur serveur (${response.status})`;
+            try {
+                const errData = await response.json();
+                if (errData.error) errorMessage = errData.error;
+            } catch (e) { /* Pas de JSON, on garde le message par défaut */ }
+
             if (response.status === 401 || response.status === 403) {
-                 const errData = await response.json();
-                 throw new Error(errData.error || "Accès refusé");
+                throw new Error("Accès refusé ou session expirée.");
             }
-            return response;
+            throw new Error(errorMessage);
         }
+
+        return response;
+
+    } catch (error) {
+        // 4. GESTION DU TIMEOUT ET ERREURS RÉSEAU
+        if (error.name === 'AbortError') {
+            throw new Error("Le serveur met trop de temps à répondre (Timeout). Vérifiez votre connexion.");
+        }
+        if (error.message.includes('Failed to fetch')) {
+            throw new Error("Impossible de contacter le serveur. Vérifiez votre internet.");
+        }
+        throw error; // On renvoie l'erreur pour qu'elle soit affichée par l'appelant
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         async function handleLogin(e) { 
             e.preventDefault(); 
@@ -532,28 +875,55 @@
             fetchData(false);
         }
 
-async function refreshAllData() {
-            const icon = document.getElementById('refresh-icon'); 
-            if(icon) icon.classList.add('fa-spin');
-            
-            // 1. On affiche les skeletons pendant le chargement
-            const skeletonRow = `<tr class="border-b"><td class="p-4 flex gap-3 items-center"><div class="w-10 h-10 rounded-full skeleton"></div><div class="space-y-2"><div class="h-3 w-24 rounded skeleton"></div><div class="h-2 w-16 rounded skeleton"></div></div></td><td class="p-4"><div class="h-3 w-32 rounded skeleton"></div></td><td class="p-4"><div class="h-6 w-16 rounded-lg skeleton"></div></td><td class="p-4"></td></tr>`;
-            document.getElementById('full-body').innerHTML = Array(6).fill(skeletonRow).join('');
-
-            // 2. On force le téléchargement
-            await fetchData(true); 
-            
-            if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 800);
-            
-            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 1500});
-            Toast.fire({icon: 'success', title: 'Données actualisées'});
-        }
 
 
+
+                async function refreshAllData() {
+    const icon = document.getElementById('refresh-icon'); 
+    
+    // Animation visuelle
+    if(icon) icon.classList.add('fa-spin');
+    
+    // On vide les tableaux pour montrer que ça charge (Skeletons)
+    const skeletonRow = `<tr class="border-b"><td class="p-4 flex gap-3 items-center"><div class="w-10 h-10 rounded-full skeleton"></div><div class="space-y-2"><div class="h-3 w-24 rounded skeleton"></div><div class="h-2 w-16 rounded skeleton"></div></div></td><td class="p-4"><div class="h-3 w-32 rounded skeleton"></div></td><td class="p-4"><div class="h-6 w-16 rounded-lg skeleton"></div></td><td class="p-4"></td></tr>`;
+    document.getElementById('full-body').innerHTML = Array(6).fill(skeletonRow).join('');
+    
+    // Petit Toast de chargement en haut à droite
+    const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false});
+    Toast.fire({icon: 'info', title: 'Actualisation générale...'});
+
+    try {
+        // LANCE TOUTES LES MISES À JOUR EN MÊME TEMPS (Parallèle)
+        // fetchData(true) -> Force la mise à jour des employés/dossiers/profils
+        // fetchLeaveRequests() -> Met à jour les congés
         
+        // Dans refreshAllData()
+        await Promise.all([
+            fetchData(true), 
+            fetchLeaveRequests(),
+            fetchCandidates() // <--- AJOUTE CELA
+        ]);
 
+        // Si tout s'est bien passé
+        Toast.fire({icon: 'success', title: 'Tout est à jour !', timer: 2000});
 
-
+    } catch (error) {
+        // Si UNE SEULE requête échoue, on affiche l'erreur
+        console.error(error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Échec de l\'actualisation',
+            text: error.message,
+            confirmButtonColor: '#0f172a'
+        });
+        
+        // On remet les données en cache si possible pour ne pas laisser l'écran vide
+        fetchData(false); 
+    } finally {
+        // On arrête l'animation quoi qu'il arrive
+        if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 500);
+    }
+}
 
 
 
@@ -579,14 +949,48 @@ async function refreshAllData() {
                 let fetchUrl = `${URL_READ}?agent=${encodeURIComponent(currentUser.nom)}`;
                 const r = await secureFetch(fetchUrl); 
                 const d = await r.json(); 
-                employees = d.map(x => ({ 
-                        id:x.employee_id || x.id, nom:x.nom || x.Nom, date:x.date_embauche || x.date, poste:x.poste || x.Poste, 
-                        dept: x.département || x.departement || "Non défini", limit:x.type_contrat || 365, photo:x.photo, statut:x.Statut || 'Actif', 
-                        email:x.email, telephone:x.telephone || x.téléphone, adresse:x.adresse, date_naissance:x.date_naissance, 
-                        doc: x.contrat_pdf ? (Array.isArray(x.contrat_pdf) ? x.contrat_pdf[0].url : formatGoogleLink(x.contrat_pdf)) : '#',
-                        contract_status: x.contract_status || 'Non signé', cv_link: formatGoogleLink(x.cv_link) || '#',
-                        id_card_link: formatGoogleLink(x.id_card_link) || '#', diploma_link: formatGoogleLink(x.diploma_link) || '#'
-                }));
+                console.log("Données reçues de Make :", d[0]); // Affiche le premier employé reçu
+
+// Dans la fonction fetchData...
+
+employees = d.map(x => {
+    // Sécurité pour la photo : on regarde si c'est 'photo' ou 'Photo' ou 'Photos'
+    let rawPhoto = x.photo || x.Photo || x.Photos;
+
+    return { 
+        id: x.employee_id || x.id, 
+        nom: x.nom || x.Nom, 
+        date: x.date_embauche || x.date, 
+        poste: x.poste || x.Poste, 
+        dept: x['département'] || x.departement || "Non défini", 
+        limit: x.type_contrat || 365, 
+        
+        // ICI : On passe la donnée brute, la fonction formatGoogleLink s'occupera du reste
+        photo: rawPhoto, 
+        
+        statut: x.Statut || 'Actif', 
+        email: x.email, 
+        telephone: x.telephone || x['téléphone'], 
+        adresse: x.adresse, 
+        date_naissance: x.date_naissance, 
+        role: x.role || x.Role || 'EMPLOYEE',
+
+        
+        // Gestion des documents
+        doc: x.contrat_pdf ? formatGoogleLink(x.contrat_pdf) : '#',
+        contract_status: x.contract_status || 'Non signé',
+        cv_link: formatGoogleLink(x.cv_link) || '#',
+        id_card_link: formatGoogleLink(x.id_card_link) || '#',
+        diploma_link: formatGoogleLink(x.diploma_link) || '#',
+        attestation_link: formatGoogleLink(x.attestation) || '#',
+        lm_link: formatGoogleLink(x.lm_link) || '#'
+
+        
+    };
+});
+
+
+
                 localStorage.setItem(CACHE_KEY, JSON.stringify(employees));
                 localStorage.setItem(CACHE_KEY + '_time', Date.now());
                 renderData(); 
@@ -645,34 +1049,52 @@ async function refreshAllData() {
             document.getElementById('leave-end').valueAsDate = new Date();
         }
 
-        async function submitLeaveRequest(e) {
+
+
+
+
+
+
+                async function submitLeaveRequest(e) {
             e.preventDefault();
-            const type = document.querySelector('input[name="leave_type"]:checked').value;
-            const start = document.getElementById('leave-start').value;
-            const end = document.getElementById('leave-end').value;
-            const reason = document.getElementById('leave-reason').value;
-            const data = {
-                employee_id: currentUser.id, nom: currentUser.nom, type: type,
-                date_debut: start, date_fin: end, motif: reason,
-                date_demande: new Date().toISOString(), agent: currentUser.nom 
-            };
-            Swal.fire({ title: 'Envoi...', text: 'Veuillez patienter', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+            
+            const fd = new FormData();
+            fd.append('employee_id', currentUser.id);
+            fd.append('nom', currentUser.nom);
+            fd.append('type', document.querySelector('input[name="leave_type"]:checked').value);
+            fd.append('date_debut', document.getElementById('leave-start').value);
+            fd.append('date_fin', document.getElementById('leave-end').value);
+            fd.append('motif', document.getElementById('leave-reason').value);
+            fd.append('date_demande', new Date().toISOString());
+            fd.append('agent', currentUser.nom);
+
+            // Ajout du justificatif s'il a été pris en photo ou uploadé
+            if (docBlobs.leave_justif) {
+                fd.append('justificatif', docBlobs.leave_justif, 'justificatif_conge.jpg');
+            }
+
+            Swal.fire({ title: 'Envoi...', text: 'Traitement de votre demande', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
             try {
-                const response = await secureFetch(URL_LEAVE_REQUEST, { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) 
-                });
+                const response = await secureFetch(URL_LEAVE_REQUEST, { method: 'POST', body: fd });
                 if (response.ok) {
                     document.getElementById('leave-modal').classList.add('hidden');
                     e.target.reset();
-                    Swal.fire('Succès', 'Votre demande a bien été transmise.', 'success');
+                    docBlobs.leave_justif = null;
+                    document.getElementById('leave-doc-preview').innerHTML = '<i class="fa-solid fa-camera"></i>';
+                    Swal.fire('Succès', 'Votre demande de congé a été envoyée.', 'success');
                 }
-            } catch (error) { Swal.fire('Erreur', error.message, 'error'); }
+            } catch (error) { 
+                Swal.fire('Erreur', "Échec de l'envoi : " + error.message, 'error'); 
+            }
         }
 
-        window.addEventListener('load', () => {
-            const status = localStorage.getItem('clock_status_' + (currentUser ? currentUser.id : 'temp'));
-            updateClockUI(status === 'IN');
-        });
+
+
+
+
+
+
 
         function updateClockUI(isIn) {
             const btn = document.getElementById('btn-clock');
@@ -731,67 +1153,236 @@ async function refreshAllData() {
             } catch (e) { Swal.fire('Echec', 'Erreur serveur : ' + e.message, 'error'); }
         }
 
-        function openFullFolder(id) {
-            const e = employees.find(x => x.id === id); if(!e) return;
-            document.getElementById('folder-photo').src = formatGoogleLink(e.photo) || 'https://via.placeholder.com/150';
-            document.getElementById('folder-name').innerText = e.nom; document.getElementById('folder-id').innerText = "IDENTIFIANT : " + e.id;
-            document.getElementById('folder-poste').innerText = e.poste; document.getElementById('folder-dept').innerText = e.dept;
-            document.getElementById('folder-email').innerText = e.email || "Non renseigné"; document.getElementById('folder-phone').innerText = e.telephone || "Non renseigné";
-            document.getElementById('folder-address').innerText = e.adresse || "Non renseignée";
-            if(e.date) { 
-                let sD = parseDateSmart(e.date); 
-                document.getElementById('folder-start').innerText = sD.toLocaleDateString('fr-FR'); 
-                let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(e.limit) || 365)); 
-                document.getElementById('folder-end').innerText = eD.toLocaleDateString('fr-FR'); 
-            }
-            const grid = document.getElementById('folder-docs-grid'); grid.innerHTML = '';
-            const docs = [ { label: 'Contrat Actuel', link: e.doc, icon: 'fa-file-signature', color: 'blue' }, { label: 'Curriculum Vitae', link: e.cv_link, icon: 'fa-file-pdf', color: 'indigo' }, { label: 'Pièce d\'Identité', link: e.id_card_link, icon: 'fa-id-card', color: 'slate' }, { label: 'Diplômes/Certifs', link: e.diploma_link, icon: 'fa-graduation-cap', color: 'emerald' } ];
-            docs.forEach(doc => { const hasLink = doc.link && doc.link !== '#'; grid.innerHTML += `<div class="p-4 rounded-2xl border ${hasLink ? 'bg-white shadow-sm border-slate-200' : 'bg-slate-100 opacity-50 border-transparent'} flex items-center justify-between group transition-all"><div class="flex items-center gap-3"><div class="p-2.5 rounded-xl ${hasLink ? 'bg-'+doc.color+'-50 text-'+doc.color+'-600' : 'bg-slate-200 text-slate-400'}"><i class="fa-solid ${doc.icon}"></i></div><p class="text-xs font-bold text-slate-700">${doc.label}</p></div>${hasLink ? `<a href="${doc.link}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><i class="fa-solid fa-up-right-from-square"></i></a>` : `<i class="fa-solid fa-lock text-slate-300 text-xs mr-2"></i>`}</div>`; });
-            document.getElementById('folder-modal').classList.remove('hidden');
-        }
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                        function openFullFolder(id) {
+    const e = employees.find(x => x.id === id); if(!e) return;
+    
+    // Remplissage infos header
+    document.getElementById('folder-photo').src = formatGoogleLink(e.photo) || 'https://via.placeholder.com/150';
+    document.getElementById('folder-name').innerText = e.nom; 
+    document.getElementById('folder-id').innerText = "IDENTIFIANT : " + e.id;
+    document.getElementById('folder-poste').innerText = e.poste; 
+    document.getElementById('folder-dept').innerText = e.dept;
+    document.getElementById('folder-email').innerText = e.email || "Non renseigné"; 
+    document.getElementById('folder-phone').innerText = e.telephone || "Non renseigné";
+    document.getElementById('folder-address').innerText = e.adresse || "Non renseignée";
+    
+    if(e.date) { 
+        let sD = parseDateSmart(e.date); 
+        document.getElementById('folder-start').innerText = sD.toLocaleDateString('fr-FR'); 
+        let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(e.limit) || 365)); 
+        document.getElementById('folder-end').innerText = eD.toLocaleDateString('fr-FR'); 
+    }
+    
+    const grid = document.getElementById('folder-docs-grid'); 
+    grid.innerHTML = '';
+
+    // --- CORRECTION : UNE SEULE DÉCLARATION ---
+    const docs = [ 
+        { label: 'Contrat Actuel', link: e.doc, icon: 'fa-file-signature', color: 'blue', key: 'contrat' }, 
+        { label: 'Curriculum Vitae', link: e.cv_link, icon: 'fa-file-pdf', color: 'indigo', key: 'cv' }, 
+        { label: 'Lettre Motivation', link: e.lm_link, icon: 'fa-envelope-open-text', color: 'pink', key: 'lm' },
+        { label: 'Pièce d\'Identité', link: e.id_card_link, icon: 'fa-id-card', color: 'slate', key: 'id_card' }, 
+        { label: 'Diplômes/Certifs', link: e.diploma_link, icon: 'fa-graduation-cap', color: 'emerald', key: 'diploma' },
+        { label: 'Attestations / Autres', link: e.attestation_link, icon: 'fa-file-invoice', color: 'orange', key: 'attestation' } 
+    ];
+
+    docs.forEach(doc => { 
+        const hasLink = doc.link && doc.link !== '#'; 
+        grid.innerHTML += `
+            <div class="p-4 rounded-2xl border ${hasLink ? 'bg-white shadow-sm border-slate-200' : 'bg-slate-100 opacity-50'} flex items-center justify-between group">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 rounded-xl bg-${doc.color}-50 text-${doc.color}-600"><i class="fa-solid ${doc.icon}"></i></div>
+                    <p class="text-xs font-bold text-slate-700">${doc.label}</p>
+                </div>
+                <div class="flex gap-2">
+                    ${hasLink ? `<a href="${doc.link}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i class="fa-solid fa-up-right-from-square"></i></a>` : ''}
+                    <button onclick="updateSingleDoc('${doc.key}', '${e.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                </div>
+            </div>`; 
+    });            
+    
+    document.getElementById('folder-modal').classList.remove('hidden');
+}
+
+
+
+
+
+
+
+
+
+
 
         
         
         
         function closeFolderModal() { document.getElementById('folder-modal').classList.add('hidden'); }
-     
-     
+  
+        
 
 
-        function formatGoogleLink(l) { 
-    if(!l || l === '#' || l === '') return 'https://ui-avatars.com/api/?background=cbd5e1&color=fff&size=128'; 
+
+
+
+function formatGoogleLink(link) {
+    // 1. Sécurité : si vide
+    if (!link || link === '#' || link === 'null') {
+        return 'https://ui-avatars.com/api/?background=cbd5e1&color=fff&size=128';
+    }
+
+    // 2. Nettoyage : On récupère la chaîne de caractères, peu importe si c'est dans un tableau ou non
+    let url = link;
+    if (Array.isArray(link) && link.length > 0) url = link[0].url || link[0];
+    else if (typeof link === 'object' && link.url) url = link.url;
     
-    // Si c'est une pièce jointe Airtable (Format Tableau)
-    if (Array.isArray(l) && l[0] && l[0].url) return l[0].url;
-    
-    // Si c'est une pièce jointe Airtable (Format Objet direct)
-    if (typeof l === 'object' && l.url) return l.url;
+    url = String(url);
 
-    // Si c'est un lien Google Drive (Format Texte)
-    if (typeof l === 'string' && l.includes('drive.google.com')){ 
-        const idMatch = l.match(/\/d\/([a-zA-Z0-9_-]+)/) || l.match(/id=([a-zA-Z0-9_-]+)/);
-        return idMatch ? `https://lh3.googleusercontent.com/d/${idMatch[1]}` : l; 
-    } 
-    return l; 
+    // 3. EXTRACTION DE L'ID GOOGLE DRIVE
+    // Ça marche pour :
+    // - https://drive.google.com/file/d/L_ID_EST_ICI/view
+    // - https://drive.google.com/open?id=L_ID_EST_ICI
+    const idMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+
+    if (idMatch && idMatch[1]) {
+        // C'est l'URL magique qui transforme un lien Drive en vraie image affichable
+        return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
+    }
+
+    // Si ce n'est pas du Drive, on renvoie l'url telle quelle (cas ou c'est déjà hébergé ailleurs)
+    return url;
 }
-     
 
 
 
-        function loadMyProfile() {
-            const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
-            if (myData) {
-                document.getElementById('emp-name').innerText = myData.nom; 
-                document.getElementById('emp-job').innerText = myData.poste;
-                if(myData.photo && myData.photo.length > 10) { document.getElementById('emp-photo-real').src = formatGoogleLink(myData.photo); document.getElementById('emp-photo-real').classList.remove('hidden'); document.getElementById('emp-avatar').classList.add('hidden'); }
-                if(myData.date) { let sD = parseDateSmart(myData.date); document.getElementById('emp-start-date').innerText = sD.toLocaleDateString('fr-FR'); let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(myData.limit) || 365)); document.getElementById('emp-end-date').innerText = eD.toLocaleDateString('fr-FR'); }
-                document.getElementById('emp-email').value = myData.email || ""; document.getElementById('emp-phone').value = myData.telephone || ""; 
-                document.getElementById('emp-address').value = myData.adresse || ""; document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
-                const dC = document.getElementById('doc-container'); dC.innerHTML = '';
-                const allDocs = [ { label: 'Contrat Signé', link: myData.doc, icon: 'fa-file-signature', color: 'blue' }, { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo' }, { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate' }, { label: 'Diplômes & Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald' } ];
-                allDocs.forEach(doc => { if(doc.link && doc.link.length > 5 && doc.link !== '#') { dC.innerHTML += `<a href="${doc.link}" target="_blank" class="flex items-center justify-between p-3 border border-slate-100 bg-white rounded-xl hover:bg-slate-50 transition-all group mb-3 shadow-sm"><div class="flex items-center gap-3"><div class="bg-${doc.color}-50 text-${doc.color}-600 p-2.5 rounded-lg group-hover:scale-110 transition-transform"><i class="fa-solid ${doc.icon}"></i></div><p class="text-xs font-bold text-slate-700">${doc.label}</p></div><i class="fa-solid fa-arrow-up-right-from-square text-slate-300 group-hover:text-${doc.color}-600 transition-colors"></i></a>`; } });
-            }
-        }        
+
+
+
+
+
+
+
+
+
+
+
+
+// Nouvelle fonction helper pour extraire juste l'ID (nécessaire pour la preview)
+function getDriveId(link) {
+    if (!link) return null;
+    const str = String(link);
+    const match = str.match(/\/d\/([a-zA-Z0-9_-]+)/) || str.match(/id=([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : null;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                    function loadMyProfile() {
+    // On trouve l'employé correspondant à l'utilisateur connecté
+    const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+    
+    if (myData) {
+        // Remplissage des infos textes
+        document.getElementById('emp-name').innerText = myData.nom; 
+        document.getElementById('emp-job').innerText = myData.poste;
+        
+        // Gestion Photo
+        if(myData.photo && myData.photo.length > 10) { 
+            document.getElementById('emp-photo-real').src = formatGoogleLink(myData.photo); 
+            document.getElementById('emp-photo-real').classList.remove('hidden'); 
+            document.getElementById('emp-avatar').classList.add('hidden'); 
+        }
+
+        // Gestion Dates
+        if(myData.date) { 
+            let sD = parseDateSmart(myData.date); 
+            document.getElementById('emp-start-date').innerText = sD.toLocaleDateString('fr-FR'); 
+            let eD = new Date(sD); 
+            eD.setDate(eD.getDate() + (parseInt(myData.limit) || 365)); 
+            document.getElementById('emp-end-date').innerText = eD.toLocaleDateString('fr-FR'); 
+        }
+
+        // Remplissage formulaires
+        document.getElementById('emp-email').value = myData.email || ""; 
+        document.getElementById('emp-phone').value = myData.telephone || ""; 
+        document.getElementById('emp-address').value = myData.adresse || ""; 
+        document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
+        
+        const dC = document.getElementById('doc-container'); 
+        dC.innerHTML = '';
+
+        // --- CORRECTION ICI ---
+        // Utilisation de 'myData' et syntaxe propre
+        const allDocs = [ 
+            { label: 'Contrat Actuel', link: myData.doc, icon: 'fa-file-signature', color: 'blue', key: 'contrat' }, 
+            { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo', key: 'cv' }, 
+            { label: 'Lettre Motivation', link: myData.lm_link, icon: 'fa-envelope-open-text', color: 'pink', key: 'lm' },
+            { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate', key: 'id_card' }, 
+            { label: 'Diplômes/Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald', key: 'diploma' },
+            { label: 'Attestations', link: myData.attestation_link, icon: 'fa-file-invoice', color: 'orange', key: 'attestation' } 
+        ];
+
+        allDocs.forEach(doc => {
+            const hasLink = doc.link && doc.link.length > 5 && doc.link !== '#';
+            dC.innerHTML += `
+                <div class="flex items-center justify-between p-3 border border-slate-100 bg-white rounded-xl hover:bg-slate-50 transition-all group mb-3 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-${doc.color}-50 text-${doc.color}-600 p-2.5 rounded-lg"><i class="fa-solid ${doc.icon}"></i></div>
+                        <p class="text-xs font-bold text-slate-700">${doc.label}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        ${hasLink ? `<a href="${doc.link}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg"><i class="fa-solid fa-up-right-from-square"></i></a>` : ''}
+                        <button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                        </button>
+                    </div>
+                </div>`;
+        });
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         
         function switchView(v){ 
             if(videoStream){ videoStream.getTracks().forEach(t=>t.stop()); videoStream=null; }
@@ -808,19 +1399,119 @@ async function refreshAllData() {
         function toggleSidebar(){const sb=document.getElementById('sidebar'), o=document.getElementById('sidebar-overlay'); if(sb.classList.contains('-translate-x-full')){sb.classList.remove('-translate-x-full');o.classList.remove('hidden');}else{sb.classList.add('-translate-x-full');o.classList.add('hidden');}}
         function filterTable(){const t=document.getElementById('search-input').value.toLowerCase(); const s=document.querySelector('.view-section.active'); if(s)s.querySelectorAll('tbody tr').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(t)?'':'none'})}
         function parseDateSmart(d){if(!d)return new Date();if(!isNaN(d)&&!String(d).includes('/'))return new Date((d-25569)*86400000);if(String(d).includes('/')){const p=d.split('/'); return new Date(p[2],p[1]-1,p[0]);}return new Date(d);}
-        function convertToInputDate(dStr){if(!dStr) return ""; if(dStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dStr; if(dStr.includes('/')){const p=dStr.split('/'); return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;} return "";}
-        function openEditModal(id){const e=employees.find(x=>x.id===id); if(e){document.getElementById('edit-modal').classList.remove('hidden'); document.getElementById('edit-id-hidden').value=id; document.getElementById('edit-statut').value=e.statut;}}
-        function closeEditModal(){document.getElementById('edit-modal').classList.add('hidden');}
         
-        async function submitUpdate(e){
-            e.preventDefault(); 
-            const id=document.getElementById('edit-id-hidden').value, s=document.getElementById('edit-statut').value; 
-            Swal.fire({title:'Mise à jour...', didOpen:()=>Swal.showLoading()}); 
-            try {
-                await secureFetch(`${URL_UPDATE}?id=${id}&new_statut=${s}&agent=${encodeURIComponent(currentUser.nom)}`);
-                closeEditModal(); Swal.fire('OK','Statut mis à jour','success'); refreshAllData();
-            } catch(e) { Swal.fire('Erreur', e.message, 'error'); }
+        
+        function convertToInputDate(dStr){if(!dStr) return ""; if(dStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dStr; if(dStr.includes('/')){const p=dStr.split('/'); return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;} return "";}
+        
+   
+
+
+
+
+
+                        // --- OUVRIR LA MODALE D'ADMINISTRATION ---
+function openEditModal(id) {
+    const e = employees.find(x => x.id === id);
+    if (e) {
+        // 1. Afficher la modale
+        document.getElementById('edit-modal').classList.remove('hidden');
+        document.getElementById('edit-id-hidden').value = id;
+        
+        // 2. Pré-remplir les champs standards
+        document.getElementById('edit-statut').value = e.statut || 'Actif';
+        
+        const roleSelect = document.getElementById('edit-role');
+        if(roleSelect) roleSelect.value = e.role || 'EMPLOYEE';
+        
+        const deptSelect = document.getElementById('edit-dept');
+        if(deptSelect) deptSelect.value = e.dept || 'IT & Tech';
+
+        const typeSelect = document.getElementById('edit-type-contrat');
+        if(typeSelect) typeSelect.value = e.limit || '365';
+        
+        // 3. Pré-remplir la DATE DE DÉBUT DE CONTRAT (Nouveau)
+        const dateInput = document.getElementById('edit-start-date');
+        if (dateInput) {
+            // Si l'employé a une date, on la met au format YYYY-MM-DD
+            // Sinon, on met la date d'aujourd'hui par défaut
+            if (e.date) {
+                dateInput.value = convertToInputDate(e.date);
+            } else {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
         }
+
+        // 4. Réinitialiser la case à cocher "Forcer l'initialisation"
+        const initCheck = document.getElementById('edit-init-check');
+        if(initCheck) initCheck.checked = false;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function submitUpdate(e) {
+    e.preventDefault(); 
+    const id = document.getElementById('edit-id-hidden').value;
+    
+    // Récupération des valeurs
+    const statut = document.getElementById('edit-statut').value;
+    const role = document.getElementById('edit-role') ? document.getElementById('edit-role').value : 'EMPLOYEE';
+    const dept = document.getElementById('edit-dept') ? document.getElementById('edit-dept').value : '';
+    const typeContrat = document.getElementById('edit-type-contrat').value;
+    
+    // NOUVEAU : Récupération Date & Checkbox
+    const newStartDate = document.getElementById('edit-start-date').value;
+    const forceInit = document.getElementById('edit-init-check').checked;
+
+    Swal.fire({title: 'Mise à jour...', text: 'Synchronisation...', didOpen: () => Swal.showLoading()}); 
+
+    let urlParams = `id=${id}&agent=${encodeURIComponent(currentUser.nom)}`;
+    urlParams += `&statut=${encodeURIComponent(statut)}`;
+    urlParams += `&role=${encodeURIComponent(role)}`;
+    urlParams += `&dept=${encodeURIComponent(dept)}`;
+    urlParams += `&limit=${typeContrat}`;
+    
+    // On envoie la date et le booléen
+    urlParams += `&start_date=${newStartDate}`;
+    urlParams += `&force_init=${forceInit ? 'true' : 'false'}`;
+
+    try {
+        const response = await secureFetch(`${URL_UPDATE}?${urlParams}`);
+        if(response.ok) {
+            closeEditModal(); 
+            Swal.fire('Succès', 'Contrat et dossier mis à jour', 'success'); 
+            refreshAllData();
+        } else {
+            throw new Error("Erreur serveur");
+        }
+    } catch(e) { 
+        Swal.fire('Erreur', e.message, 'error'); 
+    }
+}
+
+
+
+
+
+
+
+
+
+       
+       
+        function closeEditModal(){document.getElementById('edit-modal').classList.add('hidden');}
         
         function printBadge(id){
             const e=employees.find(x=>x.id===id); if(!e)return; 
@@ -867,6 +1558,7 @@ async function saveMyProfile() {
     fd.append('address', document.getElementById('emp-address').value);
     fd.append('dob', document.getElementById('emp-dob').value);
     fd.append('agent', currentUser.nom);
+    fd.append('doc_type', 'text_update'); // Dit à Make que c'est une modif de texte uniquement
 
     const pI = document.getElementById('emp-upload-photo');
     if (pI.files[0]) {
@@ -891,9 +1583,98 @@ async function saveMyProfile() {
         Swal.fire('Erreur', 'Échec de l\'enregistrement : ' + e.message, 'error');
     }
 }       
-       
-        async function handleOnboarding(e){e.preventDefault(); if(!capturedBlob){Swal.fire('Attention','Photo requise','warning');return;}const fd=new FormData();fd.append('nom',document.getElementById('f-nom').value); fd.append('email',document.getElementById('f-email').value);fd.append('telephone',document.getElementById('f-phone').value); fd.append('dob',document.getElementById('f-dob').value);fd.append('adresse',document.getElementById('f-address').value); fd.append('date',document.getElementById('f-date').value);fd.append('poste',document.getElementById('f-poste').value); fd.append('dept',document.getElementById('f-dept').value);fd.append('limit',document.getElementById('f-limit').value); fd.append('role',document.getElementById('f-role').value);fd.append('photo',capturedBlob,'photo.jpg'); fd.append('agent', currentUser.nom);Swal.fire({title:'Création profil...',didOpen:()=>Swal.showLoading()});try{ const r=await secureFetch(URL_WRITE_POST,{method:'POST',body:fd}); if(r.ok){ Swal.fire('Succès','Compte créé','success'); e.target.reset(); resetCamera(); switchView('employees'); refreshAllData(); } } catch(e){Swal.fire('Erreur',e.message,'error');}}
-        
+
+
+
+
+
+
+
+                                    async function handleOnboarding(e) {
+            e.preventDefault();
+            console.log("Tentative de création de profil...");
+
+            // 1. Vérification de la photo de profil (Obligatoire)
+            if (!capturedBlob) {
+                return Swal.fire('Attention', 'La photo de profil est obligatoire pour créer un compte.', 'warning');
+            }
+
+            const fd = new FormData();
+
+            try {
+                // 2. Récupération sécurisée des champs texte
+                // On vérifie que les éléments existent avant de lire .value
+                const getVal = (id) => {
+                    const el = document.getElementById(id);
+                    return el ? el.value : "";
+                };
+
+                fd.append('nom', getVal('f-nom'));
+                fd.append('email', getVal('f-email'));
+                fd.append('telephone', getVal('f-phone'));
+                fd.append('dob', getVal('f-dob'));
+                fd.append('adresse', getVal('f-address'));
+                fd.append('date', getVal('f-date'));
+                fd.append('poste', getVal('f-poste'));
+                fd.append('dept', getVal('f-dept'));
+                fd.append('limit', getVal('f-limit'));
+                fd.append('role', getVal('f-role'));
+                fd.append('agent', currentUser ? currentUser.nom : "Système");
+
+                // 3. Ajout de la photo de profil (Obligatoire)
+                fd.append('photo', capturedBlob, 'photo_profil.jpg');
+
+                // 4. Ajout des documents KYC (Optionnels)
+                // IMPORTANT : On vérifie s'ils existent AVANT de les ajouter
+                if (docBlobs.id_card) fd.append('id_card', docBlobs.id_card, 'piece_identite.jpg');
+                if (docBlobs.cv) fd.append('cv', docBlobs.cv, 'cv.jpg');
+                if (docBlobs.diploma) fd.append('diploma', docBlobs.diploma, 'diplome.jpg');
+                if (docBlobs.attestation) fd.append('attestation', docBlobs.attestation, 'attestation.jpg');
+
+                // 5. Affichage du chargement
+                Swal.fire({
+                    title: 'Création du dossier...',
+                    text: 'Envoi des informations et des documents au serveur sécurisé',
+                    didOpen: () => Swal.showLoading(),
+                    allowOutsideClick: false
+                });
+
+                // 6. Envoi au serveur Render
+                const response = await secureFetch(URL_WRITE_POST, {
+                    method: 'POST',
+                    body: fd
+                });
+
+                if (response.ok) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Profil créé !',
+                        text: 'Le collaborateur a été ajouté et ses accès ont été envoyés par email.',
+                        confirmButtonColor: '#2563eb'
+                    });
+                    location.reload(); // Recharge pour voir le nouveau membre
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Erreur serveur");
+                }
+
+            } catch (error) {
+                console.error("Erreur lors de l'onboarding:", error);
+                Swal.fire('Échec', "Impossible de créer le profil : " + error.message, 'error');
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
         function startScanner(){
             let scannerInstance = null;
             Swal.fire({
@@ -956,42 +1737,116 @@ async function saveMyProfile() {
             try { const r = await secureFetch(URL_UPLOAD_SIGNED_CONTRACT, { method: 'POST', body: fd }); if(r.ok) { Swal.fire('Succès', 'Contrat enregistré', 'success'); closeContractModal(); refreshAllData(); } } catch(e) { Swal.fire('Erreur', e.message, 'error'); } 
         }
         
+ function showLeaveDetail(nom, type, debut, fin, motif, encodedLink) {
+    const docLink = decodeURIComponent(encodedLink);
+    let documentHtml = '';
+    
+    // On récupère l'ID Drive pour construire le mode "Preview"
+    const driveId = getDriveId(docLink);
 
+    if (driveId) {
+        // C'est un lien Google Drive valide -> ON AFFICHE LA PREVIEW
+        const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+        
+        documentHtml = `
+            <div class="mt-6 pt-4 border-t border-slate-100 animate-fadeIn">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-3 flex justify-between items-center">
+                    <span>Aperçu du justificatif</span>
+                    <a href="${docLink}" target="_blank" class="text-blue-600 hover:underline cursor-pointer"><i class="fa-solid fa-expand mr-1"></i>Ouvrir en grand</a>
+                </p>
+                
+                <!-- ZONE DE PREVIEW -->
+                <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100 relative group">
+                    <iframe src="${previewUrl}" width="100%" height="250" style="border:none;" allow="autoplay"></iframe>
+                    
+                    <!-- Overlay au survol pour inciter à cliquer si besoin -->
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/5 pointer-events-none transition-all"></div>
+                </div>
+            </div>
+        `;
+    } 
+    else if (docLink && docLink !== 'null' && docLink.length > 5) {
+        // Lien existe mais pas Google Drive (ex: lien direct image serveur)
+        documentHtml = `
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-3">Justificatif</p>
+                <div class="text-center">
+                    <img src="${docLink}" class="max-h-48 rounded-lg mx-auto border shadow-sm cursor-pointer hover:scale-105 transition-transform" 
+                         onclick="Swal.fire({imageUrl: '${docLink}', showConfirmButton: false, width: '90vw'})" 
+                         alt="Justificatif" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    
+                    <!-- Fallback si l'image ne charge pas -->
+                    <a href="${docLink}" target="_blank" style="display:none" class="flex items-center gap-3 p-3 border rounded-xl bg-slate-50 hover:bg-slate-100">
+                        <i class="fa-solid fa-paperclip text-slate-400"></i>
+                        <span class="text-sm font-bold text-slate-700">Voir le fichier</span>
+                    </a>
+                </div>
+            </div>
+        `;
+    } 
+    else {
+        // Aucun document
+        documentHtml = `
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-2">Pièce Justificative</p>
+                <div class="flex items-center gap-2 p-3 rounded-xl border border-dashed border-slate-200 text-slate-400 bg-slate-50/50">
+                    <i class="fa-solid fa-file-circle-xmark"></i>
+                    <span class="text-xs font-bold">Aucun document fourni</span>
+                </div>
+            </div>
+        `;
+    }
 
-                function showLeaveDetail(nom, type, debut, fin, motif) {
+    // Affichage de la modale
     Swal.fire({
-        title: 'Détails de la demande',
         html: `
-            <div class="text-left space-y-4 p-2">
-                <div class="pb-2 border-b">
-                    <p class="text-[10px] font-black text-slate-400 uppercase">Collaborateur</p>
-                    <p class="font-bold text-slate-800">${nom}</p>
-                </div>
-                <div class="grid grid-cols-2 gap-4 pb-2 border-b">
+            <div class="text-left font-sans">
+                <div class="flex justify-between items-start mb-6 border-b border-slate-100 pb-4">
                     <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase">Type</p>
-                        <p class="text-sm font-bold text-blue-600">${type}</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Collaborateur</p>
+                        <h3 class="font-extrabold text-lg text-slate-800 m-0 leading-tight">${nom}</h3>
                     </div>
-                    <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase">Période</p>
-                        <p class="text-xs font-bold text-slate-700">${debut} au ${fin}</p>
+                    <div class="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide border border-blue-100">
+                        ${type}
                     </div>
                 </div>
+
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-4">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="border-r border-slate-200">
+                            <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Du (Matin)</p>
+                            <p class="font-bold text-sm text-slate-700 m-0">${debut}</p>
+                        </div>
+                        <div>
+                            <p class="text-[9px] font-black text-slate-400 uppercase mb-1">Au (Soir)</p>
+                            <p class="font-bold text-sm text-slate-700 m-0">${fin}</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Motif de l'absence</p>
-                    <div class="bg-slate-50 p-4 rounded-xl italic text-sm text-slate-600 border border-slate-100">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Motif</p>
+                    <div class="bg-white p-4 rounded-xl text-sm text-slate-600 border border-slate-200 italic shadow-sm">
                         "${motif}"
                     </div>
                 </div>
+                
+                ${documentHtml}
             </div>
         `,
+        showConfirmButton: true,
         confirmButtonText: 'Fermer',
-        confirmButtonColor: '#1e293b',
+        confirmButtonColor: '#0f172a',
+        width: 600, // Un peu plus large pour bien voir le document
+        padding: '1.5rem',
         customClass: {
-            popup: 'rounded-3xl'
+            popup: 'rounded-[2rem]'
         }
     });
 }
+
+
 
 
 
@@ -1062,49 +1917,82 @@ async function saveMyProfile() {
 
 
 
+                             async function fetchLeaveRequests() {
+    if (!currentUser || currentUser.role === 'EMPLOYEE') return;
+    
+    const body = document.getElementById('leave-requests-body');
+    const section = document.getElementById('manager-leave-section');
+    
+    body.innerHTML = '<tr><td colspan="3" class="p-4 text-center italic text-slate-400">Chargement des demandes...</td></tr>';
 
-
-
-
-
-
-
-    async function fetchLeaveRequests() {
-    if (currentUser.role === 'EMPLOYEE') return;
     try {
         const r = await secureFetch(`${URL_READ_LEAVES}?agent=${encodeURIComponent(currentUser.nom)}`);
-        const leaves = await r.json();
-        const body = document.getElementById('leave-requests-body');
-        const section = document.getElementById('manager-leave-section');
-        body.innerHTML = '';
+        if (!r.ok) throw new Error("Erreur réseau Make");
+
+        let leaves = await r.json();
+        if (!Array.isArray(leaves)) leaves = []; 
+
         const pending = leaves.filter(l => l.statut === 'En attente');
-        
+        body.innerHTML = '';
+
         if (pending.length > 0) {
             section.classList.remove('hidden');
+
             pending.forEach(l => {
-                // On prépare les données pour la popup (en protégeant les apostrophes)
-                const motifEscaped = (l.motif || "Aucun motif précisé").replace(/'/g, "\\'");
+                const safeNom = encodeURIComponent(l.nom || "Inconnu");
+                const safeMotif = encodeURIComponent(l.motif || "Aucun motif");
                 
+                // Recherche du lien document
+                let rawDoc = l.justificatif_link || l.justificatif || l.pj || l.attachment || l.url;
+                let docLink = '';
+                if (Array.isArray(rawDoc) && rawDoc.length > 0) rawDoc = rawDoc[0].url || rawDoc[0];
+                if (rawDoc && rawDoc !== 'null' && rawDoc !== '#') {
+                    docLink = formatGoogleLink(rawDoc);
+                }
+
                 body.innerHTML += `
-                <tr>
+                <tr class="border-b hover:bg-slate-50 transition-colors">
                     <td class="px-8 py-4 font-bold text-sm text-slate-700">${l.nom}</td>
-                    <td class="px-8 py-4 text-xs text-slate-500">${l.debut} au ${l.fin}</td>
-                    <td class="px-8 py-4 text-right space-x-2">
-                        <!-- NOUVEAU BOUTON VOIR -->
-                        <button onclick="showLeaveDetail('${l.nom}', '${l.type}', '${l.debut}', '${l.fin}', '${motifEscaped}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                    <td class="px-8 py-4 text-xs text-slate-500">
+                        ${l.debut} <span class="text-slate-300 mx-1">➔</span> ${l.fin}
+                    </td>
+                    <td class="px-8 py-4 text-right flex justify-end items-center gap-2">
+                        <button onclick="showLeaveDetailFromSafeData('${safeNom}', '${l.type}', '${l.debut}', '${l.fin}', '${safeMotif}', '${encodeURIComponent(docLink)}')" 
+                                class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all">
                             <i class="fa-solid fa-eye"></i>
                         </button>
-                        <button onclick="processLeave('${l.record_id}', 'Validé')" class="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">OUI</button>
-                        <button onclick="processLeave('${l.record_id}', 'Refusé')" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">NON</button>
+                        <button onclick="processLeave('${l.record_id}', 'Validé')" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">OUI</button>
+                        <button onclick="processLeave('${l.record_id}', 'Refusé')" class="bg-red-50 text-red-600 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase">NON</button>
                     </td>
                 </tr>`;
             });
-        } else { section.classList.add('hidden'); }
-    } catch (e) { console.log("Erreur chargement congés"); }
+        } else { 
+            section.classList.add('hidden'); 
+        }
+    } catch (e) { 
+        console.error("ERREUR:", e);
+        body.innerHTML = `<tr><td colspan="3" class="text-center text-red-500 p-4">Erreur : ${e.message}</td></tr>`;
+    }
 }
 
 
 
+
+
+
+
+
+
+
+// Nouvelle fonction intermédiaire pour décoder les données sécurisées
+function showLeaveDetailFromSafeData(safeNom, type, debut, fin, safeMotif, safeDocLink) {
+    const nom = decodeURIComponent(safeNom);
+    const motif = decodeURIComponent(safeMotif);
+    const docLink = safeDocLink ? decodeURIComponent(safeDocLink) : null;
+    
+    // Appel de la vraie fonction d'affichage
+    showLeaveDetail(nom, type, debut, fin, motif, docLink);
+}
 
 
 
@@ -1166,7 +2054,356 @@ async function processLeave(recordId, decision) {
 
 
 
+
+// Fonction pour choisir entre Caméra et Fichier via une alerte
+function openDocCamera(target) {
+    Swal.fire({
+        title: 'Source du document',
+        text: "Voulez-vous prendre une photo ou choisir un fichier ?",
+        showCancelButton: true,
+        confirmButtonText: '📸 Caméra',
+        cancelButtonText: '📁 Fichier',
+        confirmButtonColor: '#2563eb'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            startGenericCamera(target);
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            document.getElementById('f-' + target).click();
+        }
+    });
+}
+
+// Démarre la caméra pour n'importe quel doc
+async function startGenericCamera(target) {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        Swal.fire({
+            title: 'Capture',
+            html: `<video id="temp-video" autoplay playsinline class="w-full rounded-xl"></video>`,
+            confirmButtonText: 'CAPTURER',
+            showCancelButton: true,
+            didOpen: () => { document.getElementById('temp-video').srcObject = stream; }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const video = document.getElementById('temp-video');
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                canvas.toBlob(blob => {
+                    saveDoc(target, blob);
+                    stream.getTracks().forEach(t => t.stop());
+                }, 'image/jpeg', 0.8);
+            } else {
+                stream.getTracks().forEach(t => t.stop());
+            }
+        });
+    } catch (e) { Swal.fire('Erreur', 'Caméra inaccessible', 'error'); }
+}
+
+// Aperçu et stockage du fichier (qu'il vienne du PC ou de la Caméra)
+function previewDocFile(event, target) {
+    const file = event.target.files[0];
+    if (file) saveDoc(target, file);
+}
+
+function saveDoc(target, fileOrBlob) {
+    docBlobs[target] = fileOrBlob;
+    const preview = document.getElementById('preview-' + target);
+    const icon = document.getElementById('icon-' + target);
     
+    if(preview) { // Si on est dans le formulaire onboarding
+        preview.src = URL.createObjectURL(fileOrBlob);
+        preview.classList.remove('hidden');
+        if(icon) icon.classList.add('hidden');
+    } else if(target === 'leave_justif') { // Si on est dans les congés
+        document.getElementById('leave-doc-preview').innerHTML = '<i class="fa-solid fa-check text-emerald-500"></i>';
+    }
+}
+
+
+
+
+ async function updateSingleDoc(docKey, employeeId) {
+    const { value: file } = await Swal.fire({
+        title: 'Mettre à jour le document',
+        input: 'file',
+        inputAttributes: { 'accept': 'image/*,application/pdf' },
+        showCancelButton: true,
+        confirmButtonText: 'Uploader',
+        cancelButtonColor: '#ef4444',
+        confirmButtonColor: '#2563eb'
+    });
+
+    if (file) {
+        Swal.fire({ title: 'Envoi...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+        const fd = new FormData();
+        fd.append('id', employeeId);
+        fd.append('agent', currentUser.nom);
+        fd.append('new_photo', file); // On utilise le même champ binaire que ton scénario
+        fd.append('doc_type', docKey); // <--- C'est ça qui ne sera plus "undefined" !
+
+        try {
+            const r = await secureFetch(URL_EMPLOYEE_UPDATE, { method: 'POST', body: fd });
+            if (r.ok) {
+                Swal.fire('Succès', 'Document mis à jour', 'success');
+                refreshAllData();
+            }
+        } catch (e) { Swal.fire('Erreur', e.message, 'error'); }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+async function fetchCandidates() {
+    const body = document.getElementById('candidates-body');
+    // Petit loader sympa
+    body.innerHTML = '<tr><td colspan="4" class="p-8 text-center"><i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-2xl"></i><p class="text-xs text-slate-400 mt-2 font-bold uppercase">Chargement des talents...</p></td></tr>';
+
+    try {
+        const r = await secureFetch(`${URL_READ_CANDIDATES}?agent=${encodeURIComponent(currentUser.nom)}`);
+        
+        // On récupère la réponse
+        let rawData = await r.json();
+        
+        // DEBUG : Regardez dans votre console (F12) ce qui s'affiche ici
+        console.log("CANDIDATS REÇUS (BRUT) :", rawData);
+
+        let candidates = [];
+
+        // CAS 1 : C'est déjà une liste parfaite (Cas idéal avec Array Aggregator)
+        if (Array.isArray(rawData)) {
+            candidates = rawData;
+        } 
+        // CAS 2 : C'est un objet unique (Make sans Aggregator)
+        else if (typeof rawData === 'object' && rawData !== null) {
+            // Si l'objet contient une propriété "nom" ou "id", c'est un candidat seul
+            if (rawData.nom || rawData.record_id || rawData.id) {
+                candidates = [rawData];
+            } 
+            // CAS 3 : Make renvoie parfois { "items": [...] } ou { "data": [...] }
+            else if (rawData.items && Array.isArray(rawData.items)) {
+                candidates = rawData.items;
+            }
+            else if (rawData.data && Array.isArray(rawData.data)) {
+                candidates = rawData.data;
+            }
+        }
+
+        console.log("CANDIDATS TRAITÉS (LISTE) :", candidates);
+
+        body.innerHTML = '';
+
+        if (candidates.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 font-bold bg-slate-50 rounded-xl border border-dashed border-slate-200">Aucune candidature en attente</td></tr>';
+            return;
+        }
+
+        // Boucle d'affichage
+        candidates.forEach(c => {
+            const safeNom = encodeURIComponent(c.nom || "Inconnu");
+            
+            // Sécurisation des liens documents
+            const cvLink = c.cv_link ? encodeURIComponent(formatGoogleLink(c.cv_link)) : '';
+            const lmLink = c.lm_link ? encodeURIComponent(formatGoogleLink(c.lm_link)) : '';
+            const dipLink = c.diploma_link ? encodeURIComponent(formatGoogleLink(c.diploma_link)) : '';
+            const attLink = c.attestation_link ? encodeURIComponent(formatGoogleLink(c.attestation_link)) : '';
+
+            // Gestion du Statut (Couleurs)
+            let badgeClass = 'bg-slate-100 text-slate-600';
+            let st = c.statut || 'Nouveau';
+            
+            if(st === 'Entretien') badgeClass = 'bg-blue-100 text-blue-700';
+            else if(st === 'Embauché' || st === 'Validé') badgeClass = 'bg-emerald-100 text-emerald-700';
+            else if(st.includes('Refus')) badgeClass = 'bg-red-50 text-red-500';
+            else if(st === 'Nouveau') badgeClass = 'bg-yellow-50 text-yellow-700';
+
+            const btnDocs = `
+                <button onclick="showCandidateDocs('${safeNom}', '${c.poste || 'Candidat'}', '${cvLink}', '${lmLink}', '${dipLink}', '${attLink}')" 
+                        class="p-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all mr-2" title="Ouvrir le dossier">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+            `;
+
+            let actionButtons = '';
+
+            // Logique des boutons d'action selon le statut
+            if (st === 'Nouveau' || !c.statut) {
+                actionButtons = `
+                    ${btnDocs}
+                    <button onclick="handleCandidateAction('${c.record_id}', 'VALIDER_POUR_ENTRETIEN')" class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-blue-200 transition-all mr-2"><i class="fa-solid fa-calendar-check mr-1"></i> Entretien</button>
+                    <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_IMMEDIAT')" class="bg-white border border-red-100 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-xmark mr-1"></i> Refus</button>
+                `;
+            } else if (st === 'Entretien') {
+                actionButtons = `
+                    ${btnDocs}
+                    <button onclick="handleCandidateAction('${c.record_id}', 'ACCEPTER_EMBAUCHE')" class="bg-emerald-500 text-white hover:bg-emerald-600 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-emerald-200 transition-all mr-2"><i class="fa-solid fa-user-plus mr-1"></i> Embaucher</button>
+                    <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_APRES_ENTRETIEN')" class="bg-white border border-orange-100 text-orange-500 hover:bg-orange-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-thumbs-down mr-1"></i> Refus</button>
+                `;
+            } else {
+                actionButtons = `${btnDocs} <span class="text-[10px] font-bold text-slate-300 italic">Dossier Traité</span>`;
+            }
+
+            body.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition-colors group">
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">${c.nom ? c.nom.charAt(0) : '?'}</div>
+                        <div>
+                            <div class="font-bold text-sm text-slate-800">${c.nom}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">${c.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-tight">${c.poste || 'Non précisé'}</td>
+                <td class="px-6 py-4 text-center">
+                    <span class="${badgeClass} px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide border border-black/5 shadow-sm">${st}</span>
+                </td>
+                <td class="px-6 py-4 text-right flex justify-end items-center">
+                    ${actionButtons}
+                </td>
+            </tr>`;
+        });
+
+    } catch (e) {
+        console.error("Erreur Candidats:", e);
+        body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500 font-bold text-sm bg-red-50 rounded-xl border border-red-100">Erreur de chargement : ${e.message}</td></tr>`;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- POPUP DOSSIER (4 ONGLETS) ---
+function showCandidateDocs(safeNom, poste, cv, lm, dip, att) {
+    const nom = decodeURIComponent(safeNom);
+    const docs = {
+        'cv': cv ? decodeURIComponent(cv) : null,
+        'lm': lm ? decodeURIComponent(lm) : null,
+        'dip': dip ? decodeURIComponent(dip) : null,
+        'att': att ? decodeURIComponent(att) : null
+    };
+
+    // Helper pour afficher l'iframe Google Preview
+    const getViewer = (link) => {
+        if (!link || link.length < 5 || link.includes('ui-avatars')) return `<div class="h-64 flex items-center justify-center text-slate-400 italic bg-slate-50 rounded-xl border border-dashed">Document non fourni</div>`;
+        const driveId = getDriveId(link);
+        const url = driveId ? `https://drive.google.com/file/d/${driveId}/preview` : link;
+        return `<iframe src="${url}" width="100%" height="500px" class="rounded-xl border border-slate-200 bg-white mb-2"></iframe>
+                <div class="text-right"><a href="${link}" target="_blank" class="text-xs font-bold text-blue-600 hover:underline"><i class="fa-solid fa-external-link-alt"></i> Ouvrir dans un nouvel onglet</a></div>`;
+    };
+
+    Swal.fire({
+        title: `<div class="text-left"><span class="text-xs text-slate-400 uppercase">Candidature</span><div class="text-2xl font-black text-slate-800">${nom}</div><div class="text-sm text-blue-600 font-bold uppercase">${poste}</div></div>`,
+        html: `
+            <div class="mt-4">
+                <div class="flex p-1 bg-slate-100 rounded-xl mb-4 gap-1">
+                    <button onclick="switchTab('cv')" id="tab-cv" class="doc-tab flex-1 py-2 text-[10px] font-black uppercase rounded-lg bg-white shadow-sm text-slate-800 transition-all">CV</button>
+                    <button onclick="switchTab('lm')" id="tab-lm" class="doc-tab flex-1 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 hover:bg-white/50 transition-all">Lettre</button>
+                    <button onclick="switchTab('dip')" id="tab-dip" class="doc-tab flex-1 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 hover:bg-white/50 transition-all">Diplômes</button>
+                    <button onclick="switchTab('att')" id="tab-att" class="doc-tab flex-1 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 hover:bg-white/50 transition-all">Attest.</button>
+                </div>
+                <div id="content-cv" class="doc-content block">${getViewer(docs.cv)}</div>
+                <div id="content-lm" class="doc-content hidden">${getViewer(docs.lm)}</div>
+                <div id="content-dip" class="doc-content hidden">${getViewer(docs.dip)}</div>
+                <div id="content-att" class="doc-content hidden">${getViewer(docs.att)}</div>
+            </div>
+        `,
+        width: 900,
+        showConfirmButton: true,
+        confirmButtonText: 'Fermer',
+        confirmButtonColor: '#0f172a',
+        didOpen: () => {
+            // Logique locale pour les onglets
+            window.switchTab = (t) => {
+                document.querySelectorAll('.doc-tab').forEach(b => { b.classList.remove('bg-white', 'shadow-sm', 'text-slate-800'); b.classList.add('text-slate-500'); });
+                document.querySelectorAll('.doc-content').forEach(c => c.classList.add('hidden'));
+                document.getElementById(`tab-${t}`).classList.add('bg-white', 'shadow-sm', 'text-slate-800');
+                document.getElementById(`tab-${t}`).classList.remove('text-slate-500');
+                document.getElementById(`content-${t}`).classList.remove('hidden');
+            };
+        }
+    });
+}
+
+
+
+
+function convertToInputDate(dStr){
+    if(!dStr) return ""; 
+    // Si c'est déjà au format YYYY-MM-DD
+    if(dStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dStr; 
+    // Si c'est au format DD/MM/YYYY
+    if(dStr.includes('/')){
+        const p=dStr.split('/'); 
+        return `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+    } 
+    return "";
+}
+
+// --- GESTION DES ACTIONS ---
+async function handleCandidateAction(id, action) {
+    const conf = {
+        'VALIDER_POUR_ENTRETIEN': { t: 'Inviter en entretien ?', c: '#2563eb', txt: "Un email d'invitation sera envoyé." },
+        'REFUS_IMMEDIAT': { t: 'Refuser la candidature ?', c: '#ef4444', txt: "Un email de refus standard sera envoyé." },
+        'ACCEPTER_EMBAUCHE': { t: 'Confirmer l\'embauche ?', c: '#10b981', txt: 'Cela créera automatiquement le profil employé et enverra les accès.' },
+        'REFUS_APRES_ENTRETIEN': { t: 'Refuser après entretien ?', c: '#f97316', txt: "Un email personnalisé (plus doux) sera envoyé." }
+    }[action];
+
+    const res = await Swal.fire({ 
+        title: conf.t, 
+        text: conf.txt, 
+        icon: 'question', 
+        showCancelButton: true, 
+        confirmButtonColor: conf.c, 
+        confirmButtonText: 'Oui, confirmer' 
+    });
+    
+    if (res.isConfirmed) {
+        Swal.fire({ title: 'En cours...', didOpen: () => Swal.showLoading() });
+        try {
+            await secureFetch(URL_CANDIDATE_ACTION, {
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id: id, action: action, agent: currentUser.nom })
+            });
+            Swal.fire('Succès', 'Action effectuée', 'success');
+            fetchCandidates();
+            // Si on embauche, on recharge aussi la liste des employés
+            if(action === 'ACCEPTER_EMBAUCHE') refreshAllData();
+        } catch(e) { 
+            Swal.fire('Erreur', e.message, 'error'); 
+        }
+    }
+}   
+
+
+
+
+
+
+
+
+
     </script>
 </body>
 </html>
