@@ -294,7 +294,7 @@
 
 
 
-                                                                            <!-- VUE 2: LISTE COLLABORATEURS -->
+                 <!-- VUE 2: LISTE COLLABORATEURS -->
                 <section id="view-employees" class="view-section management-only">
                     
                     <!-- EN-TÊTE (HAUT) -->
@@ -392,48 +392,48 @@
 
 
 
-                                                        <!-- SECTION DOCUMENTS KYC -->
+                                <!-- SECTION DOCUMENTS KYC (CORRIGÉE) -->
                             <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-slate-100 rounded-2xl border-2 border-dashed border-slate-200 mt-4">
                                 <p class="md:col-span-4 text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Documents obligatoires (Photo ou PDF)</p>
                                 
                                 <!-- Pièce d'Identité -->
                                 <div class="space-y-2">
                                     <label class="block text-[9px] font-bold text-slate-400 uppercase">Pièce d'Identité</label>
-                                    <div class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer" onclick="openDocCamera('id_card')">
+                                    <div id="btn-id_card" class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-50 transition-all" onclick="openDocCamera('id_card')">
                                         <img id="preview-id_card" class="hidden h-full w-full object-cover">
-                                        <i id="icon-id_card" class="fa-solid fa-id-card text-slate-300"></i>
+                                        <i id="icon-id_card" class="fa-solid fa-id-card text-slate-300 text-2xl"></i>
                                     </div>
-                                    <input type="file" id="f-id_card" class="hidden" onchange="previewDocFile(event, 'id_card')">
+                                    <input type="file" id="f-id_card" class="hidden" onchange="previewDocFile(event, 'id_card'); updateFileFeedback('f-id_card', 'btn-id_card')">
                                 </div>
 
                                 <!-- CV -->
                                 <div class="space-y-2">
                                     <label class="block text-[9px] font-bold text-slate-400 uppercase">Curriculum Vitae</label>
-                                    <div class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer" onclick="openDocCamera('cv')">
+                                    <div id="btn-cv" class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-50 transition-all" onclick="openDocCamera('cv')">
                                         <img id="preview-cv" class="hidden h-full w-full object-cover">
-                                        <i id="icon-cv" class="fa-solid fa-file-pdf text-slate-300"></i>
+                                        <i id="icon-cv" class="fa-solid fa-file-pdf text-slate-300 text-2xl"></i>
                                     </div>
-                                    <input type="file" id="f-cv" class="hidden" onchange="previewDocFile(event, 'cv')">
+                                    <input type="file" id="f-cv" class="hidden" onchange="previewDocFile(event, 'cv'); updateFileFeedback('f-cv', 'btn-cv')">
                                 </div>
 
                                 <!-- Diplôme -->
                                 <div class="space-y-2">
                                     <label class="block text-[9px] font-bold text-slate-400 uppercase">Dernier Diplôme</label>
-                                    <div class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer" onclick="openDocCamera('diploma')">
+                                    <div id="btn-diploma" class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-50 transition-all" onclick="openDocCamera('diploma')">
                                         <img id="preview-diploma" class="hidden h-full w-full object-cover">
-                                        <i id="icon-diploma" class="fa-solid fa-graduation-cap text-slate-300"></i>
+                                        <i id="icon-diploma" class="fa-solid fa-graduation-cap text-slate-300 text-2xl"></i>
                                     </div>
-                                    <input type="file" id="f-diploma" class="hidden" onchange="previewDocFile(event, 'diploma')">
+                                    <input type="file" id="f-diploma" class="hidden" onchange="previewDocFile(event, 'diploma'); updateFileFeedback('f-diploma', 'btn-diploma')">
                                 </div>
 
                                 <!-- Attestation -->
                                 <div class="space-y-2">
                                     <label class="block text-[9px] font-bold text-slate-400 uppercase">Attestation / Autres</label>
-                                    <div class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer" onclick="openDocCamera('attestation')">
+                                    <div id="btn-attestation" class="h-20 bg-white rounded-lg border flex items-center justify-center overflow-hidden cursor-pointer hover:bg-slate-50 transition-all" onclick="openDocCamera('attestation')">
                                         <img id="preview-attestation" class="hidden h-full w-full object-cover">
-                                        <i id="icon-attestation" class="fa-solid fa-file-invoice text-slate-300"></i>
+                                        <i id="icon-attestation" class="fa-solid fa-file-invoice text-slate-300 text-2xl"></i>
                                     </div>
-                                    <input type="file" id="f-attestation" class="hidden" onchange="previewDocFile(event, 'attestation')">
+                                    <input type="file" id="f-attestation" class="hidden" onchange="previewDocFile(event, 'attestation'); updateFileFeedback('f-attestation', 'btn-attestation')">
                                 </div>
                             </div>
 
@@ -766,19 +766,43 @@
 </div>
 
     <!-- MODAL CONTRAT SIGNE -->
+
     <div id="contract-modal" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[110] p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
             <h3 class="font-black mb-2 text-xl text-center uppercase text-slate-800">Ajouter le Contrat Signé</h3>
             <p class="text-slate-400 text-sm text-center mb-8">Uploadez le scan ou prenez une photo du contrat cacheté.</p>
             <input type="hidden" id="contract-id-hidden">
             <div class="flex flex-col items-center p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 mb-8">
-                <div id="contract-preview-container" class="w-full h-48 bg-slate-200 rounded-xl mb-4 overflow-hidden flex items-center justify-center"><video id="contract-video" class="w-full h-full object-cover hidden" autoplay playsinline></video><img id="contract-img-preview" class="w-full h-full object-cover hidden"><i class="fa-solid fa-file-signature text-slate-400 text-4xl" id="contract-icon"></i></div>
-                <div class="flex gap-2 w-full"><button type="button" onclick="startContractCamera()" class="flex-1 text-[10px] font-black bg-white border py-3 rounded-xl uppercase"><i class="fa-solid fa-camera mr-2"></i>Photo</button><button type="button" onclick="document.getElementById('contract-upload').click()" class="flex-1 text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 py-3 rounded-xl uppercase"><i class="fa-solid fa-upload mr-2"></i>Fichier</button></div>
-                <input type="file" id="contract-upload" class="hidden" accept="image/*,application/pdf" onchange="previewContractFile(event)"><button type="button" id="btn-contract-capture" onclick="takeContractSnapshot()" class="hidden bg-blue-600 text-white py-3 rounded-xl w-full mt-4 font-black text-xs">CAPTURER LA PHOTO</button>
+                <div id="contract-preview-container" class="w-full h-48 bg-slate-200 rounded-xl mb-4 overflow-hidden flex items-center justify-center">
+                    <video id="contract-video" class="w-full h-full object-cover hidden" autoplay playsinline></video>
+                    <img id="contract-img-preview" class="w-full h-full object-cover hidden">
+                    <i class="fa-solid fa-file-signature text-slate-400 text-4xl" id="contract-icon"></i>
+                </div>
+                
+                <div class="flex gap-2 w-full">
+                    <button type="button" onclick="startContractCamera()" class="flex-1 text-[10px] font-black bg-white border py-3 rounded-xl uppercase hover:bg-slate-50 transition-all">
+                        <i class="fa-solid fa-camera mr-2"></i>Photo
+                    </button>
+                    
+                    <!-- ID AJOUTÉ ICI -->
+                    <button type="button" id="btn-contract-label" onclick="document.getElementById('contract-upload').click()" class="flex-1 text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 py-3 rounded-xl uppercase hover:bg-blue-100 transition-all">
+                        <i class="fa-solid fa-upload mr-2"></i>Fichier
+                    </button>
+                </div>
+
+                <!-- ONCHANGE MIS A JOUR -->
+                <input type="file" id="contract-upload" class="hidden" accept="image/*,application/pdf" onchange="previewContractFile(event); updateFileFeedback('contract-upload', 'btn-contract-label')">
+                
+                <button type="button" id="btn-contract-capture" onclick="takeContractSnapshot()" class="hidden bg-blue-600 text-white py-3 rounded-xl w-full mt-4 font-black text-xs hover:bg-blue-700 transition-all">CAPTURER LA PHOTO</button>
             </div>
-            <div class="flex gap-4"><button onclick="submitSignedContract()" class="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black shadow-lg uppercase text-xs tracking-widest transition-all">Enregistrer le contrat</button><button onclick="closeContractModal()" class="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-bold uppercase text-xs">Annuler</button></div>
+            <div class="flex gap-4">
+                <button onclick="submitSignedContract()" class="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black shadow-lg uppercase text-xs tracking-widest transition-all hover:bg-green-700 active:scale-95">Enregistrer le contrat</button>
+                <button onclick="closeContractModal()" class="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-bold uppercase text-xs hover:bg-slate-200 transition-all">Annuler</button>
+            </div>
         </div>
     </div>
+
+
 
     <!-- MODAL DEMANDE CONGÉ -->
     <div id="leave-modal" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[120] p-4 backdrop-blur-sm">
@@ -1863,10 +1887,49 @@ async function submitUpdate(e) {
        
         function closeEditModal(){document.getElementById('edit-modal').classList.add('hidden');}
         
-        function printBadge(id){
-            const e=employees.find(x=>x.id===id); if(!e)return; 
+       async function printBadge(id) {
+            const e = employees.find(x => x.id === id); 
+            if(!e) return; 
+            
+            // On récupère le token
             const token = localStorage.getItem('sirh_token');
-            window.open(`${URL_BADGE_GEN}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&photo=${encodeURIComponent(e.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`,'_blank','width=400,height=600');
+            
+            Swal.fire({title:'Génération...', didOpen:()=>Swal.showLoading()});
+
+            try {
+                // On construit l'URL
+                const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&photo=${encodeURIComponent(formatGoogleLink(e.photo)||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
+
+                // AU LIEU DE FAIRE window.open(url)...
+                // On va chercher le contenu (le code HTML du badge)
+                const response = await fetch(url);
+                
+                if (!response.ok) throw new Error("Erreur génération");
+
+                // On récupère le texte HTML
+                const htmlContent = await response.text();
+
+                // On ferme le loader
+                Swal.close();
+
+                // On ouvre une fenêtre vide
+                const w = window.open('', '_blank', 'width=400,height=600');
+                
+                // On écrit le HTML dedans manuellement
+                w.document.open();
+                w.document.write(htmlContent);
+                w.document.close();
+
+                // Petit délai pour laisser les images charger avant d'imprimer (si le HTML contient un script d'impression auto, ça marchera aussi)
+                w.onload = function() {
+                    // Optionnel : forcer l'impression si le HTML ne le fait pas déjà
+                    // w.print();
+                };
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Erreur', 'Impossible de générer le badge : ' + error.message, 'error');
+            }
         }
         
         async function startCameraFeed(){try{videoStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});const v=document.getElementById('video-stream');v.srcObject=videoStream;v.classList.remove('hidden');document.getElementById('captured-image').classList.add('hidden');document.getElementById('btn-capture').classList.remove('hidden');document.getElementById('initial-controls').classList.add('hidden');document.getElementById('photo-placeholder').classList.add('hidden');}catch(e){Swal.fire('Erreur', 'Caméra bloquée', 'error');}}
@@ -2837,7 +2900,50 @@ async function handleCandidateAction(id, action) {
 
 
 
-    </script>
+    
+    
+
+
+
+
+// --- FEEDBACK FICHIER ---
+function updateFileFeedback(inputId, labelId) {
+    const input = document.getElementById(inputId);
+    const label = document.getElementById(labelId); // Le bouton ou le conteneur visuel
+    const file = input.files[0];
+
+    if (file) {
+        // Change le style pour dire "C'est bon !"
+        if (label) {
+            // Sauvegarde le texte original si pas déjà fait
+            if (!label.dataset.originalText) label.dataset.originalText = label.innerHTML;
+            
+            // Affiche le nom et une icône verte
+            label.innerHTML = `<i class="fa-solid fa-check-circle text-emerald-500 mr-2"></i> <span class="text-emerald-700 font-bold text-[10px] truncate">${file.name}</span>`;
+            label.classList.add('bg-emerald-50', 'border-emerald-200');
+            label.classList.remove('bg-white', 'bg-blue-50', 'text-slate-600', 'text-blue-600');
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
 
 
 
