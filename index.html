@@ -965,16 +965,51 @@
             return R * c; // Résultat en mètres
         }
 
-                function downloadMyBadge() {
-    const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
-    if(!myData) {
-        return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
-    }
-    const token = localStorage.getItem('sirh_token');
-    const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
-    window.open(url, '_blank', 'width=400,height=600');
-}
 
+        
+
+
+        async function downloadMyBadge() {
+            // 1. On cherche les infos de l'employé connecté
+            // (On utilise find car 'employees' contient la liste chargée au login)
+            const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+            
+            if(!myData) {
+                return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
+            }
+
+            const token = localStorage.getItem('sirh_token');
+            
+            Swal.fire({ title: 'Génération...', didOpen: () => Swal.showLoading() });
+
+            try {
+                // 2. Construction de l'URL
+                const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
+
+                // 3. Récupération du HTML (au lieu d'ouvrir l'URL direct)
+                const response = await fetch(url);
+                
+                if (!response.ok) throw new Error("Erreur lors de la génération du badge");
+
+                const htmlContent = await response.text();
+
+                // 4. Affichage dans une nouvelle fenêtre
+                Swal.close();
+                const w = window.open('', '_blank', 'width=400,height=600');
+                
+                if (w) {
+                    w.document.open();
+                    w.document.write(htmlContent);
+                    w.document.close();
+                } else {
+                    Swal.fire('Bloqué', 'Veuillez autoriser les pop-ups pour voir votre badge', 'warning');
+                }
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Erreur', 'Impossible de générer le badge.', 'error');
+            }
+        }
 
 
 
