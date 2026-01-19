@@ -1304,41 +1304,26 @@ function setSession(n, r, id){
 
 // Dans la fonction fetchData...
 
+
 employees = d.map(x => {
-    // Sécurité pour la photo : on regarde si c'est 'photo' ou 'Photo' ou 'Photos'
-    let rawPhoto = x.photo || x.Photo || x.Photos;
-
-    return { 
-        id: x.employee_id || x.id, 
-        nom: x.nom || x.Nom, 
-        date: x.date_embauche || x.date, 
-        poste: x.poste || x.Poste, 
-        dept: x['département'] || x.departement || "Non défini", 
-        limit: x.type_contrat || 365, 
-        
-        // ICI : On passe la donnée brute, la fonction formatGoogleLink s'occupera du reste
-        photo: rawPhoto, 
-        
-        statut: x.Statut || 'Actif', 
-        email: x.email, 
-        telephone: x.telephone || x['téléphone'], 
-        adresse: x.adresse, 
-        date_naissance: x.date_naissance, 
-        role: x.role || x.Role || 'EMPLOYEE',
-
-        
-        // Gestion des documents
-        doc: x.contrat_pdf ? formatGoogleLink(x.contrat_pdf) : '#',
-        contract_status: x.contract_status || 'Non signé',
-        cv_link: formatGoogleLink(x.cv_link) || '#',
-        id_card_link: formatGoogleLink(x.id_card_link) || '#',
-        diploma_link: formatGoogleLink(x.diploma_link) || '#',
-        attestation_link: formatGoogleLink(x.attestation) || '#',
-        lm_link: formatGoogleLink(x.lm_link) || '#'
-
-        
-    };
-});
+                    return { 
+                        id: x.employee_id || x.id, 
+                        nom: x.nom || x.Nom, 
+                        date: x.date_embauche || x.date, // Date d'embauche
+                        date_fin: x.date_fin_contrat,    // ON RÉCUPÈRE LA DATE DE FIN DIRECTEMENT D'AIRTABLE
+                        poste: x.poste || x.Poste, 
+                        dept: x['département'] || x.departement || "Non défini", 
+                        limit: x.type_contrat || 365, 
+                        photo: x.photo || x.Photo, 
+                        statut: x.Statut || x.statut || 'Actif', // Sécurité majuscule/minuscule
+                        email: x.email, 
+                        telephone: x.telephone || x['téléphone'], 
+                        adresse: x.adresse, 
+                        date_naissance: x.date_naissance, 
+                        role: x.role || 'EMPLOYEE',
+                        contract_status: x.contract_status || 'Non signé'
+                    };
+                });
 
 
 
@@ -1367,33 +1352,11 @@ employees = d.map(x => {
 
 
 
-        
-
-
-
-
-
-
-
-         
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                                                                function renderData() { 
+                                function renderData() { 
             const b = document.getElementById('full-body'); 
             const d = document.getElementById('dashboard-body'); 
+            if(!b || !d) return; // Sécurité au cas où les éléments n'existent pas encore
+            
             b.innerHTML = ''; 
             d.innerHTML = ''; 
             
@@ -1404,6 +1367,8 @@ employees = d.map(x => {
                 total++; 
                 const rawStatus = (e.statut || 'Actif').toLowerCase().trim();
                 const isA = rawStatus === 'actif'; 
+                const isSortie = rawStatus.includes('sortie'); // On détecte le statut Sortie
+                
                 if(isA) actifs++; 
                 
                 let dL = 999, isU = false;
@@ -1412,14 +1377,21 @@ employees = d.map(x => {
                     let eD = new Date(sD); 
                     eD.setDate(eD.getDate() + (parseInt(e.limit) || 365));
                     dL = Math.ceil((eD - new Date()) / 86400000); 
-                    if(isA) { 
-                        if(dL < 0) { alertes++; } 
-                        else if(dL <= 15) { isU = true; alertes++; } 
+                    
+                    // --- MODIFICATION ICI : On alerte pour tout sauf "Sortie" ---
+                    if(!isSortie) { 
+                        if(dL < 0) { 
+                            alertes++; 
+                        } else if(dL <= 15) { 
+                            isU = true; 
+                            alertes++; 
+                        } 
                     }
                 }
 
                 // Affichage Dashboard (Alertes) - SÉCURISÉ
-                if(isU || (dL < 0 && isA)) {
+                // --- MODIFICATION ICI : On affiche dans le tableau si expiré/urgent et pas "Sortie" ---
+                if((isU || dL < 0) && !isSortie) {
                     d.innerHTML += `<tr class="bg-white border-b"><td class="p-4 text-sm font-bold text-slate-700">${escapeHTML(e.nom)}</td><td class="p-4 text-xs text-slate-500">${escapeHTML(e.poste)}</td><td class="p-4 ${dL<0?'text-red-600':'text-orange-600'} font-bold text-xs uppercase">${dL<0?'Expiré':dL+' jours'}</td><td class="p-4 rh-only text-right"><button class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold" onclick="openEditModal('${escapeHTML(e.id)}')">GÉRER</button></td></tr>`; 
                 }
             }); 
@@ -1438,20 +1410,22 @@ employees = d.map(x => {
                     let eD = new Date(sD); 
                     eD.setDate(eD.getDate() + (parseInt(e.limit) || 365));
                     dL = Math.ceil((eD - new Date()) / 86400000); 
-                    if(rawStatus === 'actif') {
+                    
+                    // --- MODIFICATION ICI : Badge rouge/orange même pour les gens en congé ---
+                    if(!rawStatus.includes('sortie')) {
                         if(dL < 0) isExpired = true;
                         else if(dL <= 15) isU = true;
                     }
                 }
 
                 const isConges = rawStatus.includes('cong');
-                const isSortie = rawStatus.includes('sortie');
+                const isSortieStatus = rawStatus.includes('sortie');
 
                 let bdgClass = "bg-green-100 text-green-700";
                 let bdgLabel = e.statut || 'Actif';
 
                 if(isConges) { bdgClass = "bg-blue-100 text-blue-700"; bdgLabel = "CONGÉ"; }
-                if(isSortie) { bdgClass = "bg-slate-100 text-slate-500"; bdgLabel = "SORTIE"; }
+                if(isSortieStatus) { bdgClass = "bg-slate-100 text-slate-500"; bdgLabel = "SORTIE"; }
                 if(isU) { bdgClass = "bg-orange-100 text-orange-700 animate-pulse font-bold"; bdgLabel = `FIN: ${dL}j`; }
                 if(isExpired) { bdgClass = "bg-red-100 text-red-700 font-bold border border-red-200"; bdgLabel = `EXPIRÉ`; }
 
@@ -1460,7 +1434,6 @@ employees = d.map(x => {
                 const sStr = String(e.contract_status || '').toLowerCase().trim(); 
                 const isSigned = (sStr === 'signé' || sStr === 'signe');
                 
-                // IDs sécurisés pour les fonctions JS
                 const safeId = escapeHTML(e.id);
 
                 const contractActions = `
@@ -1474,7 +1447,6 @@ employees = d.map(x => {
                     <button onclick="openEditModal('${safeId}')" class="text-slate-400 hover:text-slate-800 transition-all"><i class="fa-solid fa-pen"></i></button>
                 </div>`;
                 
-                // SÉCURISATION HTML (TOUTES LES VARIABLES)
                 b.innerHTML+=`<tr class="border-b hover:bg-slate-50 transition-colors"><td class="p-4 flex gap-3 items-center min-w-[200px]">${av}<div><div class="font-bold text-sm text-slate-800 uppercase">${escapeHTML(e.nom)}</div><div class="text-[10px] text-slate-400 font-mono tracking-tighter">${safeId}</div></div></td><td class="p-4 text-xs font-medium text-slate-500">${escapeHTML(e.poste)}</td><td class="p-4"><span class="px-3 py-1 border rounded-lg text-[10px] font-black uppercase ${bdgClass}">${escapeHTML(bdgLabel)}</span></td><td class="p-4 rh-only">${contractActions}</td></tr>`; 
             });
 
@@ -1489,29 +1461,6 @@ employees = d.map(x => {
             document.querySelectorAll('.btn-prev-global').forEach(btn => { btn.disabled = currentPage === 1; btn.classList.toggle('opacity-30', currentPage === 1); });
             document.querySelectorAll('.btn-next-global').forEach(btn => { btn.disabled = currentPage >= totalPages; btn.classList.toggle('opacity-30', currentPage >= totalPages); });
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
