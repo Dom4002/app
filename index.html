@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
+
+
     <!-- PWA CONFIGURATION -->
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/9322/9322127.png">
+
+
+
+
+
     <title>SIRH Pro | Secure Access</title>
     
     <!-- Bibliothèques -->
@@ -81,6 +88,51 @@
     </style>
 </head>
 <body class="text-slate-900 overflow-hidden h-screen w-screen">
+
+
+
+
+                                                <!-- LOADER PREMIUM -->
+                            <div id="initial-loader" class="fixed inset-0 bg-slate-900 z-[999] flex flex-col items-center justify-center transition-all duration-700 ease-in-out">
+                                <!-- Logo Container -->
+                                <div class="relative mb-8">
+                                    <div class="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
+                                    <div class="relative bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl flex items-center justify-center">
+                                        <i class="fa-solid fa-fingerprint text-5xl text-blue-500 animate-pulse"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- Texte -->
+                                <h2 class="text-white text-2xl font-black tracking-tight mb-2">SIRH <span class="text-blue-500">SECURE</span></h2>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-8">Initialisation du système...</p>
+
+                                <!-- Barre de chargement -->
+                                <div class="w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-blue-600 to-indigo-500 w-0 animate-[progress_1.5s_ease-in-out_infinite] rounded-full"></div>
+                                </div>
+                                
+                                <style>
+                                    @keyframes progress {
+                                        0% { w: 0%; margin-left: 0; }
+                                        50% { w: 50%; margin-left: 25%; }
+                                        100% { w: 100%; margin-left: 100%; }
+                                    }
+                                    /* Animation spécifique pour la barre */
+                                    .w-0 { width: 0%; }
+                                    .animate-\[progress_1\.5s_ease-in-out_infinite\] {
+                                        animation: loadingBar 2s infinite ease-in-out;
+                                    }
+                                    @keyframes loadingBar {
+                                        0% { width: 0%; transform: translateX(-100%); }
+                                        50% { width: 70%; transform: translateX(0); }
+                                        100% { width: 100%; transform: translateX(100%); }
+                                    }
+                                </style>
+                            </div>
+
+
+
+
 
     <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/80 z-40 hidden md:hidden transition-opacity backdrop-blur-sm"></div>
 
@@ -231,12 +283,89 @@
                 </div>
             </section>
 
-                <!-- VUE 2: LISTE COLLABORATEURS -->
+
+            
+
+
+
+
+
+
+
+
+
+                                                                            <!-- VUE 2: LISTE COLLABORATEURS -->
                 <section id="view-employees" class="view-section management-only">
-                    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-                        <div class="overflow-x-auto"><table class="w-full text-left whitespace-nowrap"><thead class="bg-slate-900 text-white text-[10px] uppercase font-bold"><tr><th class="px-8 py-5">Identité</th><th class="px-8 py-5">Poste</th><th class="px-8 py-5">Statut</th><th class="px-8 py-5 text-right rh-only">Dossier & Actions</th></tr></thead><tbody id="full-body" class="divide-y divide-slate-100"></tbody></table></div>
+                    
+                    <!-- EN-TÊTE (HAUT) -->
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-6 px-1">
+                        <div>
+                            <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">Liste des Collaborateurs</h2>
+                            <p class="text-sm text-slate-500 font-medium mt-1">Gestion administrative et contractuelle</p>
+                        </div>
+
+                        <!-- PAGINATION HAUT -->
+                        <div class="flex items-center gap-3">
+                            <button onclick="changePage(-1)" class="btn-prev-global w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-600 transition-all shadow-sm">
+                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                            </button>
+                            <span class="page-info-global text-[10px] font-black uppercase tracking-widest text-slate-400 select-none min-w-[80px] text-center">PAGE 1 / 1</span>
+                            <button onclick="changePage(1)" class="btn-next-global w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white hover:border-slate-900 disabled:opacity-30 disabled:hover:bg-white disabled:hover:text-slate-600 transition-all shadow-sm">
+                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TABLEAU -->
+                    <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden min-h-[500px] flex flex-col justify-between">
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left whitespace-nowrap">
+                                <thead class="bg-slate-900 text-white text-[10px] uppercase font-bold">
+                                    <tr>
+                                        <th class="px-8 py-5">Identité</th>
+                                        <th class="px-8 py-5">Poste</th>
+                                        <th class="px-8 py-5">Statut</th>
+                                        <th class="px-8 py-5 text-right rh-only">Dossier & Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="full-body" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- PAGINATION BAS (INTEGRÉE DANS LE TABLEAU) -->
+                        <div class="border-t border-slate-100 bg-slate-50 p-4 flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Affichage par 10</span>
+                            
+                            <div class="flex items-center gap-3">
+                                <button onclick="changePage(-1)" class="btn-prev-global w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-200 disabled:opacity-30 transition-all">
+                                    <i class="fa-solid fa-chevron-left text-xs"></i>
+                                </button>
+                                <span class="page-info-global text-[10px] font-black uppercase tracking-widest text-slate-500 select-none min-w-[80px] text-center">PAGE 1 / 1</span>
+                                <button onclick="changePage(1)" class="btn-next-global w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-200 disabled:opacity-30 transition-all">
+                                    <i class="fa-solid fa-chevron-right text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                 <!-- VUE 3: AJOUT -->
                 <section id="view-add-new" class="view-section rh-only">
@@ -734,6 +863,64 @@
         const URL_REDIRECT_FAILURE = "https://google.com";
 
         let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null;
+ 
+        let currentPage = 1;
+        const ITEMS_PER_PAGE = 10; // Nombre d'employés par page
+
+
+
+
+
+
+
+ // --- AUTO-RECONNEXION AVEC LOADER ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const session = localStorage.getItem('sirh_user_session');
+            const loader = document.getElementById('initial-loader');
+
+            if(session) {
+                try {
+                    const u = JSON.parse(session);
+                    if(u && u.nom) {
+                        console.log("Restauration session : " + u.nom);
+                        // On connecte l'utilisateur
+                        setSession(u.nom, u.role, u.id);
+                        
+                                        // Dans window.addEventListener('DOMContentLoaded', ...)
+        
+        // ... (après setSession) ...
+                            
+                            // On laisse le loader 1 seconde (1000ms) pour faire "Pro"
+                            setTimeout(() => {
+                                const loader = document.getElementById('initial-loader');
+                                loader.style.opacity = '0';
+                                loader.style.transform = 'scale(1.1)'; // Petit effet de zoom en disparaissant
+                                setTimeout(() => loader.classList.add('hidden'), 700);
+                            }, 1200);
+
+                        
+                    } else {
+                        throw new Error("Session invalide");
+                    }
+                } catch(e) { 
+                    // Si erreur de lecture, on nettoie et on montre le login
+                    localStorage.removeItem('sirh_user_session');
+                    loader.classList.add('hidden');
+                }
+            } else {
+                // Pas de session, on montre immédiatement le login
+                loader.classList.add('hidden');
+            }
+        });
+
+
+
+
+
+
+
+
+
         document.getElementById('current-date').innerText = new Date().toLocaleDateString('fr-FR');
 
 
@@ -832,16 +1019,24 @@ async function secureFetch(url, options = {}) {
 
 
 
-        async function handleLogin(e) { 
+
+
+
+
+
+async function handleLogin(e) { 
             e.preventDefault(); 
             if(!navigator.onLine) { Swal.fire('Erreur', 'Pas de connexion internet', 'warning'); return; }
+            
             const u = document.getElementById('login-user').value.trim();
             const p = document.getElementById('login-pass').value.trim();
             const btn = document.getElementById('btn-login');
             const originalBtnText = btn.innerHTML; 
+            
             btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Connexion...'; 
             btn.disabled = true;
             btn.classList.add('opacity-50', 'cursor-not-allowed');
+            
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); 
 
@@ -849,13 +1044,23 @@ async function secureFetch(url, options = {}) {
                 const response = await fetch(`${URL_LOGIN}?u=${encodeURIComponent(u.toLowerCase())}&p=${encodeURIComponent(p)}`, { signal: controller.signal });
                 clearTimeout(timeoutId); 
                 const d = await response.json();
+                
                 if(d.status === "success") { 
                     if(d.token) localStorage.setItem('sirh_token', d.token);
                     let r = d.role || "EMPLOYEE"; if(Array.isArray(r)) r = r[0]; 
+                    
+                    // --- NOUVEAU : SAUVEGARDE DE LA SESSION ---
+                    const userData = { nom: d.nom || u, role: String(r).toUpperCase(), id: d.id };
+                    localStorage.setItem('sirh_user_session', JSON.stringify(userData));
+                    // ------------------------------------------
+
                     const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
-                    Toast.fire({icon: 'success', title: 'Bienvenue ' + (d.nom || u)});
-                    setSession(d.nom || u, String(r).toUpperCase(), d.id); 
-                } else { Swal.fire('Refusé', 'Identifiant ou mot de passe incorrect', 'error'); }
+                    Toast.fire({icon: 'success', title: 'Bienvenue ' + userData.nom});
+                    
+                    setSession(userData.nom, userData.role, userData.id); 
+                } else { 
+                    Swal.fire('Refusé', 'Identifiant ou mot de passe incorrect', 'error'); 
+                }
             } catch (error) {
                 if (error.name === 'AbortError') { Swal.fire('Délai dépassé', 'Serveur lent. Vérifiez votre connexion.', 'warning'); } 
                 else { Swal.fire('Erreur Système', 'Impossible de contacter le serveur.', 'error'); }
@@ -863,6 +1068,21 @@ async function secureFetch(url, options = {}) {
                 btn.innerHTML = originalBtnText; btn.disabled = false; btn.classList.remove('opacity-50', 'cursor-not-allowed');
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         function setSession(n, r, id){ 
             currentUser = { nom: n, role: r, id: id }; 
@@ -1022,33 +1242,156 @@ employees = d.map(x => {
 
 
 
-        function renderData() { 
-            const b=document.getElementById('full-body'), d=document.getElementById('dashboard-body'); b.innerHTML=''; d.innerHTML=''; 
+
+        
+
+
+
+
+
+
+
+         
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                                                function renderData() { 
+            const b = document.getElementById('full-body'); 
+            const d = document.getElementById('dashboard-body'); 
+            b.innerHTML = ''; 
+            d.innerHTML = ''; 
+            
             let total = 0, alertes = 0, actifs = 0; 
-            employees.forEach(e=>{ 
-                total++; const isA = (e.statut||'Actif').toLowerCase().trim() === 'actif'; if(isA) actifs++; 
+
+            // 1. CALCUL DES STATISTIQUES (Sur tout l'effectif)
+            employees.forEach(e => { 
+                total++; 
+                const rawStatus = (e.statut || 'Actif').toLowerCase().trim();
+                const isA = rawStatus === 'actif'; 
+                if(isA) actifs++; 
+                
                 let dL = 999, isU = false;
                 if(e.date) {
-                    let sD = parseDateSmart(e.date); let eD = new Date(sD); eD.setDate(eD.getDate() + (parseInt(e.limit) || 365));
-                    dL = Math.ceil((eD - new Date()) / 86400000); if(isA) { if(dL < 0) { alertes++; } else if(dL <= 15) { isU = true; alertes++; } }
+                    let sD = parseDateSmart(e.date); 
+                    let eD = new Date(sD); 
+                    eD.setDate(eD.getDate() + (parseInt(e.limit) || 365));
+                    dL = Math.ceil((eD - new Date()) / 86400000); 
+                    if(isA) { 
+                        if(dL < 0) { alertes++; } 
+                        else if(dL <= 15) { isU = true; alertes++; } 
+                    }
                 }
-                const av = e.photo && e.photo.length > 10 ? `<img src="${formatGoogleLink(e.photo)}" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover bg-slate-200 border border-slate-200">` : `<div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 rounded-full flex items-center justify-center text-xs font-black text-slate-500">${e.nom.substring(0,2).toUpperCase()}</div>`;
-                const sStr = String(e.contract_status || '').toLowerCase().trim(); const isSigned = (sStr === 'signé' || sStr === 'signe');
+
+                // Affichage Dashboard (Alertes) - SÉCURISÉ
+                if(isU || (dL < 0 && isA)) {
+                    d.innerHTML += `<tr class="bg-white border-b"><td class="p-4 text-sm font-bold text-slate-700">${escapeHTML(e.nom)}</td><td class="p-4 text-xs text-slate-500">${escapeHTML(e.poste)}</td><td class="p-4 ${dL<0?'text-red-600':'text-orange-600'} font-bold text-xs uppercase">${dL<0?'Expiré':dL+' jours'}</td><td class="p-4 rh-only text-right"><button class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold" onclick="openEditModal('${escapeHTML(e.id)}')">GÉRER</button></td></tr>`; 
+                }
+            }); 
+
+            // 2. PAGINATION ET AFFICHAGE TABLEAU PRINCIPAL
+            const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+            const endIndex = startIndex + ITEMS_PER_PAGE;
+            const paginatedEmployees = employees.slice(startIndex, endIndex);
+
+            paginatedEmployees.forEach(e => {
+                const rawStatus = (e.statut || 'Actif').toLowerCase().trim();
+                let dL = 999, isU = false, isExpired = false;
+                
+                if(e.date) {
+                    let sD = parseDateSmart(e.date); 
+                    let eD = new Date(sD); 
+                    eD.setDate(eD.getDate() + (parseInt(e.limit) || 365));
+                    dL = Math.ceil((eD - new Date()) / 86400000); 
+                    if(rawStatus === 'actif') {
+                        if(dL < 0) isExpired = true;
+                        else if(dL <= 15) isU = true;
+                    }
+                }
+
+                const isConges = rawStatus.includes('cong');
+                const isSortie = rawStatus.includes('sortie');
+
+                let bdgClass = "bg-green-100 text-green-700";
+                let bdgLabel = e.statut || 'Actif';
+
+                if(isConges) { bdgClass = "bg-blue-100 text-blue-700"; bdgLabel = "CONGÉ"; }
+                if(isSortie) { bdgClass = "bg-slate-100 text-slate-500"; bdgLabel = "SORTIE"; }
+                if(isU) { bdgClass = "bg-orange-100 text-orange-700 animate-pulse font-bold"; bdgLabel = `FIN: ${dL}j`; }
+                if(isExpired) { bdgClass = "bg-red-100 text-red-700 font-bold border border-red-200"; bdgLabel = `EXPIRÉ`; }
+
+                const av = e.photo && e.photo.length > 10 ? `<img src="${formatGoogleLink(e.photo)}" loading="lazy" decoding="async" class="w-10 h-10 rounded-full object-cover bg-slate-200 border border-slate-200">` : `<div class="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-200 rounded-full flex items-center justify-center text-xs font-black text-slate-500">${escapeHTML(e.nom).substring(0,2).toUpperCase()}</div>`;
+                
+                const sStr = String(e.contract_status || '').toLowerCase().trim(); 
+                const isSigned = (sStr === 'signé' || sStr === 'signe');
+                
+                // IDs sécurisés pour les fonctions JS
+                const safeId = escapeHTML(e.id);
+
                 const contractActions = `
                 <div class="flex items-center justify-end gap-2">
-                    <button onclick="openFullFolder('${e.id}')" title="Dossier Complet" class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-500 hover:text-white transition-all"><i class="fa-solid fa-folder-open"></i></button>
+                    <button onclick="openFullFolder('${safeId}')" title="Dossier Complet" class="p-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-500 hover:text-white transition-all"><i class="fa-solid fa-folder-open"></i></button>
                     <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
-                    ${!isSigned ? `<button onclick="generateDraftContract('${e.id}')" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><i class="fa-solid fa-file-contract"></i></button>` : `<span class="text-[10px] font-black text-emerald-500 uppercase bg-emerald-50 px-2 py-1 rounded">Signé</span>`}
-                    <button onclick="openContractModal('${e.id}')" class="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-800 hover:text-white transition-all"><i class="fa-solid fa-upload"></i></button>
+                    ${!isSigned ? `<button onclick="generateDraftContract('${safeId}')" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all"><i class="fa-solid fa-file-contract"></i></button>` : `<span class="text-[10px] font-black text-emerald-500 uppercase bg-emerald-50 px-2 py-1 rounded">Signé</span>`}
+                    <button onclick="openContractModal('${safeId}')" class="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-800 hover:text-white transition-all"><i class="fa-solid fa-upload"></i></button>
                     <div class="h-4 w-[1px] bg-slate-200 mx-1"></div>
-                    <button onclick="printBadge('${e.id}')" class="text-slate-400 hover:text-blue-600 transition-all"><i class="fa-solid fa-print"></i></button>
-                    <button onclick="openEditModal('${e.id}')" class="text-slate-400 hover:text-slate-800 transition-all"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="printBadge('${safeId}')" class="text-slate-400 hover:text-blue-600 transition-all"><i class="fa-solid fa-print"></i></button>
+                    <button onclick="openEditModal('${safeId}')" class="text-slate-400 hover:text-slate-800 transition-all"><i class="fa-solid fa-pen"></i></button>
                 </div>`;
-                b.innerHTML+=`<tr class="border-b hover:bg-slate-50 transition-colors"><td class="p-4 flex gap-3 items-center min-w-[200px]">${av}<div><div class="font-bold text-sm text-slate-800 uppercase">${e.nom}</div><div class="text-[10px] text-slate-400 font-mono tracking-tighter">${e.id}</div></div></td><td class="p-4 text-xs font-medium text-slate-500">${e.poste}</td><td class="p-4"><span class="px-3 py-1 border rounded-lg text-[10px] font-black uppercase ${dL < 0 && isA ? 'bg-red-100 text-red-700' : (isU ? 'bg-orange-100 text-orange-700 animate-pulse' : 'bg-green-100 text-green-700')}">${e.statut}</span></td><td class="p-4 rh-only">${contractActions}</td></tr>`; 
-                if(isU || (dL < 0 && isA)) d.innerHTML+=`<tr class="bg-white border-b"><td class="p-4 text-sm font-bold text-slate-700">${e.nom}</td><td class="p-4 text-xs text-slate-500">${e.poste}</td><td class="p-4 ${dL<0?'text-red-600':'text-orange-600'} font-bold text-xs uppercase">${dL<0?'Expiré':dL+' jours'}</td><td class="p-4 rh-only text-right"><button class="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold" onclick="openEditModal('${e.id}')">GÉRER</button></td></tr>`; 
-            }); 
-            document.getElementById('stat-total').innerText = total; document.getElementById('stat-alert').innerText = alertes; document.getElementById('stat-active').innerText = actifs; 
+                
+                // SÉCURISATION HTML (TOUTES LES VARIABLES)
+                b.innerHTML+=`<tr class="border-b hover:bg-slate-50 transition-colors"><td class="p-4 flex gap-3 items-center min-w-[200px]">${av}<div><div class="font-bold text-sm text-slate-800 uppercase">${escapeHTML(e.nom)}</div><div class="text-[10px] text-slate-400 font-mono tracking-tighter">${safeId}</div></div></td><td class="p-4 text-xs font-medium text-slate-500">${escapeHTML(e.poste)}</td><td class="p-4"><span class="px-3 py-1 border rounded-lg text-[10px] font-black uppercase ${bdgClass}">${escapeHTML(bdgLabel)}</span></td><td class="p-4 rh-only">${contractActions}</td></tr>`; 
+            });
+
+            // 3. Mise à jour des compteurs
+            document.getElementById('stat-total').innerText = total; 
+            document.getElementById('stat-alert').innerText = alertes; 
+            document.getElementById('stat-active').innerText = actifs;
+
+            // 4. Pagination UI
+            const totalPages = Math.ceil(employees.length / ITEMS_PER_PAGE);
+            document.querySelectorAll('.page-info-global').forEach(el => { el.innerText = `PAGE ${currentPage} / ${totalPages || 1}`; });
+            document.querySelectorAll('.btn-prev-global').forEach(btn => { btn.disabled = currentPage === 1; btn.classList.toggle('opacity-30', currentPage === 1); });
+            document.querySelectorAll('.btn-next-global').forEach(btn => { btn.disabled = currentPage >= totalPages; btn.classList.toggle('opacity-30', currentPage >= totalPages); });
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         function openLeaveModal() {
             document.getElementById('leave-modal').classList.remove('hidden');
@@ -1703,14 +2046,39 @@ async function saveMyProfile() {
             }); 
         }
         
-        async function fetchLogs(){
-            const tb=document.getElementById('logs-body'); tb.innerHTML='<tr><td colspan="4" class="p-4 italic text-center">Recherche des logs...</td></tr>'; 
-            try{
-                const r=await secureFetch(`${URL_READ_LOGS}?agent=${encodeURIComponent(currentUser.nom)}`); 
-                const w=await r.json(); tb.innerHTML=''; 
-                [...w].reverse().forEach(l=>{const df=l.date?new Date(l.date).toLocaleString():'-'; tb.innerHTML+=`<tr class="border-b"><td class="p-4 text-xs font-mono">${df}</td><td class="p-4 font-bold text-slate-700">${l.agent||'Système'}</td><td class="p-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black">${l.action}</span></td><td class="p-4 text-xs text-slate-500">${l.details||l.détails||'-'}</td></tr>`;});
-            }catch(e){tb.innerHTML=`<tr><td colspan="4" class="text-red-500 p-4 font-bold text-center">${e.message}</td></tr>`;}
+
+
+
+
+
+
+
+
+                                                                     async function fetchLogs() {
+            const tbody = document.getElementById('logs-body');
+            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center italic text-slate-400">Chargement...</td></tr>';
+            try {
+                const res = await secureFetch(`${URL_READ_LOGS}?agent=${encodeURIComponent(currentUser.nom)}`); 
+                const raw = await res.json();
+                tbody.innerHTML = '';
+                [...raw].reverse().forEach(log => {
+                    let date, agent, action, details;
+                    if (Array.isArray(log)) { date=log[0]; agent=log[1]; action=log[2]; details=log[4]; } 
+                    else { date=log.date||log.Timestamp||log.created_at; agent=log.agent||'Système'; action=log.action||'-'; details=log.détails||log.details||'-'; }
+                    const dF = date ? new Date(date).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '-';
+                    
+                    // UTILISATION DE escapeHTML ICI
+                    tbody.innerHTML += `<tr class="border-b"><td class="p-4 text-xs font-mono">${dF}</td><td class="p-4 font-bold text-slate-700">${escapeHTML(agent)}</td><td class="p-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black">${escapeHTML(action)}</span></td><td class="p-4 text-xs text-slate-500">${escapeHTML(details)}</td></tr>`;
+                });
+            } catch(e) { tbody.innerHTML = `<tr><td colspan="4" class="text-red-500 p-4 font-bold text-center">${escapeHTML(e.message)}</td></tr>`; }
         }
+
+
+
+
+
+
+
         
         function generateDraftContract(id) { 
             const e = employees.find(x => x.id === id); if(!e) return; 
@@ -1860,12 +2228,32 @@ async function saveMyProfile() {
 
 
 
-        function handleLogout() {
+
+
+
+
+
+function handleLogout() {
             if(videoStream) videoStream.getTracks().forEach(t => t.stop());
             if(contractStream) contractStream.getTracks().forEach(t => t.stop());
+            
+            // NETTOYAGE COMPLET
             localStorage.removeItem('sirh_token');
+            localStorage.removeItem('sirh_user_session'); // Supprime l'identité sauvegardée
+            
             location.reload();
         }
+
+
+
+
+
+
+
+
+
+
+
 
         window.addEventListener('offline', () => { Swal.fire({ icon: 'warning', title: 'Connexion Perdue', text: 'Mode hors ligne.', toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 }); document.body.classList.add('offline-mode'); });
         window.addEventListener('online', () => { Swal.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Opérationnel.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); document.body.classList.remove('offline-mode'); });
@@ -2406,12 +2794,53 @@ async function handleCandidateAction(id, action) {
 
 
 
+                                                    function changePage(direction) {
+            const totalPages = Math.ceil(employees.length / ITEMS_PER_PAGE);
+            const newPage = currentPage + direction;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderData();
+                
+                // --- CORRECTION DU SCROLL ---
+                // On remonte doucement vers le haut du tableau, pas tout en haut de la page
+                // Cela garde le focus visuel sur les données
+                const tableSection = document.getElementById('view-employees');
+                if(tableSection) {
+                    tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+        }
 
 
+
+
+
+
+
+
+
+
+
+        // --- SÉCURITÉ XSS (NETTOYAGE DES DONNÉES) ---
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag]));
+        }
 
 
 
     </script>
+
+
+
 
     <script>
         // Enregistrement du Service Worker pour la PWA
@@ -2423,6 +2852,5 @@ async function handleCandidateAction(id, action) {
             });
         }
     </script>
-    
 </body>
 </html>
