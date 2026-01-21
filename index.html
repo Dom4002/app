@@ -3166,7 +3166,24 @@ async function fetchFlashMessage() {
             // Nettoyage des données Airtable/Make (Majuscules ou minuscules)
             const clean = (v) => Array.isArray(v) ? v[0] : v;
             const msgText = clean(data.Message || data.message);
+                                                                                            // ... (début de ta fonction fetchFlashMessage) ...
+
             const msgSender = clean(data.Sender || data.sender);
+
+            // --- NOUVELLE RÈGLE DE VISIBILITÉ ---
+            // Si le message vient du robot et que l'utilisateur n'est pas un chef (Admin, RH ou Manager)
+            const rolesSuperviseurs = ['ADMIN', 'RH', 'MANAGER'];
+            if (msgSender === "SYSTÈME DE CONTRÔLE" && !rolesSuperviseurs.includes(currentUser.role)) {
+                console.log("Alerte robot masquée pour ce profil employé.");
+                return; // On arrête là pour ce message, on passe au suivant
+            }
+
+            // ... (reste de ta boucle messages.forEach) ...
+
+
+
+
+
             const msgType = clean(data.Type || data.type) || 'Info';
             const msgDate = clean(data.Date || data.date);
             const msgExpiry = clean(data.Expiration || data.date_expiration);
