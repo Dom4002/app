@@ -958,7 +958,7 @@
 
                 // --- CONFIG SAAS (Géolocalisation dynamique) ---
         const URL_GET_CONFIG = `${BASE_API}/read-config`; // Nouvelle route à créer dans Make
-
+        let allLeaves = []; // Pour stocker tous les congés et les comparer
         // Variable globale qui stockera les infos du bureau
         let companyConfig = {
             latitude: null,      
@@ -2837,130 +2837,182 @@ function handleLogout() {
         });
     
     
-    
-    
-    
-        function renderCharts() {
-        // 1. Calcul des données par Statut
-        const statusCounts = {};
-        employees.forEach(e => { statusCounts[e.statut] = (statusCounts[e.statut] || 0) + 1; });
 
-        // 2. Calcul des données par Département
-        const deptCounts = {};
-        employees.forEach(e => { deptCounts[e.dept] = (deptCounts[e.dept] || 0) + 1; });
 
-        // Graphique Statut (Pie)
-        if (chartStatusInstance) chartStatusInstance.destroy();
-        const ctxStatus = document.getElementById('chartStatus').getContext('2d');
-        chartStatusInstance = new Chart(ctxStatus, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(statusCounts),
-                datasets: [{
-                    data: Object.values(statusCounts),
-                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#6366f1'],
-                    borderWidth: 0
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom' } }, cutout: '70%' }
-        });
-
-        // Graphique Département (Bar)
-        if (chartDeptInstance) chartDeptInstance.destroy();
-        const ctxDept = document.getElementById('chartDept').getContext('2d');
-        chartDeptInstance = new Chart(ctxDept, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(deptCounts),
-                datasets: [{
-                    label: 'Nombre d\'employés',
-                    data: Object.values(deptCounts),
-                    backgroundColor: '#6366f1',
-                    borderRadius: 8
-                }]
-            },
-            options: { 
-                scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } },
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
-   
 
 
  async function fetchLeaveRequests() {
-    // 1. Vérification du rôle (Un employé ne doit pas voir cette section)
     if (!currentUser || currentUser.role === 'EMPLOYEE') return;
     
     const body = document.getElementById('leave-requests-body');
     const section = document.getElementById('manager-leave-section');
     
-    if (!body || !section) return;
-
     try {
-        // 2. Appel au serveur Render
         const r = await secureFetch(`${URL_READ_LEAVES}?agent=${encodeURIComponent(currentUser.nom)}`);
         const rawLeaves = await r.json();
         
-        console.log("Congés reçus (brut) :", rawLeaves); 
+        console.log("DEBUG - Données reçues d'Airtable :", rawLeaves);
 
-        // --- NOUVEAU : Normalisation des données pour correspondre à ton Airtable ---
-        const leaves = rawLeaves.map(l => ({
-            id: l.record_id || l.id || '',
-            // On cherche le nom dans Employees_nom (vu sur ton screen) ou nom ou Employé
-            nom: l.Employees_nom || l.nom || l['Employé'] || 'Inconnu',
-            // On cherche le statut avec Majuscule ou minuscule
-            statut: l.Statut || l.statut || '',
-            type: l.Type || l.type || 'Congé',
-            motif: l.Motif || l.motif || '',
-            debut: l['Date de début'] || l.debut || '?',
-            fin: l['Date de fin'] || l.fin || '?',
-            justificatif_link: l.justificatif_link || l['justificatif_link'] || ''
-        }));
+        allLeaves = rawLeaves.map(l => {
+            // Nettoyage des tableaux Airtable [value] et des nulls
+            const clean = (v) => Array.isArray(v) ? v[0] : v;
+            
+            const nomNet = clean(l.Employees_nom || l.nom || l['Employé']);
+            const statutNet = clean(l.Statut || l.statut);
+            const typeNet = clean(l.Type || l.type);
+            const debutRaw = clean(l['Date Début'] || l['Date de début'] || l.debut);
+            const finRaw = clean(l['Date Fin'] || l['Date de fin'] || l.fin);
 
-        // 3. Filtrage des demandes sur les données normalisées
-        const pending = leaves.filter(l => {
-            return l.statut && l.statut.toLowerCase().trim() === 'en attente';
+            return {
+                id: l.record_id || l.id || '',
+                nom: nomNet ? String(nomNet).trim() : null,
+                statut: statutNet ? String(statutNet).trim() : '',
+                type: typeNet ? String(typeNet).trim() : '',
+                debut: debutRaw ? parseDateSmart(debutRaw) : null,
+                fin: finRaw ? parseDateSmart(finRaw) : null
+            };
         });
 
-        body.innerHTML = '';
+        // Interface Manager : On ne montre QUE ceux qui sont "En attente"
+        const pending = allLeaves.filter(l => l.statut && l.statut.toLowerCase() === 'en attente');
 
-        if (pending.length > 0) {
-            section.classList.remove('hidden'); 
-            section.style.display = 'block';     
-
-            pending.forEach(l => {
-                // Encodage pour la popup de détails
-                const safeNom = encodeURIComponent(l.nom);
-                const safeMotif = encodeURIComponent(l.motif);
-                const safeType = l.type;
-                const safeRecordId = l.id;
-                const safeDoc = l.justificatif_link ? encodeURIComponent(l.justificatif_link) : '';
-
-                body.innerHTML += `
-                    <tr class="border-b hover:bg-slate-50 transition-colors">
-                        <td class="px-8 py-4 font-bold text-sm text-slate-700">${l.nom}</td>
-                        <td class="px-8 py-4 text-xs text-slate-500">
-                            ${l.debut} <span class="text-slate-300 mx-1">➔</span> ${l.fin}
-                        </td>
-                        <td class="px-8 py-4 text-right flex justify-end items-center gap-2">
-                            <button onclick="showLeaveDetailFromSafeData('${safeNom}', '${safeType}', '${l.debut}', '${l.fin}', '${safeMotif}', '${safeDoc}')" 
-                                    class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all" title="Détails">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                            <button onclick="processLeave('${safeRecordId}', 'Validé')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-sm active:scale-95 transition-all">OUI</button>
-                            <button onclick="processLeave('${safeRecordId}', 'Refusé')" class="bg-white text-red-500 border border-red-100 px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-red-50 active:scale-95 transition-all">NON</button>
-                        </td>
-                    </tr>`;
-            });
-        } else {
-            section.classList.add('hidden'); 
-            section.style.display = 'none';
+        if (body) {
+            body.innerHTML = '';
+            if (pending.length > 0 && section) {
+                section.classList.remove('hidden'); 
+                section.style.display = 'block';     
+                pending.forEach(l => {
+                    body.innerHTML += `
+                        <tr class="border-b hover:bg-slate-50 transition-colors">
+                            <td class="px-8 py-4 font-bold text-sm text-slate-700">${l.nom || 'Inconnu'}</td>
+                            <td class="px-8 py-4 text-xs text-slate-500">${l.debut ? l.debut.toLocaleDateString() : '?'} ➔ ${l.fin ? l.fin.toLocaleDateString() : '?'}</td>
+                            <td class="px-8 py-4 text-right flex justify-end gap-2">
+                                <button onclick="processLeave('${l.id}', 'Validé')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase">OUI</button>
+                                <button onclick="processLeave('${l.id}', 'Refusé')" class="bg-white text-red-500 border border-red-100 px-4 py-2 rounded-xl text-[10px] font-black uppercase">NON</button>
+                            </td>
+                        </tr>`;
+                });
+            } else if (section) {
+                section.classList.add('hidden');
+            }
         }
+
+        // MISE À JOUR DU GRAPHIQUE
+        renderCharts();
+
     } catch (e) { 
         console.error("Erreur fetchLeaveRequests:", e);
     }
 }
+
+function renderCharts() {
+    if (!employees || employees.length === 0) return;
+
+    let counts = { 'Actif': 0, 'Congé': 0, 'Sortie': 0 };
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+
+    console.log("--- DÉBUT CALCUL GRAPHIQUE ---");
+
+    employees.forEach(emp => {
+        const empNom = String(emp.nom).toLowerCase().trim();
+        const empStatutProfil = (emp.statut || '').toLowerCase();
+
+        // 1. Sortie prioritaire (si déjà marqué sorti dans le profil)
+        if (empStatutProfil.includes('sortie')) {
+            counts['Sortie']++;
+            return;
+        }
+
+        // 2. Vérification si l'employé est en congé VALIDÉ aujourd'hui
+        const estAbsent = allLeaves.some(leave => {
+            if (!leave.nom || !leave.debut || !leave.fin) return false;
+            
+            const leaveNom = leave.nom.toLowerCase().trim();
+            const matchNom = (leaveNom === empNom);
+            
+            // On vérifie le statut en minuscule pour être sûr
+            const estValidé = (leave.statut.toLowerCase() === "validé");
+            const estDansDates = (today >= leave.debut && today <= leave.fin);
+            
+            // Le télétravail n'est pas une absence, on reste "Actif"
+            const nEstPasTeleTavail = (leave.type.toLowerCase() !== "télétravail");
+
+            return matchNom && estValidé && estDansDates && nEstPasTeleTavail;
+        });
+
+        if (estAbsent) {
+            console.info(`[GRAPHE] Congé détecté : ${emp.nom}`);
+            counts['Congé']++;
+        } else {
+            counts['Actif']++;
+        }
+    });
+
+    console.log("Stats finales calculées :", counts);
+
+    // --- Rendu du Graphique Statut (Donut) ---
+    if (chartStatusInstance) chartStatusInstance.destroy();
+    const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+    chartStatusInstance = new Chart(ctxStatus, {
+        type: 'doughnut',
+        data: {
+            labels: ['Actif', 'Congé', 'Sortie'],
+            datasets: [{
+                data: [counts['Actif'], counts['Congé'], counts['Sortie']],
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], // Vert, Orange, Rouge
+                borderWidth: 0
+            }]
+        },
+        options: { 
+            plugins: { 
+                legend: { position: 'bottom' } 
+            }, 
+            cutout: '70%',
+            animation: { duration: 500 }
+        }
+    });
+
+    // Rendu département (inchangé mais nettoyé)
+    const deptCounts = {};
+    employees.forEach(e => { 
+        const d = e.dept || 'Inconnu';
+        deptCounts[d] = (deptCounts[d] || 0) + 1; 
+    });
+    if (chartDeptInstance) chartDeptInstance.destroy();
+    const ctxDept = document.getElementById('chartDept').getContext('2d');
+    chartDeptInstance = new Chart(ctxDept, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(deptCounts),
+            datasets: [{ label: 'Collaborateurs', data: Object.values(deptCounts), backgroundColor: '#6366f1', borderRadius: 8 }]
+        },
+        options: { 
+            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }, 
+            plugins: { legend: { display: false } } 
+        }
+    });
+}
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
