@@ -20,6 +20,7 @@
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
@@ -189,6 +190,13 @@
                     <div id="nav-admin-section" class="management-only pt-4 border-t border-slate-800 mt-4">
                         <p class="text-[10px] font-black text-slate-500 uppercase mb-2 ml-4 tracking-widest">Gestion</p>
                         <button onclick="switchView('dash')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group"><i class="fa-solid fa-chart-pie w-5"></i> <span class="font-semibold">Tableau de Bord</span></button>
+                        
+                    <button onclick="openFlashModal()" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group management-only">
+                        <i class="fa-solid fa-bullhorn w-5 text-orange-500"></i> 
+                        <span class="font-semibold text-orange-400 group-hover:text-white">Diffuser Alerte</span>
+                    </button>
+                        
+                        
                         <button onclick="switchView('employees')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group"><i class="fa-solid fa-user-group w-5"></i> <span class="font-semibold">Collaborateurs</span></button>
                         <button onclick="switchView('add-new')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group rh-only"><i class="fa-solid fa-user-plus w-5"></i> <span class="font-semibold">Nouveau Profil</span></button>
                         <!-- BOUTON RECRUTEMENT -->
@@ -224,6 +232,22 @@
             </header>
 
             <div id="main-scroll-container" class="flex-1 overflow-y-auto p-8 scroll-smooth">
+                                                        <!-- BANNIÈRE FLASH INFO (Cachée par défaut) -->
+                <div id="flash-banner" class="hidden mb-6 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-all duration-500 transform hover:scale-[1.01]">
+                    <div class="absolute top-0 right-0 p-4 opacity-20"><i id="flash-icon-bg" class="fa-solid fa-bullhorn text-6xl transform rotate-12"></i></div>
+                    <div class="relative z-10 flex items-start gap-4">
+                        <div id="flash-icon-container" class="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                            <i id="flash-icon" class="fa-solid fa-bell text-xl animate-pulse"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <p id="flash-meta" class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">INFO RH</p>
+                                <button onclick="closeFlashBanner()" class="text-white/60 hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <p id="flash-content" class="font-bold text-sm leading-relaxed">Chargement...</p>
+                        </div>
+                    </div>
+                </div>
                 <!-- VUE 1: DASHBOARD -->
             <section id="view-dash" class="view-section active">             
             <div class="flex justify-between items-center mb-8">
@@ -782,37 +806,30 @@
 
     <!-- MODAL CONTRAT SIGNE -->
 
+                                                                    <!-- MODAL SIGNATURE NUMÉRIQUE -->
     <div id="contract-modal" class="fixed inset-0 bg-slate-900/80 hidden flex items-center justify-center z-[110] p-4 backdrop-blur-sm">
         <div class="bg-white w-full max-w-lg rounded-3xl p-8 shadow-2xl">
-            <h3 class="font-black mb-2 text-xl text-center uppercase text-slate-800">Ajouter le Contrat Signé</h3>
-            <p class="text-slate-400 text-sm text-center mb-8">Uploadez le scan ou prenez une photo du contrat cacheté.</p>
+            <h3 class="font-black mb-2 text-xl text-center uppercase text-slate-800">Signature du Contrat</h3>
+            <p class="text-slate-400 text-sm text-center mb-8">Signez avec votre doigt ou votre souris dans le cadre ci-dessous pour valider le document.</p>
             <input type="hidden" id="contract-id-hidden">
-            <div class="flex flex-col items-center p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 mb-8">
-                <div id="contract-preview-container" class="w-full h-48 bg-slate-200 rounded-xl mb-4 overflow-hidden flex items-center justify-center">
-                    <video id="contract-video" class="w-full h-full object-cover hidden" autoplay playsinline></video>
-                    <img id="contract-img-preview" class="w-full h-full object-cover hidden">
-                    <i class="fa-solid fa-file-signature text-slate-400 text-4xl" id="contract-icon"></i>
-                </div>
+            
+            <div class="flex flex-col items-center p-2 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 mb-8">
+                <!-- LE CADRE DE SIGNATURE -->
+                <canvas id="signature-pad" class="w-full h-48 bg-white rounded-xl border border-slate-200 cursor-crosshair shadow-inner"></canvas>
                 
-                <div class="flex gap-2 w-full">
-                    <button type="button" onclick="startContractCamera()" class="flex-1 text-[10px] font-black bg-white border py-3 rounded-xl uppercase hover:bg-slate-50 transition-all">
-                        <i class="fa-solid fa-camera mr-2"></i>Photo
+                <div class="flex justify-between w-full p-2">
+                    <button type="button" onclick="clearSignature()" class="text-[10px] font-black text-red-500 uppercase hover:underline">
+                        <i class="fa-solid fa-eraser mr-1"></i> Effacer
                     </button>
-                    
-                    <!-- ID AJOUTÉ ICI -->
-                    <button type="button" id="btn-contract-label" onclick="document.getElementById('contract-upload').click()" class="flex-1 text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 py-3 rounded-xl uppercase hover:bg-blue-100 transition-all">
-                        <i class="fa-solid fa-upload mr-2"></i>Fichier
-                    </button>
+                    <span class="text-[9px] text-slate-400 italic font-medium">Signature électronique sécurisée</span>
                 </div>
-
-                <!-- ONCHANGE MIS A JOUR -->
-                <input type="file" id="contract-upload" class="hidden" accept="image/*,application/pdf" onchange="previewContractFile(event); updateFileFeedback('contract-upload', 'btn-contract-label')">
-                
-                <button type="button" id="btn-contract-capture" onclick="takeContractSnapshot()" class="hidden bg-blue-600 text-white py-3 rounded-xl w-full mt-4 font-black text-xs hover:bg-blue-700 transition-all">CAPTURER LA PHOTO</button>
             </div>
+
             <div class="flex gap-4">
-                <button onclick="submitSignedContract()" class="flex-1 bg-green-600 text-white py-4 rounded-2xl font-black shadow-lg uppercase text-xs tracking-widest transition-all hover:bg-green-700 active:scale-95">Enregistrer le contrat</button>
-                <button onclick="closeContractModal()" class="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-bold uppercase text-xs hover:bg-slate-200 transition-all">Annuler</button>
+                <button onclick="submitSignedContract()" class="flex-1 bg-slate-900 text-white py-4 rounded-2xl font-black shadow-lg uppercase text-xs tracking-widest transition-all hover:bg-blue-600 active:scale-95">
+                    GÉNÉRER LE PDF SIGNÉ
+                </button>
+                <button onclick="closeContractModal()" class="flex-1 bg-slate-100 text-slate-500 py-4 rounded-2xl font-bold uppercase text-xs">Annuler</button>
             </div>
         </div>
     </div>
@@ -863,6 +880,41 @@
         </div>
     </div>
 
+
+
+
+
+
+
+
+
+
+
+                <!-- MODAL ENVOI FLASH -->
+            <div id="flash-modal" class="fixed inset-0 bg-slate-900/90 hidden flex items-center justify-center z-[160] p-4 backdrop-blur-sm">
+                <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-black text-xl uppercase text-slate-800">Nouvelle Annonce</h3>
+                        <button onclick="document.getElementById('flash-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+                    </div>
+                    <form onsubmit="submitFlashMessage(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Niveau d'urgence</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="cursor-pointer"><input type="radio" name="flash_type" value="Info" class="peer sr-only" checked><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-blue-600 peer-checked:text-white transition-all">ℹ️ Info</div></label>
+                                <label class="cursor-pointer"><input type="radio" name="flash_type" value="Urgent" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-red-600 peer-checked:text-white transition-all">🚨 Urgent</div></label>
+                                <label class="cursor-pointer"><input type="radio" name="flash_type" value="Maintenance" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-yellow-500 peer-checked:text-white transition-all">⚠️ Travaux</div></label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Message</label>
+                            <textarea id="flash-input-msg" rows="4" class="w-full p-4 bg-slate-50 border rounded-xl outline-none font-medium text-sm" placeholder="Ex: Réunion générale demain à 8h00 en salle de conférence..." required></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-blue-600 shadow-lg transition-all">PUBLIER MAINTENANT</button>
+                    </form>
+                </div>
+            </div>
+
     <script>
 
 
@@ -898,11 +950,27 @@
         const URL_READ_CANDIDATES = `${BASE_API}/read-candidates`; 
         const URL_CANDIDATE_ACTION = `${BASE_API}/candidate-action`;
 
+        const URL_READ_FLASH = `${BASE_API}/read-flash`;
+        const URL_WRITE_FLASH = `${BASE_API}/write-flash`;
+
         const SCAN_KEY = "SIGD_SECURE_2025"; 
         const URL_REDIRECT_FAILURE = "https://google.com";
 
+                // --- CONFIG SAAS (Géolocalisation dynamique) ---
+        const URL_GET_CONFIG = `${BASE_API}/read-config`; // Nouvelle route à créer dans Make
+
+        // Variable globale qui stockera les infos du bureau
+        let companyConfig = {
+            latitude: null,      
+            longitude: null,     
+            radius: 100,         // Rayon par défaut (mètres)
+            geo_required: false  // Force le GPS ou non
+        };
+
         let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null;
- 
+                           
+        
+let offsetSuivant = null; // Mémorise le marque-page pour le lot suivant
         let currentPage = 1;
         const ITEMS_PER_PAGE = 10; // Nombre d'employés par page
 
@@ -984,10 +1052,15 @@
         
 
 
-        async function downloadMyBadge() {
-            // 1. On cherche les infos de l'employé connecté
-            // (On utilise find car 'employees' contient la liste chargée au login)
-            const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+
+
+
+async function downloadMyBadge() {
+            // 1. On cherche l'employé avec une comparaison flexible
+            const normalize = (s) => s ? String(s).toLowerCase().replace(/[\.\s_-]/g, '') : '';
+            const searchTarget = normalize(currentUser.nom);
+
+            const myData = employees.find(e => normalize(e.nom) === searchTarget);
             
             if(!myData) {
                 return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
@@ -998,10 +1071,10 @@
             Swal.fire({ title: 'Génération...', didOpen: () => Swal.showLoading() });
 
             try {
-                // 2. Construction de l'URL
+                // 2. Construction de l'URL (Utilise myData.id qui est le Matricule)
                 const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
 
-                // 3. Récupération du HTML (au lieu d'ouvrir l'URL direct)
+                // 3. Récupération du HTML
                 const response = await fetch(url);
                 
                 if (!response.ok) throw new Error("Erreur lors de la génération du badge");
@@ -1026,7 +1099,18 @@
             }
         }
 
-async function secureFetch(url, options = {}) {
+
+
+
+
+
+
+                                                                                                        async function secureFetch(url, options = {}) {
+    // 0. SÉCURITÉ RÉSEAU IMMÉDIATE
+    if (!navigator.onLine) {
+        throw new Error("Vous êtes hors ligne. Vérifiez votre connexion internet.");
+    }
+
     const token = localStorage.getItem('sirh_token');
     const headers = options.headers || {};
     
@@ -1034,8 +1118,7 @@ async function secureFetch(url, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // 1. TIMEOUT AUGMENTÉ À 60 SECONDES
-    // Cela laisse le temps au serveur Render/Make de se réveiller (Cold Start)
+    // 1. TIMEOUT 60 SECONDES
     const TIMEOUT_MS = 60000; 
     
     const controller = new AbortController();
@@ -1049,7 +1132,7 @@ async function secureFetch(url, options = {}) {
             signal: controller.signal 
         });
 
-        clearTimeout(timeoutId); // Succès : on arrête le chronomètre
+        clearTimeout(timeoutId); 
 
         // 3. GESTION DES ERREURS HTTP
         if (!response.ok) {
@@ -1078,8 +1161,6 @@ async function secureFetch(url, options = {}) {
         throw error; 
     }
 }
-
-
 
 
 
@@ -1198,68 +1279,76 @@ function setSession(n, r, id){
 
 
 
+                async function fetchCompanyConfig() {
+                    try {
+                        // On demande la config spécifique à l'agent connecté
+                        const response = await secureFetch(`${URL_GET_CONFIG}?agent=${encodeURIComponent(currentUser.nom)}`);
+                        const data = await response.json();
 
-
-
-                                                    async function refreshAllData() {
-            const icon = document.getElementById('refresh-icon'); 
-            
-            // 1. Animation visuelle (Feedback)
-            if(icon) icon.classList.add('fa-spin');
-            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false});
-            Toast.fire({icon: 'info', title: 'Synchronisation...'});
-
-            try {
-                // Liste des tâches à effectuer en parallèle
-                const tasks = [];
-
-                // Tâche 1 : Les employés (Tout le monde en a besoin)
-                // true = on force le réseau, on ignore le cache local
-                tasks.push(fetchData(true)); 
-
-                // Tâche 2 : Les congés (Tout le monde)
-                tasks.push(fetchLeaveRequests());
-
-                // Tâche 3 : Les Candidats (Seulement RH et ADMIN)
-                if (currentUser && ['RH', 'ADMIN'].includes(currentUser.role)) {
-                    tasks.push(fetchCandidates());
+                        // On s'attend à recevoir : { "lat": 6.36, "lon": 2.40, "radius": 50, "active": true }
+                        if (data.lat && data.lon) {
+                            companyConfig.latitude = parseFloat(data.lat);
+                            companyConfig.longitude = parseFloat(data.lon);
+                            companyConfig.radius = parseInt(data.radius) || 100;
+                            companyConfig.geo_required = (data.active === true || data.active === "true");
+                            
+                            console.log("📍 Bureau localisé (SaaS) :", companyConfig);
+                        }
+                    } catch (e) {
+                        console.warn("⚠️ Impossible de charger la config GPS (Mode par défaut)", e);
+                    }
                 }
 
-                // Tâche 4 : Les Logs (Seulement ADMIN)
-                if (currentUser && currentUser.role === 'ADMIN') {
-                    tasks.push(fetchLogs());
-                }
 
-                // Tâche 5 : Recharger son propre profil (Si Employee)
-                if (currentUser && currentUser.role === 'EMPLOYEE') {
-                     // On recharge pour avoir les dernières infos (adresse, tel...)
-                     // Note : loadMyProfile utilise les données de employees, donc fetchData suffit souvent,
-                     // mais c'est bien de rafraîchir l'affichage
-                     setTimeout(loadMyProfile, 500); 
-                }
 
-                // ON LANCE TOUT EN MÊME TEMPS
-                await Promise.all(tasks);
 
-                // Mise à jour des graphiques après avoir reçu les nouvelles données
-                renderCharts();
 
-                Toast.fire({icon: 'success', title: 'Données à jour !', timer: 2000});
+ async function refreshAllData() {
+    const icon = document.getElementById('refresh-icon'); 
+    if(icon) icon.classList.add('fa-spin');
+    const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false});
+    Toast.fire({icon: 'info', title: 'Synchronisation...'});
 
-            } catch (error) {
-                console.error(error);
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Synchro partielle',
-                    text: 'Certaines données n\'ont pas pu être actualisées. Vérifiez votre connexion.',
-                    confirmButtonColor: '#0f172a'
-                });
-            } finally {
-                // Arrêt de l'animation
-                if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 500);
+    try {
+        // 1. Tâches parallèles non critiques (GPS, Flash, Congés)
+        const secondaryTasks = [
+            fetchCompanyConfig().catch(e => console.warn("GPS ignoré", e)),
+            fetchFlashMessage().catch(e => console.warn("Flash ignoré", e)),
+            fetchLeaveRequests().catch(e => console.warn("Congés ignorés", e))
+        ];
+
+        // 2. Gestion des Rôles Spéciaux
+        if (currentUser) {
+            if (['RH', 'ADMIN'].includes(currentUser.role)) {
+                secondaryTasks.push(fetchCandidates().catch(e => console.log(e)));
+            }
+            if (currentUser.role === 'ADMIN') {
+                secondaryTasks.push(fetchLogs().catch(e => console.log(e)));
             }
         }
 
+        // 3. CHARGEMENT CRITIQUE : On attend d'avoir les employés AVANT de charger le profil
+        await fetchData(true); // <--- Ceci remplit la variable 'employees'
+
+        // 4. Une fois les employés chargés, on affiche le profil
+        if (currentUser.role === 'EMPLOYEE') {
+            loadMyProfile(); 
+        }
+
+        // 5. On lance le reste en arrière-plan
+        await Promise.all(secondaryTasks);
+
+        renderCharts();
+        Toast.fire({icon: 'success', title: 'Données à jour !', timer: 2000});
+
+    } catch (error) {
+        console.error("Erreur Sync:", error);
+        Swal.fire('Attention', 'Erreur de connexion partielle.', 'warning');
+    } finally {
+        if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 500);
+    }
+}
+ 
 
 
 
@@ -1274,104 +1363,80 @@ function setSession(n, r, id){
 
 
 
-
-
-
-
-
-
-
-        async function fetchData(forceUpdate = false){ 
+async function fetchData(forceUpdate = false){ 
             const CACHE_KEY = 'sirh_data_v1';
             const CACHE_TIME = 1000 * 60 * 60; 
+
             if (!forceUpdate) {
                 const cached = localStorage.getItem(CACHE_KEY);
                 const cachedTime = localStorage.getItem(CACHE_KEY + '_time');
                 if (cached && cachedTime && (Date.now() - cachedTime < CACHE_TIME)) {
                     employees = JSON.parse(cached);
-                    renderData();
-                    loadMyProfile();
-                    renderCharts();
-                    fetchLeaveRequests(); // <--- AJOUTÉ : Pour charger les congés depuis le cache
+                    renderData(); loadMyProfile(); renderCharts();
                     return; 
                 }
             }
+
             try{ 
                 let fetchUrl = `${URL_READ}?agent=${encodeURIComponent(currentUser.nom)}`;
                 const r = await secureFetch(fetchUrl); 
                 const d = await r.json(); 
-                console.log("Données reçues de Make :", d[0]); // Affiche le premier employé reçu
+                
+                employees = d.map(x => {
+                    const getRawLink = (l) => {
+                         if (!l) return '';
+                         if (Array.isArray(l) && l.length > 0) return l[0].url || l[0];
+                         if (typeof l === 'object' && l.url) return l.url;
+                         return String(l);
+                    };
 
-// Dans la fonction fetchData...
-
-employees = d.map(x => {
-    // Sécurité pour la photo : on regarde si c'est 'photo' ou 'Photo' ou 'Photos'
-    let rawPhoto = x.photo || x.Photo || x.Photos;
-
-    return { 
-        id: x.employee_id || x.id, 
-        nom: x.nom || x.Nom, 
-        date: x.date_embauche || x.date, 
-        poste: x.poste || x.Poste, 
-        dept: x['département'] || x.departement || "Non défini", 
-        limit: x.type_contrat || 365, 
-        
-        // ICI : On passe la donnée brute, la fonction formatGoogleLink s'occupera du reste
-        photo: rawPhoto, 
-        
-        statut: x.Statut || 'Actif', 
-        email: x.email, 
-        telephone: x.telephone || x['téléphone'], 
-        adresse: x.adresse, 
-        date_naissance: x.date_naissance, 
-        role: x.role || x.Role || 'EMPLOYEE',
-
-        
-        // Gestion des documents
-        doc: x.contrat_pdf ? formatGoogleLink(x.contrat_pdf) : '#',
-        contract_status: x.contract_status || 'Non signé',
-        cv_link: formatGoogleLink(x.cv_link) || '#',
-        id_card_link: formatGoogleLink(x.id_card_link) || '#',
-        diploma_link: formatGoogleLink(x.diploma_link) || '#',
-        attestation_link: formatGoogleLink(x.attestation) || '#',
-        lm_link: formatGoogleLink(x.lm_link) || '#'
-
-        
-    };
-});
-
-
+                    return { 
+                        id: x.employee_id || x.id, 
+                        nom: x.nom || x.Nom, 
+                        date: x.date_embauche || x.date, 
+                        poste: x.poste || x.Poste, 
+                        dept: x['département'] || x.departement || "Non défini", 
+                        limit: x.type_contrat || 365, 
+                        photo: x.photo || x.Photo || '', 
+                        statut: x.Statut || 'Actif', 
+                        email: x.email, 
+                        telephone: x.telephone || x['téléphone'], 
+                        adresse: x.adresse, 
+                        date_naissance: x.date_naissance, 
+                        role: x.role || x.Role || 'EMPLOYEE',
+                        doc: getRawLink(x.contrat_pdf || x.doc),
+                        contract_status: x.contract_status || 'Non signé',
+                        cv_link: getRawLink(x.cv_link),
+                        id_card_link: getRawLink(x.id_card_link),
+                        diploma_link: getRawLink(x.diploma_link),
+                        attestation_link: getRawLink(x.attestation_link || x.attestation),
+                        lm_link: getRawLink(x.lm_link)
+                    };
+                });
 
                 localStorage.setItem(CACHE_KEY, JSON.stringify(employees));
                 localStorage.setItem(CACHE_KEY + '_time', Date.now());
-                renderData(); 
-                loadMyProfile();
-                renderCharts();
-                fetchLeaveRequests(); // <--- AJOUTÉ : Pour charger les congés en direct
+                
+                renderData(); loadMyProfile(); renderCharts(); fetchLeaveRequests(); 
+
             } catch(e){ 
-                console.error(e); 
+                console.error("Erreur Fetch:", e); 
+                let diagnostic = "Erreur Système";
+                if (!navigator.onLine) diagnostic = "Connexion Internet coupée";
+                else if (e.message.includes("403") || e.message.includes("429")) diagnostic = "Quota Make.com épuisé (Crédits)";
+                else if (e.message.includes("500")) diagnostic = "Service indisponible (Erreur Serveur)";
+
                 const cached = localStorage.getItem(CACHE_KEY);
                 if(cached) {
                     employees = JSON.parse(cached);
-                    renderData(); loadMyProfile(); renderCharts(); fetchLeaveRequests();
-                } else { Swal.fire('Erreur', 'Impossible de récupérer les données', 'error'); }
+                    renderData(); loadMyProfile(); renderCharts();
+                    const Toast = Swal.mixin({toast: true, position: 'bottom-end', showConfirmButton: false, timer: 5000});
+                    Toast.fire({ icon: 'warning', title: diagnostic, text: 'Données locales affichées.' });
+                } else { 
+                    Swal.fire('Erreur Critique', diagnostic, 'error'); 
+                }
             } 
         }
-
-
-
-
-
-
-
-
-
-
-        
-
-
-
-
 
 
 
@@ -1595,45 +1660,129 @@ function renderData() {
             }
         }
 
-        async function handleClockInOut() {
-            const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
-            const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
-            let locationCoords = "Non autorisé ou Timeout";
-            try {
-                const pos = await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    });
-                });
-                locationCoords = `${pos.coords.latitude},${pos.coords.longitude}`;
-            } catch(e) { console.warn("GPS erreur:", e.message); }
-            Swal.fire({ title: 'Enregistrement...', text: 'Liaison avec le serveur sécurisé', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-            const payload = {
-                id: currentUser.id, nom: currentUser.nom, action: action, 
-                time: new Date().toISOString(), gps: locationCoords, agent: currentUser.nom
-            };
-            try {
-                const response = await secureFetch(URL_CLOCK_ACTION, { 
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
-                });
-                if (response.ok) {
-                    const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
-                    localStorage.setItem('clock_status_' + currentUser.id, newStatus);
-                    updateClockUI(newStatus === 'IN');
-                    document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString();
+
+
+
+
+
+
+
+
+                 async function handleClockInOut() {
+                    const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
+                    const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
+                    
+                    let locationCoords = "Non détecté";
+                    let dist = 0;
+                    
+                    // 1. Feedback visuel immédiat
                     Swal.fire({ 
-                        icon: 'success', title: action === 'CLOCK_IN' ? 'Entrée Validée' : 'Sortie Validée', 
-                        text: locationCoords.includes("Timeout") ? "Pointage OK (sans GPS)" : "Pointage et GPS OK",
-                        timer: 2000, showConfirmButton: false 
+                        title: 'Géolocalisation...', 
+                        text: 'Vérification de la zone autorisée...', 
+                        didOpen: () => Swal.showLoading(), 
+                        allowOutsideClick: false 
                     });
+
+                    try {
+                        // 2. Récupération Position Téléphone
+                        const pos = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                                enableHighAccuracy: true, 
+                                timeout: 10000, 
+                                maximumAge: 0
+                            });
+                        });
+
+                        const userLat = pos.coords.latitude;
+                        const userLon = pos.coords.longitude;
+                        locationCoords = `${userLat},${userLon}`;
+
+                        // 3. VÉRIFICATION DE LA ZONE (Si la config SaaS est chargée)
+                        // On vérifie si la variable globale companyConfig contient des coordonnées
+                        if (typeof companyConfig !== 'undefined' && companyConfig.latitude && companyConfig.longitude) {
+                            
+                            // Calcul de la distance
+                            dist = getDistance(userLat, userLon, companyConfig.latitude, companyConfig.longitude);
+                            
+                            console.log(`📏 Distance: ${Math.round(dist)}m (Max: ${companyConfig.radius}m)`);
+
+                            // Si la validation stricte est active et qu'on est trop loin
+                            if (companyConfig.geo_required && dist > companyConfig.radius) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Hors Zone',
+                                    html: `Vous êtes à <b>${Math.round(dist)} mètres</b> du bureau.<br>Le pointage est autorisé uniquement dans un rayon de ${companyConfig.radius}m.`,
+                                    confirmButtonColor: '#ef4444'
+                                });
+                                return; // ⛔ STOP : On arrête tout ici, rien n'est envoyé.
+                            }
+                        }
+
+                    } catch(e) { 
+                        console.warn("Erreur GPS:", e.message);
+                        // Si la config exige le GPS mais qu'on ne peut pas le récupérer
+                        if (typeof companyConfig !== 'undefined' && companyConfig.geo_required) {
+                            return Swal.fire('GPS Requis', 'Impossible de valider votre position. Activez le GPS et réessayez.', 'warning');
+                        }
+                        locationCoords = "Erreur/Désactivé";
+                    }
+
+                    // 4. Préparation des données (Payload)
+                    const payload = {
+                        id: currentUser.id, 
+                        nom: currentUser.nom, 
+                        action: action, 
+                        time: new Date().toISOString(), 
+                        gps: locationCoords, 
+                        distance_bureau: Math.round(dist), // On ajoute la distance pour les logs
+                        agent: currentUser.nom
+                    };
+
+                    // 5. Gestion Hors-Ligne (Stockage local)
+                    if (!navigator.onLine) {
+                        const queue = JSON.parse(localStorage.getItem('sirh_offline_queue') || '[]');
+                        queue.push(payload);
+                        localStorage.setItem('sirh_offline_queue', JSON.stringify(queue));
+
+                        const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
+                        localStorage.setItem('clock_status_' + currentUser.id, newStatus);
+                        updateClockUI(newStatus === 'IN');
+                        document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString() + " (En attente réseau)";
+
+                        Swal.fire({ 
+                            icon: 'info', title: 'Mode Hors-Ligne', 
+                            text: 'Pointage enregistré. Il sera envoyé dès le retour de la connexion.',
+                            confirmButtonColor: '#f59e0b'
+                        });
+                        return;
+                    }
+
+                    // 6. Envoi au Serveur (Mode Connecté)
+                    try {
+                        const response = await secureFetch(URL_CLOCK_ACTION, { 
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
+                        });
+                        
+                        if (response.ok) {
+                            const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
+                            localStorage.setItem('clock_status_' + currentUser.id, newStatus);
+                            updateClockUI(newStatus === 'IN');
+                            document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString();
+                            
+                            // Message de succès avec la distance affichée
+                            const distMsg = (typeof companyConfig !== 'undefined' && companyConfig.latitude) ? `(à ${Math.round(dist)}m du bureau)` : "";
+                            
+                            Swal.fire({ 
+                                icon: 'success', 
+                                title: action === 'CLOCK_IN' ? 'Bienvenue !' : 'Au revoir !', 
+                                text: `Pointage validé ${distMsg}`,
+                                timer: 2000, showConfirmButton: false 
+                            });
+                        }
+                    } catch (e) { 
+                        Swal.fire('Echec', 'Erreur serveur : ' + e.message, 'error'); 
+                    }
                 }
-            } catch (e) { Swal.fire('Echec', 'Erreur serveur : ' + e.message, 'error'); }
-        }
-
-
-        
 
 
 
@@ -1642,16 +1791,9 @@ function renderData() {
 
 
 
-
-
-
-
-
-
-                                        function openFullFolder(id) {
+function openFullFolder(id) {
     const e = employees.find(x => x.id === id); if(!e) return;
     
-    // Remplissage infos header
     document.getElementById('folder-photo').src = formatGoogleLink(e.photo) || 'https://via.placeholder.com/150';
     document.getElementById('folder-name').innerText = e.nom; 
     document.getElementById('folder-id').innerText = "IDENTIFIANT : " + e.id;
@@ -1671,7 +1813,6 @@ function renderData() {
     const grid = document.getElementById('folder-docs-grid'); 
     grid.innerHTML = '';
 
-    // --- CORRECTION : UNE SEULE DÉCLARATION ---
     const docs = [ 
         { label: 'Contrat Actuel', link: e.doc, icon: 'fa-file-signature', color: 'blue', key: 'contrat' }, 
         { label: 'Curriculum Vitae', link: e.cv_link, icon: 'fa-file-pdf', color: 'indigo', key: 'cv' }, 
@@ -1682,7 +1823,10 @@ function renderData() {
     ];
 
     docs.forEach(doc => { 
-        const hasLink = doc.link && doc.link !== '#'; 
+        const hasLink = doc.link && doc.link.length > 5; 
+        // --- CORRECTION : Protection contre les guillemets simples dans le label ---
+        const safeLabel = doc.label.replace(/'/g, "\\'");
+
         grid.innerHTML += `
             <div class="p-4 rounded-2xl border ${hasLink ? 'bg-white shadow-sm border-slate-200' : 'bg-slate-100 opacity-50'} flex items-center justify-between group">
                 <div class="flex items-center gap-3">
@@ -1690,18 +1834,17 @@ function renderData() {
                     <p class="text-xs font-bold text-slate-700">${doc.label}</p>
                 </div>
                 <div class="flex gap-2">
-                    ${hasLink ? `<a href="${doc.link}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><i class="fa-solid fa-up-right-from-square"></i></a>` : ''}
+                    ${hasLink ? `<button onclick="viewDocument('${doc.link}', '${safeLabel}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Consulter"><i class="fa-solid fa-eye"></i></button>` : ''}
+                    
                     <button onclick="updateSingleDoc('${doc.key}', '${e.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
                         <i class="fa-solid fa-pen-to-square"></i>
                     </button>
                 </div>
             </div>`; 
-    });            
+    });         
     
     document.getElementById('folder-modal').classList.remove('hidden');
 }
-
-
 
 
 
@@ -1782,74 +1925,107 @@ function getDriveId(link) {
 
 
 
-
-
-
-                                                    function loadMyProfile() {
-    // On trouve l'employé correspondant à l'utilisateur connecté
-    const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
-    
-    if (myData) {
-        // Remplissage des infos textes
-        document.getElementById('emp-name').innerText = myData.nom; 
-        document.getElementById('emp-job').innerText = myData.poste;
-        
-        // Gestion Photo
-        if(myData.photo && myData.photo.length > 10) { 
-            document.getElementById('emp-photo-real').src = formatGoogleLink(myData.photo); 
-            document.getElementById('emp-photo-real').classList.remove('hidden'); 
-            document.getElementById('emp-avatar').classList.add('hidden'); 
-        }
-
-        // Gestion Dates
-        if(myData.date) { 
-            let sD = parseDateSmart(myData.date); 
-            document.getElementById('emp-start-date').innerText = sD.toLocaleDateString('fr-FR'); 
-            let eD = new Date(sD); 
-            eD.setDate(eD.getDate() + (parseInt(myData.limit) || 365)); 
-            document.getElementById('emp-end-date').innerText = eD.toLocaleDateString('fr-FR'); 
-        }
-
-        // Remplissage formulaires
-        document.getElementById('emp-email').value = myData.email || ""; 
-        document.getElementById('emp-phone').value = myData.telephone || ""; 
-        document.getElementById('emp-address').value = myData.adresse || ""; 
-        document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
-        
-        const dC = document.getElementById('doc-container'); 
-        dC.innerHTML = '';
-
-        // --- CORRECTION ICI ---
-        // Utilisation de 'myData' et syntaxe propre
-        const allDocs = [ 
-            { label: 'Contrat Actuel', link: myData.doc, icon: 'fa-file-signature', color: 'blue', key: 'contrat' }, 
-            { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo', key: 'cv' }, 
-            { label: 'Lettre Motivation', link: myData.lm_link, icon: 'fa-envelope-open-text', color: 'pink', key: 'lm' },
-            { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate', key: 'id_card' }, 
-            { label: 'Diplômes/Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald', key: 'diploma' },
-            { label: 'Attestations', link: myData.attestation_link, icon: 'fa-file-invoice', color: 'orange', key: 'attestation' } 
-        ];
-
-        allDocs.forEach(doc => {
-            const hasLink = doc.link && doc.link.length > 5 && doc.link !== '#';
-            dC.innerHTML += `
-                <div class="flex items-center justify-between p-3 border border-slate-100 bg-white rounded-xl hover:bg-slate-50 transition-all group mb-3 shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-${doc.color}-50 text-${doc.color}-600 p-2.5 rounded-lg"><i class="fa-solid ${doc.icon}"></i></div>
-                        <p class="text-xs font-bold text-slate-700">${doc.label}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        ${hasLink ? `<a href="${doc.link}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg"><i class="fa-solid fa-up-right-from-square"></i></a>` : ''}
-                        <button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
-                            <i class="fa-solid fa-file-arrow-up"></i>
-                        </button>
-                    </div>
-                </div>`;
-        });
+ function loadMyProfile() {
+    // 1. Sécurité : Si la liste est vide, on arrête
+    if (!employees || employees.length === 0) {
+        console.warn("Liste employés vide, impossible de charger le profil.");
+        return;
     }
+
+    // 2. Recherche Intelligente (Smart Matching)
+    // On nettoie le nom de l'utilisateur (sena.broda -> sena broda)
+    const cleanUser = currentUser.nom.toLowerCase().replace(/[\.-_]/g, ' ').trim();
+
+    let myData = employees.find(e => {
+        // On nettoie le nom dans la base (Sena Broda -> sena broda)
+        const cleanEmp = e.nom.toLowerCase().replace(/[\.-_]/g, ' ').trim();
+        return cleanEmp.includes(cleanUser) || cleanUser.includes(cleanEmp);
+    });
+
+    // 3. Fallback : Si on ne trouve pas par nom, on cherche par ID si disponible
+    if (!myData && currentUser.id) {
+        myData = employees.find(e => e.id === currentUser.id);
+    }
+
+    // Si toujours rien trouvé
+    if (!myData) {
+        console.error("Profil introuvable pour :", currentUser.nom);
+        return;
+    }
+    
+// --- Remplissage de l'interface ---
+    document.getElementById('emp-name').innerText = myData.nom; 
+    document.getElementById('emp-job').innerText = myData.poste;
+    
+    // --- CORRECTION : Mise à jour du nom et de l'initiale en bas à gauche (Sidebar) ---
+    const nameDisplay = document.getElementById('name-display');
+    const avatarDisplay = document.getElementById('avatar-display');
+    if (nameDisplay) nameDisplay.innerText = myData.nom;
+    if (avatarDisplay) avatarDisplay.innerText = myData.nom.charAt(0).toUpperCase();
+    
+    // Gestion Photo
+    const photoEl = document.getElementById('emp-photo-real');
+    const avatarEl = document.getElementById('emp-avatar');
+    
+    if(myData.photo && myData.photo.length > 10) { 
+        photoEl.src = formatGoogleLink(myData.photo); 
+        photoEl.classList.remove('hidden'); 
+        avatarEl.classList.add('hidden'); 
+    } else {
+        photoEl.classList.add('hidden'); 
+        avatarEl.classList.remove('hidden');
+        avatarEl.innerText = myData.nom.charAt(0).toUpperCase();
+    }
+
+    // Gestion Dates
+    if(myData.date) { 
+        let sD = parseDateSmart(myData.date); 
+        document.getElementById('emp-start-date').innerText = sD.toLocaleDateString('fr-FR'); 
+        let eD = new Date(sD); 
+        eD.setDate(eD.getDate() + (parseInt(myData.limit) || 365)); 
+        document.getElementById('emp-end-date').innerText = eD.toLocaleDateString('fr-FR'); 
+    }
+
+    // Remplissage formulaires
+    document.getElementById('emp-email').value = myData.email || ""; 
+    document.getElementById('emp-phone').value = myData.telephone || ""; 
+    document.getElementById('emp-address').value = myData.adresse || ""; 
+    document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
+    
+    // Remplissage Documents
+    const dC = document.getElementById('doc-container'); 
+    dC.innerHTML = '';
+
+    const allDocs = [ 
+        { label: 'Contrat Actuel', link: myData.doc, icon: 'fa-file-signature', color: 'blue', key: 'contrat' }, 
+        { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo', key: 'cv' }, 
+        { label: 'Lettre Motivation', link: myData.lm_link, icon: 'fa-envelope-open-text', color: 'pink', key: 'lm' },
+        { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate', key: 'id_card' }, 
+        { label: 'Diplômes/Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald', key: 'diploma' },
+        { label: 'Attestations', link: myData.attestation_link, icon: 'fa-file-invoice', color: 'orange', key: 'attestation' } 
+    ];
+
+    allDocs.forEach(doc => {
+        const hasLink = doc.link && doc.link.length > 5;
+        // --- CORRECTION : Protection contre les guillemets simples ---
+        const safeLabel = doc.label.replace(/'/g, "\\'");
+
+        dC.innerHTML += `
+            <div class="flex items-center justify-between p-3 border border-slate-100 bg-white rounded-xl hover:bg-slate-50 transition-all group mb-3 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="bg-${doc.color}-50 text-${doc.color}-600 p-2.5 rounded-lg"><i class="fa-solid ${doc.icon}"></i></div>
+                    <p class="text-xs font-bold text-slate-700">${doc.label}</p>
+                </div>
+                <div class="flex gap-2">
+                    <!-- MISE À JOUR : Utilisation de safeLabel ici -->
+                    ${hasLink ? `<button onclick="viewDocument('${doc.link}', '${safeLabel}')" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg"><i class="fa-solid fa-eye"></i></button>` : ''}
+                    <button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                    </button>
+                </div>
+            </div>`;
+    });
 }
-
-
 
 
 
@@ -1929,7 +2105,13 @@ function switchView(v) {
 
 
         function toggleSidebar(){const sb=document.getElementById('sidebar'), o=document.getElementById('sidebar-overlay'); if(sb.classList.contains('-translate-x-full')){sb.classList.remove('-translate-x-full');o.classList.remove('hidden');}else{sb.classList.add('-translate-x-full');o.classList.add('hidden');}}
+    
+
+
         function filterTable(){const t=document.getElementById('search-input').value.toLowerCase(); const s=document.querySelector('.view-section.active'); if(s)s.querySelectorAll('tbody tr').forEach(r=>{r.style.display=r.innerText.toLowerCase().includes(t)?'':'none'})}
+    
+    
+    
         function parseDateSmart(d){if(!d)return new Date();if(!isNaN(d)&&!String(d).includes('/'))return new Date((d-25569)*86400000);if(String(d).includes('/')){const p=d.split('/'); return new Date(p[2],p[1]-1,p[0]);}return new Date(d);}
         
         
@@ -2115,25 +2297,39 @@ async function submitUpdate(e) {
         
         
         function toggleEditMode(){const ids=['emp-email','emp-phone','emp-address','emp-dob'], btn=document.getElementById('save-btn-container'), dis=document.getElementById('emp-email').disabled; ids.forEach(i=>{const el=document.getElementById(i); el.disabled=!dis; if(!dis)el.classList.add('bg-white','ring-2','ring-blue-100'); else el.classList.remove('bg-white','ring-2','ring-blue-100');}); if(dis){btn.classList.remove('hidden');document.getElementById('emp-email').focus();}else{btn.classList.add('hidden');loadMyProfile();}}
-        
-async function saveMyProfile() {
+                                                                
+                                                                                    async function saveMyProfile() {
     Swal.fire({ title: 'Sauvegarde...', didOpen: () => Swal.showLoading() });
 
-    // On récupère le MATRICULE (ex: BA-47889) pour que Make trouve le bon dossier
-    const myData = employees.find(e => e.nom.toLowerCase().includes(currentUser.nom.toLowerCase()));
+    // --- CORRECTION : Recherche sécurisée du Matricule ---
+    // On nettoie les noms (enlève points, espaces) pour comparer "sena.broda" et "Sena Broda"
+    const normalize = (s) => s ? s.toLowerCase().replace(/[\.\s_-]/g, '') : '';
+    const searchNom = normalize(currentUser.nom);
+
+    const myData = employees.find(e => 
+        normalize(e.nom) === searchNom || 
+        normalize(e.nom).includes(searchNom) || 
+        searchNom.includes(normalize(e.nom))
+    );
+
+    // Si on trouve l'employé dans la liste, on prend son Matricule (myData.id)
+    // Sinon on garde l'ID de secours
+    const idToSend = (myData && myData.id) ? myData.id : currentUser.id;
+    
+    // Log pour vérifier dans ta console (F12) avant l'envoi
+    console.log("Tentative d'envoi pour l'ID :", idToSend);
 
     const fd = new FormData();
-    fd.append('id', myData ? myData.id : currentUser.id); // On envoie le matricule à Make
+    fd.append('id', idToSend); // Envoie le Matricule au lieu du Record ID
     fd.append('email', document.getElementById('emp-email').value);
     fd.append('phone', document.getElementById('emp-phone').value);
     fd.append('address', document.getElementById('emp-address').value);
     fd.append('dob', document.getElementById('emp-dob').value);
     fd.append('agent', currentUser.nom);
-    fd.append('doc_type', 'text_update'); // Dit à Make que c'est une modif de texte uniquement
+    fd.append('doc_type', 'text_update'); 
 
     const pI = document.getElementById('emp-upload-photo');
     if (pI.files[0]) {
-        // "new_photo" car c'est le nom utilisé dans le filtre de ton scénario Make
         fd.append('new_photo', pI.files[0]); 
     }
 
@@ -2145,20 +2341,15 @@ async function saveMyProfile() {
         
         if (response.ok) {
             Swal.fire('Succès', 'Votre profil a été mis à jour', 'success');
-            toggleEditMode(); // Verrouille les champs
-            refreshAllData(); // Recharge les données et les graphiques
+            toggleEditMode(); 
+            refreshAllData(); 
         } else {
-            throw new Error("Erreur serveur");
+            throw new Error("Erreur serveur (" + response.status + ")");
         }
     } catch (e) {
         Swal.fire('Erreur', 'Échec de l\'enregistrement : ' + e.message, 'error');
     }
-}       
-
-
-
-
-
+}
 
 
                                     async function handleOnboarding(e) {
@@ -2296,7 +2487,43 @@ async function saveMyProfile() {
 
 
 
+                                                                                    // Fonction pour ouvrir n'importe quel doc en mode lecture (PDF, IMG, Word...)
+function viewDocument(url, title) {
+    if (!url || url === '#' || url === 'null') {
+        return Swal.fire('Oups', 'Aucun document disponible.', 'info');
+    }
 
+    // 1. On extrait l'ID Google Drive
+    const str = String(url);
+    const match = str.match(/\/d\/([a-zA-Z0-9_-]+)/) || str.match(/id=([a-zA-Z0-9_-]+)/);
+    
+    let finalUrl = url;
+
+    // 2. Si c'est du Drive, on force le mode "PREVIEW" (Liseuse)
+    if (match && match[1]) {
+        finalUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
+    }
+
+    // 3. On ouvre une belle modale
+    Swal.fire({
+        title: `<span class="text-sm font-bold uppercase text-slate-500">${title || 'Document'}</span>`,
+        html: `
+            <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-100" style="height: 75vh;">
+                <iframe src="${finalUrl}" width="100%" height="100%" style="border:none;" allow="autoplay"></iframe>
+            </div>
+            <div class="mt-2 text-right">
+                <a href="${url}" target="_blank" class="text-xs font-bold text-blue-600 hover:underline">
+                    <i class="fa-solid fa-external-link-alt"></i> Ouvrir dans une nouvelle fenêtre
+                </a>
+            </div>
+        `,
+        width: '90%', // Largeur quasi plein écran
+        showConfirmButton: true,
+        confirmButtonText: 'Fermer',
+        confirmButtonColor: '#0f172a',
+        padding: '1rem'
+    });
+}
 
 
 
@@ -2307,7 +2534,45 @@ async function saveMyProfile() {
             window.open(`${URL_CONTRACT_GENERATE}?id=${encodeURIComponent(id)}&nom=${encodeURIComponent(e.nom)}&poste=${encodeURIComponent(e.poste)}&date=${encodeURIComponent(e.date)}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`, '_blank'); 
         }
         
-        function openContractModal(id) { document.getElementById('contract-id-hidden').value = id; document.getElementById('contract-modal').classList.remove('hidden'); resetContractCamera(); }
+
+        
+
+
+
+
+
+
+
+
+
+            function openContractModal(id) {
+                document.getElementById('contract-id-hidden').value = id;
+                document.getElementById('contract-modal').classList.remove('hidden');
+                
+                // Initialisation du pad de signature sur le canvas
+                const canvas = document.getElementById('signature-pad');
+                signaturePad = new SignaturePad(canvas, {
+                    backgroundColor: 'rgba(255, 255, 255, 0)', // Fond transparent
+                    penColor: 'rgb(0, 0, 0)' // Encre noire
+                });
+
+                // Cette partie est CRUCIALE pour que la signature soit précise sur mobile (Retina display)
+                const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                signaturePad.clear(); // On vide le cadre au cas où
+            }
+
+
+
+
+
+
+
+
+       
+       
         function closeContractModal() { if(contractStream) contractStream.getTracks().forEach(t => t.stop()); document.getElementById('contract-modal').classList.add('hidden'); }
         async function startContractCamera() { try { contractStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } }); const v = document.getElementById('contract-video'); v.srcObject = contractStream; v.classList.remove('hidden'); document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-icon').classList.add('hidden'); document.getElementById('btn-contract-capture').classList.remove('hidden'); } catch(e) { Swal.fire('Erreur', 'Caméra inaccessible', 'error'); } }
         
@@ -2325,13 +2590,58 @@ async function saveMyProfile() {
         function previewContractFile(e) { const file = e.target.files[0]; if(!file) return; contractBlob = file; if(file.type.includes('image')) { const img = document.getElementById('contract-img-preview'); img.src = URL.createObjectURL(file); img.classList.remove('hidden'); document.getElementById('contract-icon').classList.add('hidden'); } }
         function resetContractCamera() { contractBlob = null; document.getElementById('contract-img-preview').classList.add('hidden'); document.getElementById('contract-video').classList.add('hidden'); document.getElementById('contract-icon').classList.remove('hidden'); document.getElementById('btn-contract-capture').classList.add('hidden'); if(contractStream) contractStream.getTracks().forEach(t => t.stop()); }
         
-        async function submitSignedContract() { 
-            if(!contractBlob && !document.getElementById('contract-upload').files[0]) { Swal.fire('Erreur', 'Document requis', 'warning'); return; } 
-            const id = document.getElementById('contract-id-hidden').value; 
-            Swal.fire({ title: 'Upload...', didOpen: () => Swal.showLoading() }); 
-            const fd = new FormData(); fd.append('id', id); fd.append('contract_file', contractBlob || document.getElementById('contract-upload').files[0], 'contrat.jpg'); fd.append('agent', currentUser.nom);
-            try { const r = await secureFetch(URL_UPLOAD_SIGNED_CONTRACT, { method: 'POST', body: fd }); if(r.ok) { Swal.fire('Succès', 'Contrat enregistré', 'success'); closeContractModal(); refreshAllData(); } } catch(e) { Swal.fire('Erreur', e.message, 'error'); } 
-        }
+
+        
+
+
+                        async function submitSignedContract() { 
+    // On vérifie si l'employé a dessiné quelque chose
+    if (!signaturePad || signaturePad.isEmpty()) { 
+        return Swal.fire('Attention', 'Veuillez apposer votre signature avant de valider.', 'warning'); 
+    }
+
+    const id = document.getElementById('contract-id-hidden').value; 
+    
+    // MAGIE : On transforme le dessin en texte Base64
+    const signatureBase64 = signaturePad.toDataURL(); 
+
+    Swal.fire({ 
+        title: 'Signature en cours...', 
+        text: 'Incrustation de votre signature dans le contrat PDF', 
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false
+    }); 
+
+    try { 
+        // On envoie le texte de la signature à ton Webhook au lieu du fichier
+        const r = await secureFetch(URL_UPLOAD_SIGNED_CONTRACT, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: id, 
+                signature: signatureBase64, // C'est cette variable que Make utilisera
+                agent: currentUser.nom 
+            }) 
+        }); 
+        
+        if (r.ok) { 
+            Swal.fire('Succès', 'Le contrat a été signé numériquement et archivé avec succès.', 'success'); 
+            closeContractModal(); 
+            refreshAllData(); 
+        } 
+    } catch (e) { 
+        console.error(e);
+        Swal.fire('Erreur', "Échec technique lors de la signature : " + e.message, 'error'); 
+    } 
+}
+
+
+
+
+
+
+
+
         
  function showLeaveDetail(nom, type, debut, fin, motif, encodedLink) {
     const docLink = decodeURIComponent(encodedLink);
@@ -2469,7 +2779,40 @@ function handleLogout() {
 
 
 
+        async function syncOfflineData() {
+            const queue = JSON.parse(localStorage.getItem('sirh_offline_queue') || '[]');
+            
+            if (queue.length === 0) return; // Rien à faire
 
+            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false});
+            Toast.fire({icon: 'info', title: `Synchronisation de ${queue.length} pointage(s)...`});
+
+            const remainingQueue = [];
+
+            for (const item of queue) {
+                try {
+                    // On tente d'envoyer
+                    await secureFetch(URL_CLOCK_ACTION, { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify(item) 
+                    });
+                } catch (e) {
+                    console.error("Echec synchro item", item, e);
+                    remainingQueue.push(item); // Si ça rate encore, on le garde pour la prochaine fois
+                }
+            }
+
+            // Mise à jour de la file d'attente (on ne garde que les échecs)
+            localStorage.setItem('sirh_offline_queue', JSON.stringify(remainingQueue));
+
+            if (remainingQueue.length === 0) {
+                Toast.fire({icon: 'success', title: 'Tous les pointages ont été synchronisés !'});
+                document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString() + " (Synchronisé)";
+            } else {
+                Toast.fire({icon: 'warning', title: `Reste ${remainingQueue.length} pointage(s) à envoyer.`});
+            }
+        }
 
 
 
@@ -2477,8 +2820,28 @@ function handleLogout() {
 
 
         window.addEventListener('offline', () => { Swal.fire({ icon: 'warning', title: 'Connexion Perdue', text: 'Mode hors ligne.', toast: true, position: 'top-end', showConfirmButton: false, timer: 5000 }); document.body.classList.add('offline-mode'); });
-        window.addEventListener('online', () => { Swal.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Opérationnel.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); document.body.classList.remove('offline-mode'); });
-    
+      
+      
+      
+      
+                                                                                    // --- GESTION INTELLIGENTE DU RÉSEAU ---
+        window.addEventListener('online', () => { 
+            // 1. On ferme les alertes SweetAlert s'il y en a (comme "Pas de connexion")
+            Swal.close();
+            
+            // 2. On affiche un petit toast vert
+            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 3000});
+            Toast.fire({ icon: 'success', title: 'Connexion Rétablie', text: 'Vous êtes de nouveau en ligne.' }); 
+            
+            // 3. On enlève le mode visuel hors ligne
+            document.body.classList.remove('offline-mode'); 
+            
+            // 4. On synchronise les pointages en attente
+            syncOfflineData();
+
+            // 5. On rafraîchit les données visuelles
+            if(currentUser) refreshAllData();
+        });
     
     
     
@@ -2532,11 +2895,7 @@ function handleLogout() {
    
 
 
-
-
-
-
-    async function fetchLeaveRequests() {
+ async function fetchLeaveRequests() {
     // 1. Vérification du rôle (Un employé ne doit pas voir cette section)
     if (!currentUser || currentUser.role === 'EMPLOYEE') return;
     
@@ -2548,38 +2907,51 @@ function handleLogout() {
     try {
         // 2. Appel au serveur Render
         const r = await secureFetch(`${URL_READ_LEAVES}?agent=${encodeURIComponent(currentUser.nom)}`);
-        const leaves = await r.json();
+        const rawLeaves = await r.json();
         
-        console.log("Congés reçus de l'API :", leaves); // Pour vérifier dans la console F12
+        console.log("Congés reçus (brut) :", rawLeaves); 
 
-        // 3. Filtrage des demandes (On s'assure de prendre 'En attente' ou de tout afficher si vide)
-        // Note : On gère le cas où statut est absent en vérifiant si la donnée existe
+        // --- NOUVEAU : Normalisation des données pour correspondre à ton Airtable ---
+        const leaves = rawLeaves.map(l => ({
+            id: l.record_id || l.id || '',
+            // On cherche le nom dans Employees_nom (vu sur ton screen) ou nom ou Employé
+            nom: l.Employees_nom || l.nom || l['Employé'] || 'Inconnu',
+            // On cherche le statut avec Majuscule ou minuscule
+            statut: l.Statut || l.statut || '',
+            type: l.Type || l.type || 'Congé',
+            motif: l.Motif || l.motif || '',
+            debut: l['Date de début'] || l.debut || '?',
+            fin: l['Date de fin'] || l.fin || '?',
+            justificatif_link: l.justificatif_link || l['justificatif_link'] || ''
+        }));
+
+        // 3. Filtrage des demandes sur les données normalisées
         const pending = leaves.filter(l => {
-            if (!l.statut) return true; // Si pas de statut, on affiche quand même pour ne pas perdre la demande
-            return l.statut.toLowerCase().trim() === 'en attente';
+            return l.statut && l.statut.toLowerCase().trim() === 'en attente';
         });
 
         body.innerHTML = '';
 
         if (pending.length > 0) {
-            section.classList.remove('hidden'); // On montre la section
-            section.style.display = 'block';     // Sécurité supplémentaire
+            section.classList.remove('hidden'); 
+            section.style.display = 'block';     
 
             pending.forEach(l => {
                 // Encodage pour la popup de détails
-                const safeNom = encodeURIComponent(l.nom || "Inconnu");
-                const safeMotif = encodeURIComponent(l.motif || "Aucun motif");
-                const safeType = l.type || "Congé";
-                const safeRecordId = l.record_id || l.id;
+                const safeNom = encodeURIComponent(l.nom);
+                const safeMotif = encodeURIComponent(l.motif);
+                const safeType = l.type;
+                const safeRecordId = l.id;
+                const safeDoc = l.justificatif_link ? encodeURIComponent(l.justificatif_link) : '';
 
                 body.innerHTML += `
                     <tr class="border-b hover:bg-slate-50 transition-colors">
-                        <td class="px-8 py-4 font-bold text-sm text-slate-700">${l.nom || 'Inconnu'}</td>
+                        <td class="px-8 py-4 font-bold text-sm text-slate-700">${l.nom}</td>
                         <td class="px-8 py-4 text-xs text-slate-500">
-                            ${l.debut || '?'} <span class="text-slate-300 mx-1">➔</span> ${l.fin || '?'}
+                            ${l.debut} <span class="text-slate-300 mx-1">➔</span> ${l.fin}
                         </td>
                         <td class="px-8 py-4 text-right flex justify-end items-center gap-2">
-                            <button onclick="showLeaveDetailFromSafeData('${safeNom}', '${safeType}', '${l.debut}', '${l.fin}', '${safeMotif}', '')" 
+                            <button onclick="showLeaveDetailFromSafeData('${safeNom}', '${safeType}', '${l.debut}', '${l.fin}', '${safeMotif}', '${safeDoc}')" 
                                     class="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all" title="Détails">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
@@ -2589,17 +2961,13 @@ function handleLogout() {
                     </tr>`;
             });
         } else {
-            section.classList.add('hidden'); // On cache si aucune demande
+            section.classList.add('hidden'); 
             section.style.display = 'none';
         }
     } catch (e) { 
         console.error("Erreur fetchLeaveRequests:", e);
     }
 }
-
-
-
-
 
 
 
@@ -3121,9 +3489,162 @@ function updateFileFeedback(inputId, labelId) {
         });
 
 
+        function clearSignature() {
+            if (signaturePad) signaturePad.clear();
+        }                                                   
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+// --- MODULE FLASH MESSAGE ---
+
+async function fetchFlashMessage() {
+    const banner = document.getElementById('flash-banner');
+    try {
+        // On récupère le message
+        const r = await secureFetch(`${URL_READ_FLASH}?agent=${encodeURIComponent(currentUser.nom)}`);
+        const data = await r.json();
+
+        // Si pas de message ou erreur Make vide
+        if (!data || !data.message) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        // --- CORRECTION : Ne pas afficher si c'est nous qui avons envoyé le message ---
+        if (data.sender === currentUser.nom) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        // Vérification si l'utilisateur a déjà fermé CE message spécifique (stockage local simple)
+        const msgKey = `flash_closed_${data.date}_${data.sender}`; 
+        if (sessionStorage.getItem(msgKey)) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        // Configuration du style selon le type
+        const styles = {
+            'Info': { bg: 'bg-gradient-to-r from-blue-600 to-indigo-600', icon: 'fa-circle-info' },
+            'Urgent': { bg: 'bg-gradient-to-r from-red-600 to-rose-600', icon: 'fa-triangle-exclamation' },
+            'Maintenance': { bg: 'bg-gradient-to-r from-yellow-500 to-orange-500', icon: 'fa-screwdriver-wrench' }
+        };
+        const st = styles[data.type] || styles['Info'];
+
+        // Injection des données
+        banner.className = `mb-6 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-all duration-500 transform hover:scale-[1.01] ${st.bg}`;
+        document.getElementById('flash-content').innerText = data.message;
+        document.getElementById('flash-meta').innerText = `${data.type.toUpperCase()} • PAR ${data.sender.toUpperCase()}`;
+        document.getElementById('flash-icon').className = `fa-solid ${st.icon} text-xl animate-pulse`;
+        
+        // On stocke la clé pour pouvoir le fermer plus tard
+        banner.dataset.key = msgKey;
+        banner.classList.remove('hidden');
+
+    } catch (e) {
+        console.warn("Pas de flash info", e);
+        banner.classList.add('hidden');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function closeFlashBanner() {
+    const banner = document.getElementById('flash-banner');
+    if(banner.dataset.key) {
+        sessionStorage.setItem(banner.dataset.key, 'true'); // Mémorise la fermeture pour la session
+    }
+    banner.classList.add('hidden');
+}
+
+function openFlashModal() {
+    document.getElementById('flash-modal').classList.remove('hidden');
+    document.getElementById('flash-input-msg').value = '';
+}
+ 
+
+
+// --- MODULE FLASH MESSAGE (Version Corrigée) ---
+
+async function fetchFlashMessage() {
+    const banner = document.getElementById('flash-banner');
+    try {
+        const r = await secureFetch(`${URL_READ_FLASH}?agent=${encodeURIComponent(currentUser.nom)}`);
+        let data = await r.json();
+
+        // 1. GESTION SI MAKE RENVOIE UNE LISTE (On prend le premier élément)
+        if (Array.isArray(data)) data = data[0];
+
+        // 2. NETTOYAGE DES DONNÉES (Airtable envoie souvent des tableaux [value])
+        const clean = (v) => Array.isArray(v) ? v[0] : v;
+
+        const msgText = clean(data.message || data.Message);
+        const msgType = clean(data.type || data.Type) || 'Info';
+        const msgSender = clean(data.sender || data.Sender);
+        const msgDate = clean(data.date || data.Date);
+
+        // 3. SÉCURITÉ : Si aucun message trouvé
+        if (!msgText) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        // 4. NE PAS AFFICHER À L'EXPÉDITEUR
+        if (msgSender === currentUser.nom) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        // 5. VÉRIFICATION FERMETURE SESSION
+        const msgKey = `flash_closed_${msgDate}_${msgSender}`; 
+        if (sessionStorage.getItem(msgKey)) {
+            banner.classList.add('hidden');
+            return;
+        }
+
+        // 6. STYLE ET AFFICHAGE
+        const styles = {
+            'Info': { bg: 'bg-gradient-to-r from-blue-600 to-indigo-600', icon: 'fa-circle-info' },
+            'Urgent': { bg: 'bg-gradient-to-r from-red-600 to-rose-600', icon: 'fa-triangle-exclamation' },
+            'Maintenance': { bg: 'bg-gradient-to-r from-yellow-500 to-orange-500', icon: 'fa-screwdriver-wrench' }
+        };
+        const st = styles[msgType] || styles['Info'];
+
+        banner.className = `mb-6 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-all duration-500 transform hover:scale-[1.01] ${st.bg}`;
+        document.getElementById('flash-content').innerText = msgText;
+        document.getElementById('flash-meta').innerText = `${msgType.toUpperCase()} • PAR ${msgSender.toUpperCase()}`;
+        document.getElementById('flash-icon').className = `fa-solid ${st.icon} text-xl animate-pulse`;
+        
+        banner.dataset.key = msgKey;
+        banner.classList.remove('hidden');
+
+    } catch (e) {
+        console.warn("Pas de flash info disponible", e);
+        banner.classList.add('hidden');
+    }
+}
 
 </script>
 
