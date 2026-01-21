@@ -1919,13 +1919,7 @@ function getDriveId(link) {
 
 
 
-
-
-
-
-
-
- function loadMyProfile() {
+function loadMyProfile() {
     // 1. Sécurité : Si la liste est vide, on arrête
     if (!employees || employees.length === 0) {
         console.warn("Liste employés vide, impossible de charger le profil.");
@@ -1933,11 +1927,9 @@ function getDriveId(link) {
     }
 
     // 2. Recherche Intelligente (Smart Matching)
-    // On nettoie le nom de l'utilisateur (sena.broda -> sena broda)
     const cleanUser = currentUser.nom.toLowerCase().replace(/[\.-_]/g, ' ').trim();
 
     let myData = employees.find(e => {
-        // On nettoie le nom dans la base (Sena Broda -> sena broda)
         const cleanEmp = e.nom.toLowerCase().replace(/[\.-_]/g, ' ').trim();
         return cleanEmp.includes(cleanUser) || cleanUser.includes(cleanEmp);
     });
@@ -1953,11 +1945,11 @@ function getDriveId(link) {
         return;
     }
     
-// --- Remplissage de l'interface ---
+    // --- Remplissage de l'interface ---
     document.getElementById('emp-name').innerText = myData.nom; 
     document.getElementById('emp-job').innerText = myData.poste;
     
-    // --- CORRECTION : Mise à jour du nom et de l'initiale en bas à gauche (Sidebar) ---
+    // --- Mise à jour du nom et de l'initiale en bas à gauche (Sidebar) ---
     const nameDisplay = document.getElementById('name-display');
     const avatarDisplay = document.getElementById('avatar-display');
     if (nameDisplay) nameDisplay.innerText = myData.nom;
@@ -2007,7 +1999,6 @@ function getDriveId(link) {
 
     allDocs.forEach(doc => {
         const hasLink = doc.link && doc.link.length > 5;
-        // --- CORRECTION : Protection contre les guillemets simples ---
         const safeLabel = doc.label.replace(/'/g, "\\'");
 
         dC.innerHTML += `
@@ -2017,16 +2008,18 @@ function getDriveId(link) {
                     <p class="text-xs font-bold text-slate-700">${doc.label}</p>
                 </div>
                 <div class="flex gap-2">
-                    <!-- MISE À JOUR : Utilisation de safeLabel ici -->
                     ${hasLink ? `<button onclick="viewDocument('${doc.link}', '${safeLabel}')" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg"><i class="fa-solid fa-eye"></i></button>` : ''}
-                    <button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
-                        <i class="fa-solid fa-file-arrow-up"></i>
-                    </button>
+                    
+                    <!-- CORRECTION : Le bouton modifier n'apparaît QUE pour la Pièce d'Identité -->
+                    ${doc.key === 'id_card' ? `
+                        <button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
+                            <i class="fa-solid fa-file-arrow-up"></i>
+                        </button>
+                    ` : ''}
                 </div>
             </div>`;
     });
 }
-
 
 
 
