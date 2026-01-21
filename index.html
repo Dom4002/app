@@ -232,22 +232,28 @@
             </header>
 
             <div id="main-scroll-container" class="flex-1 overflow-y-auto p-8 scroll-smooth">
-                                                        <!-- BANNIÈRE FLASH INFO (Cachée par défaut) -->
-                <div id="flash-banner" class="hidden mb-6 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-all duration-500 transform hover:scale-[1.01]">
-                    <div class="absolute top-0 right-0 p-4 opacity-20"><i id="flash-icon-bg" class="fa-solid fa-bullhorn text-6xl transform rotate-12"></i></div>
-                    <div class="relative z-10 flex items-start gap-4">
-                        <div id="flash-icon-container" class="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                            <i id="flash-icon" class="fa-solid fa-bell text-xl animate-pulse"></i>
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <p id="flash-meta" class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">INFO RH</p>
-                                <button onclick="closeFlashBanner()" class="text-white/60 hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
-                            </div>
-                            <p id="flash-content" class="font-bold text-sm leading-relaxed">Chargement...</p>
-                        </div>
-                    </div>
-                </div>
+                
+                
+                
+                <!-- BANNIÈRE FLASH INFO (Cachée par défaut) -->
+                    <!-- CONTENEUR POUR PLUSIEURS ALERTES -->
+                 <!-- CONTENEUR POUR PLUSIEURS ALERTES -->
+                    <div id="flash-container" class="space-y-3 mb-6"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 <!-- VUE 1: DASHBOARD -->
             <section id="view-dash" class="view-section active">             
             <div class="flex justify-between items-center mb-8">
@@ -888,32 +894,56 @@
 
 
 
+ 
 
-
-                <!-- MODAL ENVOI FLASH -->
-            <div id="flash-modal" class="fixed inset-0 bg-slate-900/90 hidden flex items-center justify-center z-[160] p-4 backdrop-blur-sm">
-                <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-black text-xl uppercase text-slate-800">Nouvelle Annonce</h3>
-                        <button onclick="document.getElementById('flash-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-800"><i class="fa-solid fa-xmark text-xl"></i></button>
-                    </div>
-                    <form onsubmit="submitFlashMessage(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Niveau d'urgence</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <label class="cursor-pointer"><input type="radio" name="flash_type" value="Info" class="peer sr-only" checked><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-blue-600 peer-checked:text-white transition-all">ℹ️ Info</div></label>
-                                <label class="cursor-pointer"><input type="radio" name="flash_type" value="Urgent" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-red-600 peer-checked:text-white transition-all">🚨 Urgent</div></label>
-                                <label class="cursor-pointer"><input type="radio" name="flash_type" value="Maintenance" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-yellow-500 peer-checked:text-white transition-all">⚠️ Travaux</div></label>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Message</label>
-                            <textarea id="flash-input-msg" rows="4" class="w-full p-4 bg-slate-50 border rounded-xl outline-none font-medium text-sm" placeholder="Ex: Réunion générale demain à 8h00 en salle de conférence..." required></textarea>
-                        </div>
-                        <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-blue-600 shadow-lg transition-all">PUBLIER MAINTENANT</button>
-                    </form>
-                </div>
+                                                                    <!-- MODAL ENVOI FLASH (VERSION AVEC DURÉE) -->
+<div id="flash-modal" class="fixed inset-0 bg-slate-900/90 hidden flex items-center justify-center z-[160] p-4 backdrop-blur-sm">
+    <div class="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-black text-xl uppercase text-slate-800">Nouvelle Annonce</h3>
+            <button onclick="document.getElementById('flash-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+        <form onsubmit="submitFlashMessage(event)" class="space-y-4">
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Urgence & Durée d'affichage</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="flash-input-type" class="p-3 border rounded-xl text-xs font-bold bg-slate-50 outline-none">
+                        <option value="Info">ℹ️ Info</option>
+                        <option value="Urgent">🚨 Urgent</option>
+                        <option value="Maintenance">⚠️ Travaux</option>
+                    </select>
+                    <select id="flash-input-duration" class="p-3 border rounded-xl text-xs font-bold bg-blue-50 text-blue-700 outline-none">
+                        <option value="15">15 minutes</option>
+                        <option value="30">30 minutes</option>
+                        <option value="60" selected>1 heure</option>
+                        <option value="120">2 heures</option>
+                        <option value="240">4 heures</option>
+                        <option value="720">12 heures</option>
+                        <option value="1440">1 jour (24h)</option>
+                        <option value="2880">2 jours</option>
+                        <option value="10080">1 semaine</option>
+                    </select>
+                                                
             </div>
+            <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Message</label>
+                <textarea id="flash-input-msg" rows="4" class="w-full p-4 bg-slate-50 border rounded-xl outline-none font-medium text-sm" placeholder="Votre annonce..." required></textarea>
+            </div>
+            <button type="submit" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-blue-600 shadow-lg transition-all">PUBLIER MAINTENANT</button>
+        </form>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
 
     <script>
 
@@ -1050,62 +1080,94 @@ let offsetSuivant = null; // Mémorise le marque-page pour le lot suivant
 
 
         
+                                                                                                                                        async function downloadMyBadge() {
+    // 1. Sécurité : Vérifier que la liste n'est pas vide
+    if (!employees || employees.length === 0) {
+        return Swal.fire('Patientez', 'Le système charge vos données...', 'info');
+    }
 
+    // 2. LOGIQUE DE RECHERCHE IDENTIQUE À loadMyProfile (qui fonctionne chez toi)
+    const cleanUser = currentUser.nom.toLowerCase().replace(/[\.-_]/g, ' ').trim();
 
+    let myData = employees.find(e => {
+        const cleanEmp = e.nom.toLowerCase().replace(/[\.-_]/g, ' ').trim();
+        return cleanEmp.includes(cleanUser) || cleanUser.includes(cleanEmp);
+    });
 
+    // 3. Fallback par ID au cas où
+    if (!myData && currentUser.id) {
+        myData = employees.find(e => String(e.id) === String(currentUser.id));
+    }
 
+    // 4. Si on ne trouve toujours rien
+    if (!myData) {
+        console.error("Badge Error: Impossible de trouver l'employé", currentUser.nom);
+        return Swal.fire('Erreur', 'Impossible de localiser votre fiche employé pour générer le badge.', 'error');
+    }
 
-async function downloadMyBadge() {
-            // 1. On cherche l'employé avec une comparaison flexible
-            const normalize = (s) => s ? String(s).toLowerCase().replace(/[\.\s_-]/g, '') : '';
-            const searchTarget = normalize(currentUser.nom);
+    // 5. Lancement de la génération
+    const token = localStorage.getItem('sirh_token');
+    Swal.fire({ 
+        title: 'Génération du badge...', 
+        text: 'Veuillez patienter',
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false 
+    });
 
-            const myData = employees.find(e => normalize(e.nom) === searchTarget);
-            
-            if(!myData) {
-                return Swal.fire('Erreur', 'Impossible de charger les données de votre badge. Réessayez dans un instant.', 'error');
-            }
+    try {
+        // On formate la photo pour qu'elle soit visible sur le badge
+        const photoUrl = myData.photo ? formatGoogleLink(myData.photo) : '';
 
-            const token = localStorage.getItem('sirh_token');
-            
-            Swal.fire({ title: 'Génération...', didOpen: () => Swal.showLoading() });
+        // Construction de l'URL vers ton API de badge
+        const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(photoUrl)}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
 
-            try {
-                // 2. Construction de l'URL (Utilise myData.id qui est le Matricule)
-                const url = `${URL_BADGE_GEN}?id=${encodeURIComponent(myData.id)}&nom=${encodeURIComponent(myData.nom)}&poste=${encodeURIComponent(myData.poste)}&photo=${encodeURIComponent(myData.photo||'')}&agent=${encodeURIComponent(currentUser.nom)}&token=${token}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Erreur serveur");
 
-                // 3. Récupération du HTML
-                const response = await fetch(url);
-                
-                if (!response.ok) throw new Error("Erreur lors de la génération du badge");
+        const htmlContent = await response.text();
+        Swal.close();
 
-                const htmlContent = await response.text();
-
-                // 4. Affichage dans une nouvelle fenêtre
-                Swal.close();
-                const w = window.open('', '_blank', 'width=400,height=600');
-                
-                if (w) {
-                    w.document.open();
-                    w.document.write(htmlContent);
-                    w.document.close();
-                } else {
-                    Swal.fire('Bloqué', 'Veuillez autoriser les pop-ups pour voir votre badge', 'warning');
-                }
-
-            } catch (error) {
-                console.error(error);
-                Swal.fire('Erreur', 'Impossible de générer le badge.', 'error');
-            }
+        // Ouverture de la fenêtre d'impression
+        const w = window.open('', '_blank', 'width=450,height=700');
+        if (w) {
+            w.document.open();
+            w.document.write(htmlContent);
+            w.document.close();
+        } else {
+            Swal.fire('Pop-up bloqué', 'Veuillez autoriser les fenêtres surgissantes pour voir votre badge.', 'warning');
         }
 
+    } catch (error) {
+        console.error(error);
+        Swal.fire('Erreur', 'Une erreur technique est survenue.', 'error');
+    }
+}
 
 
 
 
 
 
-                                                                                                        async function secureFetch(url, options = {}) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+  async function secureFetch(url, options = {}) {
     // 0. SÉCURITÉ RÉSEAU IMMÉDIATE
     if (!navigator.onLine) {
         throw new Error("Vous êtes hors ligne. Vérifiez votre connexion internet.");
@@ -2587,7 +2649,63 @@ function viewDocument(url, title) {
         
 
 
-                        async function submitSignedContract() { 
+
+async function submitFlashMessage(e) {
+    e.preventDefault();
+    
+    const msgInput = document.getElementById('flash-input-msg');
+    const typeInput = document.getElementById('flash-input-type');
+    const durationInput = document.getElementById('flash-input-duration');
+
+    if(!msgInput || !durationInput) return;
+
+    const msg = msgInput.value;
+    const type = typeInput ? typeInput.value : "Info";
+    const durationMinutes = parseFloat(durationInput.value);
+    
+    const now = new Date();
+    // CALCUL : Maintenant + (Minutes choisies * 60 000 ms)
+    const expirationDate = new Date(now.getTime() + (durationMinutes * 60000));
+
+    Swal.fire({ title: 'Publication...', didOpen: () => Swal.showLoading() });
+
+    try {
+        const response = await secureFetch(URL_WRITE_FLASH, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: msg,
+                type: type,
+                sender: currentUser.nom,
+                date: now.toISOString(),
+                date_expiration: expirationDate.toISOString(),
+                agent: currentUser.nom
+            })
+        });
+
+        if (response.ok) {
+            document.getElementById('flash-modal').classList.add('hidden');
+            const timeStr = expirationDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            Swal.fire('Succès !', `L'alerte est publiée. Elle expirera à ${timeStr}`, 'success');
+            // On rafraîchit l'affichage pour voir le message immédiatement
+            setTimeout(() => fetchFlashMessage(), 1000);
+        }
+    } catch (e) {
+        console.error("Erreur envoi flash:", e);
+        Swal.fire('Erreur', "Le serveur n'a pas reçu l'info. Vérifie ta connexion.", 'error');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+ async function submitSignedContract() { 
     // On vérifie si l'employé a dessiné quelque chose
     if (!signaturePad || signaturePad.isEmpty()) { 
         return Swal.fire('Attention', 'Veuillez apposer votre signature avant de valider.', 'warning'); 
@@ -2841,40 +2959,47 @@ function handleLogout() {
 
 
 
- async function fetchLeaveRequests() {
+
+
+
+
+                                                                                                                    async function fetchLeaveRequests() {
     if (!currentUser || currentUser.role === 'EMPLOYEE') return;
     
     const body = document.getElementById('leave-requests-body');
     const section = document.getElementById('manager-leave-section');
     
+    // Fonction de nettoyage interne (accents, majuscules, espaces)
+    const normalize = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
     try {
         const r = await secureFetch(`${URL_READ_LEAVES}?agent=${encodeURIComponent(currentUser.nom)}`);
         const rawLeaves = await r.json();
         
-        console.log("DEBUG - Données reçues d'Airtable :", rawLeaves);
+        console.log("DEBUG - Données brutes reçues d'Airtable :", rawLeaves);
 
         allLeaves = rawLeaves.map(l => {
-            // Nettoyage des tableaux Airtable [value] et des nulls
             const clean = (v) => Array.isArray(v) ? v[0] : v;
             
-            const nomNet = clean(l.Employees_nom || l.nom || l['Employé']);
-            const statutNet = clean(l.Statut || l.statut);
-            const typeNet = clean(l.Type || l.type);
+            const rawNom = clean(l.Employees_nom || l.nom || l['Employé']);
+            const statutNet = normalize(clean(l.Statut || l.statut));
+            const typeNet = normalize(clean(l.Type || l.type));
             const debutRaw = clean(l['Date Début'] || l['Date de début'] || l.debut);
             const finRaw = clean(l['Date Fin'] || l['Date de fin'] || l.fin);
 
             return {
                 id: l.record_id || l.id || '',
-                nom: nomNet ? String(nomNet).trim() : null,
-                statut: statutNet ? String(statutNet).trim() : '',
-                type: typeNet ? String(typeNet).trim() : '',
+                nom: rawNom ? String(rawNom).trim() : null,
+                nomIndex: normalize(rawNom), // Pour comparaison stricte
+                statut: statutNet,
+                type: typeNet,
                 debut: debutRaw ? parseDateSmart(debutRaw) : null,
                 fin: finRaw ? parseDateSmart(finRaw) : null
             };
         });
 
-        // Interface Manager : On ne montre QUE ceux qui sont "En attente"
-        const pending = allLeaves.filter(l => l.statut && l.statut.toLowerCase() === 'en attente');
+        // Interface Manager : On filtre uniquement les "En attente" pour validation
+        const pending = allLeaves.filter(l => l.statut === 'en attente');
 
         if (body) {
             body.innerHTML = '';
@@ -2897,7 +3022,7 @@ function handleLogout() {
             }
         }
 
-        // MISE À JOUR DU GRAPHIQUE
+        // RECALCUL DU GRAPHIQUE AVEC LES NOUVELLES DONNÉES
         renderCharts();
 
     } catch (e) { 
@@ -2908,50 +3033,64 @@ function handleLogout() {
 function renderCharts() {
     if (!employees || employees.length === 0) return;
 
+    // 1. ÉLIMINATION DES DOUBLONS D'EMPLOYÉS (par matricule unique)
+    const uniqueEmployees = [];
+    const seenIds = new Set();
+    employees.forEach(emp => {
+        if (!seenIds.has(emp.id)) {
+            seenIds.add(emp.id);
+            uniqueEmployees.push(emp);
+        }
+    });
+
     let counts = { 'Actif': 0, 'Congé': 0, 'Sortie': 0 };
     const today = new Date();
     today.setHours(0, 0, 0, 0); 
 
-    console.log("--- DÉBUT CALCUL GRAPHIQUE ---");
+    const normalize = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 
-    employees.forEach(emp => {
-        const empNom = String(emp.nom).toLowerCase().trim();
-        const empStatutProfil = (emp.statut || '').toLowerCase();
+    console.log("--- DÉBUT CALCUL GRAPHIQUE (PRIORITÉ CUMULÉE) ---");
 
-        // 1. Sortie prioritaire (si déjà marqué sorti dans le profil)
+    uniqueEmployees.forEach(emp => {
+        const empNomIndex = normalize(emp.nom);
+        const empStatutProfil = normalize(emp.statut);
+
+        // A. PRIORITÉ SORTIE : Si marqué Sortie dans le profil Airtable
         if (empStatutProfil.includes('sortie')) {
             counts['Sortie']++;
             return;
         }
 
-        // 2. Vérification si l'employé est en congé VALIDÉ aujourd'hui
-        const estAbsent = allLeaves.some(leave => {
-            if (!leave.nom || !leave.debut || !leave.fin) return false;
+        // B. SOURCE 1 : Vérification dans la table CONGES (Validé + Dates)
+        const aUnCongeValideEnTable = allLeaves.some(leave => {
+            if (!leave.nomIndex || !leave.debut || !leave.fin) return false;
             
-            const leaveNom = leave.nom.toLowerCase().trim();
-            const matchNom = (leaveNom === empNom);
-            
-            // On vérifie le statut en minuscule pour être sûr
-            const estValidé = (leave.statut.toLowerCase() === "validé");
+            // Comparaison STRICTE du nom pour éviter de confondre Josue Dominique et Dominique
+            const matchNomStrict = (leave.nomIndex === empNomIndex);
+            const estValide = (leave.statut === "valide");
             const estDansDates = (today >= leave.debut && today <= leave.fin);
-            
-            // Le télétravail n'est pas une absence, on reste "Actif"
-            const nEstPasTeleTavail = (leave.type.toLowerCase() !== "télétravail");
+            const nEstPasTele = (!leave.type.includes("teletravail"));
 
-            return matchNom && estValidé && estDansDates && nEstPasTeleTavail;
+            return matchNomStrict && estValide && estDansDates && nEstPasTele;
         });
 
-        if (estAbsent) {
-            console.info(`[GRAPHE] Congé détecté : ${emp.nom}`);
+        // C. SOURCE 2 : Vérification du statut manuel "Congé" dans la fiche employé
+        const estEnCongeDansProfil = empStatutProfil.includes('conge');
+
+        // D. SYNTHÈSE : Si l'un des deux est Vrai, on le compte en congé
+        if (aUnCongeValideEnTable || estEnCongeDansProfil) {
+            console.info(`[CONGÉ] ${emp.nom} comptabilisé.`);
             counts['Congé']++;
         } else {
             counts['Actif']++;
         }
     });
 
-    console.log("Stats finales calculées :", counts);
+    // --- SYNCHRONISATION DES CHIFFRES DU DASHBOARD ---
+    if(document.getElementById('stat-total')) document.getElementById('stat-total').innerText = uniqueEmployees.length;
+    if(document.getElementById('stat-active')) document.getElementById('stat-active').innerText = counts['Actif'];
 
-    // --- Rendu du Graphique Statut (Donut) ---
+    // --- RENDU CHART.JS (STATUT) ---
     if (chartStatusInstance) chartStatusInstance.destroy();
     const ctxStatus = document.getElementById('chartStatus').getContext('2d');
     chartStatusInstance = new Chart(ctxStatus, {
@@ -2960,22 +3099,20 @@ function renderCharts() {
             labels: ['Actif', 'Congé', 'Sortie'],
             datasets: [{
                 data: [counts['Actif'], counts['Congé'], counts['Sortie']],
-                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], // Vert, Orange, Rouge
+                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], 
                 borderWidth: 0
             }]
         },
         options: { 
-            plugins: { 
-                legend: { position: 'bottom' } 
-            }, 
+            plugins: { legend: { position: 'bottom' } }, 
             cutout: '70%',
-            animation: { duration: 500 }
+            animation: { duration: 800 }
         }
     });
 
-    // Rendu département (inchangé mais nettoyé)
+    // --- RENDU CHART.JS (DÉPARTEMENT) ---
     const deptCounts = {};
-    employees.forEach(e => { 
+    uniqueEmployees.forEach(e => { 
         const d = e.dept || 'Inconnu';
         deptCounts[d] = (deptCounts[d] || 0) + 1; 
     });
@@ -2988,16 +3125,11 @@ function renderCharts() {
             datasets: [{ label: 'Collaborateurs', data: Object.values(deptCounts), backgroundColor: '#6366f1', borderRadius: 8 }]
         },
         options: { 
-            scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }, 
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { grid: { display: false } } }, 
             plugins: { legend: { display: false } } 
         }
     });
 }
-
-
-
-
-
 
  
 
@@ -3011,7 +3143,93 @@ function renderCharts() {
 
 
 
+async function fetchFlashMessage() {
+    const container = document.getElementById('flash-container');
+    if (!container) return;
 
+    try {
+        const r = await secureFetch(`${URL_READ_FLASH}?agent=${encodeURIComponent(currentUser.nom)}`);
+        let messages = await r.json();
+
+        // On s'assure d'avoir un tableau
+        if (!Array.isArray(messages)) {
+            messages = messages && typeof messages === 'object' ? [messages] : [];
+        }
+
+        container.innerHTML = ''; // On vide pour le rafraîchissement
+        
+        const now = new Date().getTime();
+        const normalize = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const userMe = normalize(currentUser.nom);
+
+        messages.forEach((data, index) => {
+            // Nettoyage des données Airtable/Make (Majuscules ou minuscules)
+            const clean = (v) => Array.isArray(v) ? v[0] : v;
+            const msgText = clean(data.Message || data.message);
+            const msgSender = clean(data.Sender || data.sender);
+            const msgType = clean(data.Type || data.type) || 'Info';
+            const msgDate = clean(data.Date || data.date);
+            const msgExpiry = clean(data.Expiration || data.date_expiration);
+
+            if (!msgText) return;
+
+            // 1. NE PAS AFFICHER À SOI-MÊME (On compare Josue Dominique et Josue Dominique)
+            if (msgSender && normalize(msgSender) === userMe) {
+                console.log("C'est votre propre message, il est masqué pour vous.");
+                return;
+            }
+
+            // 2. FILTRE EXPIRATION
+            if (msgExpiry && now > new Date(msgExpiry).getTime()) {
+                console.log("Message expiré, ignoré.");
+                return;
+            }
+
+            // 3. FILTRE FERMETURE (sessionStorage)
+            const msgKey = `flash_closed_${msgDate}_${msgSender}`;
+            if (sessionStorage.getItem(msgKey)) return;
+
+            // 4. DESIGN
+            const styles = {
+                'Info': { bg: 'bg-gradient-to-r from-blue-600 to-indigo-600', icon: 'fa-circle-info' },
+                'Urgent': { bg: 'bg-gradient-to-r from-red-600 to-rose-600', icon: 'fa-triangle-exclamation' },
+                'Maintenance': { bg: 'bg-gradient-to-r from-yellow-500 to-orange-500', icon: 'fa-screwdriver-wrench' }
+            };
+            const st = styles[msgType] || styles['Info'];
+
+            const bannerHtml = `
+                <div id="flash-msg-${index}" class="${st.bg} rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-all duration-500 transform hover:scale-[1.01] animate-fadeIn">
+                    <div class="absolute top-0 right-0 p-4 opacity-20"><i class="fa-solid fa-bullhorn text-5xl transform rotate-12"></i></div>
+                    <div class="relative z-10 flex items-start gap-4">
+                        <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm"><i class="fa-solid ${st.icon} text-xl animate-pulse"></i></div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start">
+                                <p class="text-[9px] font-black uppercase tracking-widest opacity-80 mb-1">${msgType} • PAR ${msgSender.toUpperCase()}</p>
+                                <button onclick="closeSpecificFlash('${msgKey}', 'flash-msg-${index}')" class="text-white/60 hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <p class="font-bold text-sm leading-relaxed">${msgText}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', bannerHtml);
+        });
+
+    } catch (e) {
+        console.warn("Erreur chargement Flash", e);
+    }
+}
+
+// Assure-toi que cette fonction est aussi présente
+function closeSpecificFlash(storageKey, elementId) {
+    sessionStorage.setItem(storageKey, 'true');
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(20px)';
+        setTimeout(() => el.remove(), 400);
+    }
+}
 
 
 
@@ -3546,65 +3764,7 @@ function updateFileFeedback(inputId, labelId) {
 
 
 
-
-
-
-
-
-// --- MODULE FLASH MESSAGE ---
-
-async function fetchFlashMessage() {
-    const banner = document.getElementById('flash-banner');
-    try {
-        // On récupère le message
-        const r = await secureFetch(`${URL_READ_FLASH}?agent=${encodeURIComponent(currentUser.nom)}`);
-        const data = await r.json();
-
-        // Si pas de message ou erreur Make vide
-        if (!data || !data.message) {
-            banner.classList.add('hidden');
-            return;
-        }
-
-        // --- CORRECTION : Ne pas afficher si c'est nous qui avons envoyé le message ---
-        if (data.sender === currentUser.nom) {
-            banner.classList.add('hidden');
-            return;
-        }
-
-        // Vérification si l'utilisateur a déjà fermé CE message spécifique (stockage local simple)
-        const msgKey = `flash_closed_${data.date}_${data.sender}`; 
-        if (sessionStorage.getItem(msgKey)) {
-            banner.classList.add('hidden');
-            return;
-        }
-
-        // Configuration du style selon le type
-        const styles = {
-            'Info': { bg: 'bg-gradient-to-r from-blue-600 to-indigo-600', icon: 'fa-circle-info' },
-            'Urgent': { bg: 'bg-gradient-to-r from-red-600 to-rose-600', icon: 'fa-triangle-exclamation' },
-            'Maintenance': { bg: 'bg-gradient-to-r from-yellow-500 to-orange-500', icon: 'fa-screwdriver-wrench' }
-        };
-        const st = styles[data.type] || styles['Info'];
-
-        // Injection des données
-        banner.className = `mb-6 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-all duration-500 transform hover:scale-[1.01] ${st.bg}`;
-        document.getElementById('flash-content').innerText = data.message;
-        document.getElementById('flash-meta').innerText = `${data.type.toUpperCase()} • PAR ${data.sender.toUpperCase()}`;
-        document.getElementById('flash-icon').className = `fa-solid ${st.icon} text-xl animate-pulse`;
-        
-        // On stocke la clé pour pouvoir le fermer plus tard
-        banner.dataset.key = msgKey;
-        banner.classList.remove('hidden');
-
-    } catch (e) {
-        console.warn("Pas de flash info", e);
-        banner.classList.add('hidden');
-    }
-}
-
-
-
+ 
 
 
 
@@ -3631,65 +3791,59 @@ function openFlashModal() {
  
 
 
-// --- MODULE FLASH MESSAGE (Version Corrigée) ---
 
-async function fetchFlashMessage() {
-    const banner = document.getElementById('flash-banner');
-    try {
-        const r = await secureFetch(`${URL_READ_FLASH}?agent=${encodeURIComponent(currentUser.nom)}`);
-        let data = await r.json();
 
-        // 1. GESTION SI MAKE RENVOIE UNE LISTE (On prend le premier élément)
-        if (Array.isArray(data)) data = data[0];
 
-        // 2. NETTOYAGE DES DONNÉES (Airtable envoie souvent des tableaux [value])
-        const clean = (v) => Array.isArray(v) ? v[0] : v;
 
-        const msgText = clean(data.message || data.Message);
-        const msgType = clean(data.type || data.Type) || 'Info';
-        const msgSender = clean(data.sender || data.Sender);
-        const msgDate = clean(data.date || data.Date);
 
-        // 3. SÉCURITÉ : Si aucun message trouvé
-        if (!msgText) {
-            banner.classList.add('hidden');
-            return;
-        }
 
-        // 4. NE PAS AFFICHER À L'EXPÉDITEUR
-        if (msgSender === currentUser.nom) {
-            banner.classList.add('hidden');
-            return;
-        }
 
-        // 5. VÉRIFICATION FERMETURE SESSION
-        const msgKey = `flash_closed_${msgDate}_${msgSender}`; 
-        if (sessionStorage.getItem(msgKey)) {
-            banner.classList.add('hidden');
-            return;
-        }
 
-        // 6. STYLE ET AFFICHAGE
-        const styles = {
-            'Info': { bg: 'bg-gradient-to-r from-blue-600 to-indigo-600', icon: 'fa-circle-info' },
-            'Urgent': { bg: 'bg-gradient-to-r from-red-600 to-rose-600', icon: 'fa-triangle-exclamation' },
-            'Maintenance': { bg: 'bg-gradient-to-r from-yellow-500 to-orange-500', icon: 'fa-screwdriver-wrench' }
-        };
-        const st = styles[msgType] || styles['Info'];
 
-        banner.className = `mb-6 rounded-2xl p-4 text-white shadow-lg relative overflow-hidden transition-all duration-500 transform hover:scale-[1.01] ${st.bg}`;
-        document.getElementById('flash-content').innerText = msgText;
-        document.getElementById('flash-meta').innerText = `${msgType.toUpperCase()} • PAR ${msgSender.toUpperCase()}`;
-        document.getElementById('flash-icon').className = `fa-solid ${st.icon} text-xl animate-pulse`;
-        
-        banner.dataset.key = msgKey;
-        banner.classList.remove('hidden');
 
-    } catch (e) {
-        console.warn("Pas de flash info disponible", e);
-        banner.classList.add('hidden');
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Nouvelle fonction pour fermer UN SEUL message de la pile
+function closeSpecificFlash(storageKey, elementId) {
+    sessionStorage.setItem(storageKey, 'true');
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(20px)';
+        setTimeout(() => el.remove(), 500);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </script>
 
