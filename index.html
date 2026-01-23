@@ -22,6 +22,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
+
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
         
@@ -43,11 +44,6 @@
             from { opacity: 0; transform: translateY(5px); } 
             to { opacity: 1; transform: translateY(0); } 
         }
-
-
-
-
-    
 
 
         .admin-only, .rh-only, .management-only { display: none !important; }
@@ -101,35 +97,7 @@
         }
 
 
-
-    </style>
-</head>
-<body class="text-slate-900 overflow-hidden h-screen w-screen">
-
-
-
-
-                                                <!-- LOADER PREMIUM -->
-                            <div id="initial-loader" class="fixed inset-0 bg-slate-900 z-[999] flex flex-col items-center justify-center transition-all duration-700 ease-in-out">
-                                <!-- Logo Container -->
-                                <div class="relative mb-8">
-                                    <div class="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
-                                    <div class="relative bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl flex items-center justify-center">
-                                        <i class="fa-solid fa-fingerprint text-5xl text-blue-500 animate-pulse"></i>
-                                    </div>
-                                </div>
-                                
-                                <!-- Texte -->
-                                <h2 class="text-white text-2xl font-black tracking-tight mb-2">SIRH <span class="text-blue-500">SECURE</span></h2>
-                                <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-8">Initialisation du système...</p>
-
-                                <!-- Barre de chargement -->
-                                <div class="w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                    <div class="h-full bg-gradient-to-r from-blue-600 to-indigo-500 w-0 animate-[progress_1.5s_ease-in-out_infinite] rounded-full"></div>
-                                </div>
-                                
-                                <style>
-                                    @keyframes progress {
+                                            @keyframes progress {
                                         0% { w: 0%; margin-left: 0; }
                                         50% { w: 50%; margin-left: 25%; }
                                         100% { w: 100%; margin-left: 100%; }
@@ -144,7 +112,34 @@
                                         50% { width: 70%; transform: translateX(0); }
                                         100% { width: 100%; transform: translateX(100%); }
                                     }
-                                </style>
+    </style>
+</head>
+
+
+
+<body class="text-slate-900 overflow-hidden h-screen w-screen">
+
+
+
+                                                <!-- LOADER PREMIUM -->
+                         <div id="initial-loader" class="fixed inset-0 bg-slate-900 z-[999] flex flex-col items-center justify-center transition-all duration-700 ease-in-out">
+                                <!-- Logo Container -->
+                                <div class="relative mb-8">
+                                    <div class="absolute inset-0 bg-blue-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
+                                    <div class="relative bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl flex items-center justify-center">
+                                        <i class="fa-solid fa-fingerprint text-5xl text-blue-500 animate-pulse"></i>
+                                    </div>
+                                </div>
+                                
+                                <!-- Texte -->
+                                <h2 class="text-white text-2xl font-black tracking-tight mb-2">SIRH <span class="text-blue-500">SECURE</span></h2>
+                                <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-8">Chargement ...</p>
+
+                                <!-- Barre de chargement -->
+                                <div class="w-64 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-blue-600 to-indigo-500 w-0 animate-[progress_1.5s_ease-in-out_infinite] rounded-full"></div>
+                                </div>
+
                             </div>
 
 
@@ -159,7 +154,7 @@
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-20 h-20 bg-blue-600 rounded-2xl shadow-xl shadow-blue-500/30 mb-6 text-white"><i class="fa-solid fa-fingerprint text-3xl"></i></div>
                 <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight text-center">SIRH Secure</h1>
-                <p class="text-slate-400 mt-2 font-medium text-center">Portail Unifié</p>
+                <p class="text-slate-400 mt-2 font-medium text-center">Portail De Connexion</p>
             </div>
             <form onsubmit="handleLogin(event)" class="space-y-5">
                 <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Identifiant</label><input type="text" id="login-user" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" required></div>
@@ -174,7 +169,7 @@
         <aside id="sidebar" class="w-72 bg-slate-900 text-slate-300 flex flex-col fixed md:relative inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 border-r border-slate-800">
             <div class="p-8 flex-1 overflow-y-auto">
                 <div class="flex items-center justify-between mb-10 text-white">
-                    <div class="flex items-center gap-3"><div class="p-2 bg-blue-600 rounded-lg shadow-lg"><i class="fa-solid fa-shield-halved"></i></div><span class="font-bold text-xl tracking-tighter">CORP-HR</span></div>
+                    <div class="flex items-center gap-3"><div class="p-2 bg-blue-600 rounded-lg shadow-lg"><i class="fa-solid fa-shield-halved"></i></div><span class="font-bold text-xl tracking-tighter">SIRH SECURE</span></div>
                     <button onclick="toggleSidebar()" class="md:hidden text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <nav class="space-y-2">
@@ -193,7 +188,7 @@
                         
                     <button onclick="openFlashModal()" class="nav-btn w-full flex items-center gap-4 p-4 rounded-xl transition-all hover:text-white group management-only">
                         <i class="fa-solid fa-bullhorn w-5 text-orange-500"></i> 
-                        <span class="font-semibold text-orange-400 group-hover:text-white">Diffuser Alerte</span>
+                        <span class="font-semibold text-orange-400 group-hover:text-white">Diffuser Une Annonce</span>
                     </button>
                         
                         
@@ -234,24 +229,9 @@
             <div id="main-scroll-container" class="flex-1 overflow-y-auto p-8 scroll-smooth">
                 
                 
-                
-                <!-- BANNIÈRE FLASH INFO (Cachée par défaut) -->
-                    <!-- CONTENEUR POUR PLUSIEURS ALERTES -->
+
                  <!-- CONTENEUR POUR PLUSIEURS ALERTES -->
                     <div id="flash-container" class="space-y-3 mb-6"></div>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
                 <!-- VUE 1: DASHBOARD -->
@@ -259,7 +239,7 @@
             <div class="flex justify-between items-center mb-8">
                     <h2 class="text-2xl font-extrabold text-slate-800">Analyse de l'Effectif</h2>
                     <div class="flex gap-3 items-center">
-                        <button onclick="refreshAllData()" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95">
+                        <button onclick="refreshAllData(true)" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95">
                             <i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualiser
                         </button>
                         <div id="current-date" class="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-xl font-bold text-sm border border-blue-100 italic">--</div>
@@ -397,21 +377,6 @@
                 </section>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 <!-- VUE 3: AJOUT -->
                 <section id="view-add-new" class="view-section">
                     <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border">
@@ -494,7 +459,7 @@
                         <!-- VUE 7: RECRUTEMENT / ATS -->
                     <section id="view-recruitment" class="view-section">
                         <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-2xl font-extrabold text-slate-800">Candidatures (Google Form)</h2>
+                        <h2 class="text-2xl font-extrabold text-slate-800">Candidatures (Via Google Form)</h2>
                         <button onclick="fetchCandidates()" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm font-bold text-sm">
                             <i class="fa-solid fa-rotate mr-2"></i> Actualiser
                         </button>
@@ -551,7 +516,7 @@
                                     <i class="fa-solid fa-fingerprint"></i> <span>ENTRÉE</span>
                                 </button>
                                 <button onclick="openLeaveModal()" class="flex-1 md:flex-none bg-slate-800 hover:bg-slate-700 text-white px-6 py-4 rounded-2xl font-bold uppercase transition-all border border-slate-700 active:scale-95 text-xs">
-                                    <i class="fa-solid fa-plane-departure mr-2"></i> Demander Congé
+                                    <i class="fa-solid fa-plane-departure mr-2"></i> Demander un Congé
                                 </button>
                             </div>
                         </div>
@@ -578,6 +543,20 @@
                                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                                     <h3 class="font-black text-[10px] uppercase text-slate-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open text-yellow-500"></i> Mes Documents</h3>
                                     <div id="doc-container" class="space-y-3"></div>
+
+
+                                    <!-- BLOC BULLETINS DE PAIE -->
+                                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mt-6">
+                                        <h3 class="font-black text-[10px] uppercase text-slate-400 mb-4 flex items-center gap-2">
+                                            <i class="fa-solid fa-file-invoice-dollar text-emerald-500"></i> Mes Bulletins de Paie
+                                        </h3>
+                                        <div id="payroll-container" class="space-y-3">
+                                            <!-- Sera rempli par fetchPayrollData() -->
+                                            <p class="text-[10px] text-slate-400 italic text-center py-4">Recherche des bulletins...</p>
+                                        </div>
+                                    </div>
+
+
                                 </div>
                             </div>
                             <div class="md:col-span-2 space-y-6">
@@ -682,7 +661,7 @@
                 </p>
                 <div class="bg-white/10 p-3 rounded-xl flex items-center gap-3">
                     <i class="fa-solid fa-envelope text-blue-400"></i>
-                    <span class="font-mono text-xs">support-rh@entreprise.com</span>
+                    <span class="font-mono text-xs">support-sirh@entreprise.com</span>
                 </div>
             </div>
 
@@ -695,9 +674,10 @@
 
     <!-- MODAL DOSSIER COMPLET -->
     <div id="folder-modal" class="fixed inset-0 bg-slate-900/90 hidden flex items-center justify-center z-[150] p-4 backdrop-blur-md">
-        <div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] md:h-auto max-h-[95vh]">
-            <div class="md:w-1/3 bg-slate-900 p-8 text-white flex flex-col items-center text-center">
-                <div class="w-32 h-32 rounded-3xl bg-slate-800 mb-6 overflow-hidden border-2 border-slate-700 shadow-xl"><img id="folder-photo" class="w-full h-full object-cover"></div>
+<!-- NOUVELLE LIGNE CORRIGÉE -->
+<div class="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row h-[90vh] max-h-[95vh]">
+ <div class="md:w-1/3 bg-slate-900 p-6 md:p-8 text-white flex flex-col items-center text-center shrink-0">
+    <div class="w-32 h-32 rounded-3xl bg-slate-800 mb-6 overflow-hidden border-2 border-slate-700 shadow-xl"><img id="folder-photo" class="w-full h-full object-cover"></div>
                 <h3 id="folder-name" class="text-2xl font-black mb-1 uppercase tracking-tight">...</h3>
                 <p id="folder-id" class="text-blue-500 font-mono text-xs mb-6 uppercase tracking-widest">...</p>
                 <div class="w-full space-y-3 text-left bg-white/5 p-4 rounded-2xl border border-white/10 mb-4">
@@ -709,8 +689,9 @@
                 </div>
                 <button onclick="closeFolderModal()" class="mt-8 w-full py-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all font-bold text-sm">FERMER LE DOSSIER</button>
             </div>
-            <div class="flex-1 p-8 md:p-12 overflow-y-auto bg-slate-50">
-                <h4 class="text-slate-400 font-black text-xs uppercase tracking-widest mb-8 flex items-center gap-2"><div class="h-[1px] flex-1 bg-slate-200"></div> ARCHIVES NUMÉRIQUES <div class="h-[1px] flex-1 bg-slate-200"></div></h4>
+ <!-- REMPLACE PAR CELLE-CI -->
+<div class="flex-1 p-8 md:p-12 overflow-y-auto bg-slate-50">
+ <h4 class="text-slate-400 font-black text-xs uppercase tracking-widest mb-8 flex items-center gap-2"><div class="h-[1px] flex-1 bg-slate-200"></div> ARCHIVES NUMÉRIQUES <div class="h-[1px] flex-1 bg-slate-200"></div></h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10" id="folder-docs-grid"></div>
                 <h4 class="text-slate-400 font-black text-xs uppercase tracking-widest mb-6 flex items-center gap-2"><div class="h-[1px] flex-1 bg-slate-200"></div> CONTACTS & COORDONNÉES <div class="h-[1px] flex-1 bg-slate-200"></div></h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
@@ -855,7 +836,7 @@
                     <div class="grid grid-cols-3 gap-2">
                         <label class="cursor-pointer"><input type="radio" name="leave_type" value="Congé Payé" class="peer sr-only" checked><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition-all">🏖️ Congé</div></label>
                         <label class="cursor-pointer"><input type="radio" name="leave_type" value="Maladie" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 transition-all">💊 Maladie</div></label>
-                        <label class="cursor-pointer"><input type="radio" name="leave_type" value="Télétravail" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-purple-500 peer-checked:text-white peer-checked:border-purple-500 transition-all">🏠 Home</div></label>
+                        <label class="cursor-pointer"><input type="radio" name="leave_type" value="Télétravail" class="peer sr-only"><div class="p-3 border rounded-xl text-center text-xs font-bold text-slate-500 peer-checked:bg-purple-500 peer-checked:text-white peer-checked:border-purple-500 transition-all">🏠 Autres</div></label>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
@@ -979,6 +960,8 @@
         // --- AJOUTER ICI ---
         const URL_READ_CANDIDATES = `${BASE_API}/read-candidates`; 
         const URL_CANDIDATE_ACTION = `${BASE_API}/candidate-action`;
+        const URL_READ_PAYROLL = `${BASE_API}/read-payroll`;
+
 
         const URL_READ_FLASH = `${BASE_API}/read-flash`;
         const URL_WRITE_FLASH = `${BASE_API}/write-flash`;
@@ -989,6 +972,25 @@
                 // --- CONFIG SAAS (Géolocalisation dynamique) ---
         const URL_GET_CONFIG = `${BASE_API}/read-config`; // Nouvelle route à créer dans Make
         let allLeaves = []; // Pour stocker tous les congés et les comparer
+        let myPayrolls = [];
+ 
+        // ÉTAPE 1 : Mémoire des derniers chargements (pour économiser les crédits Make)
+        let lastFetchTimes = {
+            global: 0,      // Pour la config GPS
+            employees: 0,   // Pour la liste de base
+            leaves: 0,      // Pour les congés
+            candidates: 0,  // Pour le recrutement
+            payroll: 0,     // Pour la paie
+            flash: 0        // Pour les annonces
+        };
+
+        // On définit un délai de "fraîcheur" de 5 minutes (300 000 millisecondes)
+        // L'app ne demandera pas de mise à jour au serveur avant ce délai, sauf si on l'y force.
+        const REFRESH_THRESHOLD = 300000;
+
+
+
+
         // Variable globale qui stockera les infos du bureau
         let companyConfig = {
             latitude: null,      
@@ -1000,7 +1002,7 @@
         let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null;
                            
         
-let offsetSuivant = null; // Mémorise le marque-page pour le lot suivant
+        let offsetSuivant = null; // Mémorise le marque-page pour le lot suivant
         let currentPage = 1;
         const ITEMS_PER_PAGE = 10; // Nombre d'employés par page
 
@@ -1101,7 +1103,7 @@ let offsetSuivant = null; // Mémorise le marque-page pour le lot suivant
 
     // 4. Si on ne trouve toujours rien
     if (!myData) {
-        console.error("Badge Error: Impossible de trouver l'employé", currentUser.nom);
+        console.error("Badge Error: Impossible de trouver cet l'employé", currentUser.nom);
         return Swal.fire('Erreur', 'Impossible de localiser votre fiche employé pour générer le badge.', 'error');
     }
 
@@ -1363,56 +1365,73 @@ function setSession(n, r, id){
 
 
 
-
-
- async function refreshAllData() {
+async function refreshAllData(force = false) {
+    const now = Date.now();
     const icon = document.getElementById('refresh-icon'); 
     if(icon) icon.classList.add('fa-spin');
+
+    // On n'affiche le message de synchronisation que si c'est une action forcée
     const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false});
-    Toast.fire({icon: 'info', title: 'Synchronisation...'});
+    if(force) Toast.fire({icon: 'info', title: 'Synchronisation forcée...'});
 
     try {
-        // 1. Tâches parallèles non critiques (GPS, Flash, Congés)
-        const secondaryTasks = [
-            fetchCompanyConfig().catch(e => console.warn("GPS ignoré", e)),
-            fetchFlashMessage().catch(e => console.warn("Flash ignoré", e)),
-            fetchLeaveRequests().catch(e => console.warn("Congés ignorés", e))
-        ];
+        const tasks = [];
 
-        // 2. Gestion des Rôles Spéciaux
-        if (currentUser) {
-            if (['RH', 'ADMIN'].includes(currentUser.role)) {
-                secondaryTasks.push(fetchCandidates().catch(e => console.log(e)));
-            }
-            if (currentUser.role === 'ADMIN') {
-                secondaryTasks.push(fetchLogs().catch(e => console.log(e)));
-            }
+        // 1. CONFIG GPS (Seulement si force ou plus d'une heure)
+        if (force || (now - lastFetchTimes.global > 3600000)) {
+            tasks.push(fetchCompanyConfig().then(() => lastFetchTimes.global = now).catch(e => console.warn("GPS ignoré", e)));
         }
 
-        // 3. CHARGEMENT CRITIQUE : On attend d'avoir les employés AVANT de charger le profil
-        await fetchData(true); // <--- Ceci remplit la variable 'employees'
+        // 2. FLASH INFO (Seulement si force ou plus de 10 minutes)
+        if (force || (now - lastFetchTimes.flash > 600000)) {
+            tasks.push(fetchFlashMessage().then(() => lastFetchTimes.flash = now).catch(e => console.warn("Flash ignoré", e)));
+        }
 
-        // 4. Une fois les employés chargés, on affiche le profil
-        if (currentUser.role === 'EMPLOYEE') {
+        // 3. CHARGEMENT CRITIQUE DES EMPLOYÉS (Seulement si force ou plus de 5 minutes)
+        if (force || (now - lastFetchTimes.employees > REFRESH_THRESHOLD)) {
+            await fetchData(force); 
+            lastFetchTimes.employees = now;
+
+            // On charge le profil et la paie pour l'utilisateur connecté
             loadMyProfile(); 
+            tasks.push(fetchPayrollData().then(() => lastFetchTimes.payroll = now).catch(e => console.warn("Paie ignorée", e)));
         }
 
-        // 5. On lance le reste en arrière-plan
-        await Promise.all(secondaryTasks);
+        // --- L'ACCOLADE EN TROP A ÉTÉ SUPPRIMÉE ICI ---
+
+        // 4. MODULES DE GESTION (RH / Admin / Manager)
+        if (currentUser && currentUser.role !== 'EMPLOYEE') {
+            // Congés (5 minutes)
+            if (force || (now - lastFetchTimes.leaves > REFRESH_THRESHOLD)) {
+                tasks.push(fetchLeaveRequests().then(() => lastFetchTimes.leaves = now).catch(e => console.warn("Congés ignorés", e)));
+            }
+
+            // Recrutement (RH et Admin - 5 minutes)
+            if (['RH', 'ADMIN'].includes(currentUser.role)) {
+                if (force || (now - lastFetchTimes.candidates > REFRESH_THRESHOLD)) {
+                    tasks.push(fetchCandidates().then(() => lastFetchTimes.candidates = now).catch(e => console.warn("Candidats ignorés", e)));
+                }
+            }
+
+            // Audit Logs (Admin seulement)
+            if (currentUser.role === 'ADMIN') {
+                tasks.push(fetchLogs().catch(e => console.log(e)));
+            }
+        }
+
+        // Lancement de toutes les tâches secondaires en parallèle
+        await Promise.all(tasks);
 
         renderCharts();
-        Toast.fire({icon: 'success', title: 'Données à jour !', timer: 2000});
+
+        if(force) Toast.fire({icon: 'success', title: 'Données à jour !', timer: 2000});
 
     } catch (error) {
         console.error("Erreur Sync:", error);
-        Swal.fire('Attention', 'Erreur de connexion partielle.', 'warning');
     } finally {
         if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 500);
     }
 }
- 
-
-
 
 
 
@@ -1750,7 +1769,7 @@ function renderData() {
                         const pos = await new Promise((resolve, reject) => {
                             navigator.geolocation.getCurrentPosition(resolve, reject, {
                                 enableHighAccuracy: true, 
-                                timeout: 10000, 
+                                timeout: 20000, 
                                 maximumAge: 0
                             });
                         });
@@ -2261,7 +2280,9 @@ async function submitUpdate(e) {
         if(response.ok) {
             closeEditModal(); 
             Swal.fire('Succès', 'Contrat et dossier mis à jour', 'success'); 
-            refreshAllData();
+
+                    fetchData(true); // On met à jour la liste des employés
+
         } else {
             throw new Error("Erreur serveur");
         }
@@ -2353,7 +2374,10 @@ async function submitUpdate(e) {
         
         function toggleEditMode(){const ids=['emp-email','emp-phone','emp-address','emp-dob'], btn=document.getElementById('save-btn-container'), dis=document.getElementById('emp-email').disabled; ids.forEach(i=>{const el=document.getElementById(i); el.disabled=!dis; if(!dis)el.classList.add('bg-white','ring-2','ring-blue-100'); else el.classList.remove('bg-white','ring-2','ring-blue-100');}); if(dis){btn.classList.remove('hidden');document.getElementById('emp-email').focus();}else{btn.classList.add('hidden');loadMyProfile();}}
                                                                 
-                                                                                    async function saveMyProfile() {
+
+
+
+async function saveMyProfile() {
     Swal.fire({ title: 'Sauvegarde...', didOpen: () => Swal.showLoading() });
 
     // --- CORRECTION : Recherche sécurisée du Matricule ---
@@ -2397,7 +2421,7 @@ async function submitUpdate(e) {
         if (response.ok) {
             Swal.fire('Succès', 'Votre profil a été mis à jour', 'success');
             toggleEditMode(); 
-            refreshAllData(); 
+            fetchData(true); // On met à jour ses infos
         } else {
             throw new Error("Erreur serveur (" + response.status + ")");
         }
@@ -2469,7 +2493,9 @@ async function submitUpdate(e) {
                         text: 'Le collaborateur a été ajouté et ses accès ont été envoyés par email.',
                         confirmButtonColor: '#2563eb'
                     });
-                    refreshAllData(); // Recharge pour voir le nouveau membre
+                    
+                    fetchData(true); // On force uniquement la mise à jour de la liste des employés
+
                 } else {
                     const errorData = await response.json();
                     throw new Error(errorData.error || "Erreur serveur");
@@ -3166,24 +3192,7 @@ async function fetchFlashMessage() {
             // Nettoyage des données Airtable/Make (Majuscules ou minuscules)
             const clean = (v) => Array.isArray(v) ? v[0] : v;
             const msgText = clean(data.Message || data.message);
-                                                                                            // ... (début de ta fonction fetchFlashMessage) ...
-
             const msgSender = clean(data.Sender || data.sender);
-
-            // --- NOUVELLE RÈGLE DE VISIBILITÉ ---
-            // Si le message vient du robot et que l'utilisateur n'est pas un chef (Admin, RH ou Manager)
-            const rolesSuperviseurs = ['ADMIN', 'RH', 'MANAGER'];
-            if (msgSender === "SYSTÈME DE CONTRÔLE" && !rolesSuperviseurs.includes(currentUser.role)) {
-                console.log("Alerte robot masquée pour ce profil employé.");
-                return; // On arrête là pour ce message, on passe au suivant
-            }
-
-            // ... (reste de ta boucle messages.forEach) ...
-
-
-
-
-
             const msgType = clean(data.Type || data.type) || 'Info';
             const msgDate = clean(data.Date || data.date);
             const msgExpiry = clean(data.Expiration || data.date_expiration);
@@ -3306,9 +3315,7 @@ async function processLeave(recordId, decision) {
                     text: `La demande a été marquée comme ${decision.toLowerCase()}.`,
                     timer: 2000
                 });
-                
-                // 5. Rafraîchir le tableau des congés pour faire disparaître la ligne traitée
-                refreshAllData(); 
+                    fetchLeaveRequests(); // On ne recharge que la liste des congés
             } else {
                 throw new Error("Erreur du serveur");
             }
@@ -3632,9 +3639,9 @@ function convertToInputDate(dStr){
 async function handleCandidateAction(id, action) {
     const conf = {
         'VALIDER_POUR_ENTRETIEN': { t: 'Inviter en entretien ?', c: '#2563eb', txt: "Un email d'invitation sera envoyé." },
-        'REFUS_IMMEDIAT': { t: 'Refuser la candidature ?', c: '#ef4444', txt: "Un email de refus standard sera envoyé." },
-        'ACCEPTER_EMBAUCHE': { t: 'Confirmer l\'embauche ?', c: '#10b981', txt: 'Cela créera automatiquement le profil employé et enverra les accès.' },
-        'REFUS_APRES_ENTRETIEN': { t: 'Refuser après entretien ?', c: '#f97316', txt: "Un email personnalisé (plus doux) sera envoyé." }
+        'REFUS_IMMEDIAT': { t: 'Refuser la candidature ?', c: '#ef4444', txt: "Un email de refus immédiat sera envoyé." },
+        'ACCEPTER_EMBAUCHE': { t: 'Confirmer l\'embauche ?', c: '#10b981', txt: 'Cela créera automatiquement le profil employé et enverra les accès. Les informations restantes devront être mises à jour par la suite' },
+        'REFUS_APRES_ENTRETIEN': { t: 'Refuser après entretien ?', c: '#f97316', txt: "Un email personnalisé sera envoyé." }
     }[action];
 
     const res = await Swal.fire({ 
@@ -3655,9 +3662,8 @@ async function handleCandidateAction(id, action) {
                 body: JSON.stringify({ id: id, action: action, agent: currentUser.nom })
             });
             Swal.fire('Succès', 'Action effectuée', 'success');
-            refreshAllData();
-            // Si on embauche, on recharge aussi la liste des employés
-            if(action === 'ACCEPTER_EMBAUCHE') refreshAllData();
+            fetchCandidates(); // On recharge les candidats
+                if(action === 'ACCEPTER_EMBAUCHE') fetchData(true); // Si on embauche, on recharge aussi les employés
         } catch(e) { 
             Swal.fire('Erreur', e.message, 'error'); 
         }
@@ -3776,23 +3782,6 @@ function updateFileFeedback(inputId, labelId) {
 
 
 
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
 function closeFlashBanner() {
     const banner = document.getElementById('flash-banner');
     if(banner.dataset.key) {
@@ -3846,10 +3835,46 @@ function closeSpecificFlash(storageKey, elementId) {
 
 
 
+  async function fetchPayrollData() {
+    const container = document.getElementById('payroll-container');
+    if (!container || !currentUser) return;
 
+    try {
+        // On appelle ton backend Render qui va interroger le scénario Make n°1
+        const r = await secureFetch(`${URL_READ_PAYROLL}?employee_id=${encodeURIComponent(currentUser.id)}&agent=${encodeURIComponent(currentUser.nom)}`);
+        const payrolls = await r.json();
+        
+        container.innerHTML = '';
 
+        if (!payrolls || payrolls.length === 0) {
+            container.innerHTML = '<p class="text-[10px] text-slate-400 italic text-center py-4">Aucun bulletin disponible</p>';
+            return;
+        }
 
-
+        payrolls.forEach(p => {
+            const montant = p.Salaire_Net ? new Intl.NumberFormat('fr-FR').format(p.Salaire_Net) + ' FCFA' : '--';
+            const titre = `${p.Mois} ${p.Année}`;
+            
+            container.innerHTML += `
+                <div class="flex items-center justify-between p-3 border border-slate-100 bg-slate-50 rounded-xl hover:bg-white transition-all group shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><i class="fa-solid fa-file-pdf"></i></div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-700">${titre}</p>
+                            <p class="text-[9px] text-emerald-600 font-black uppercase">${montant}</p>
+                        </div>
+                    </div>
+                    <button onclick="viewDocument('${p.Fiche_PDF}', 'Bulletin ${titre}')" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            `;
+        });
+    } catch (e) {
+        console.warn("Erreur bulletins:", e);
+        container.innerHTML = '<p class="text-[10px] text-red-400 italic text-center py-4">Erreur de chargement</p>';
+    }
+}
 
 
 
