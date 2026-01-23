@@ -20,6 +20,15 @@ self.addEventListener("install", (e) => {
   );
 });
 
+// Écoute le clic sur la notification mobile
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(
+        clients.openWindow('/') // Ouvre l'app quand on clique sur la notif
+    );
+});
+
+
 // Récupération (Stratégie : Cache First, then Network)
 self.addEventListener("fetch", (e) => {
   e.respondWith(
@@ -27,4 +36,5 @@ self.addEventListener("fetch", (e) => {
       return response || fetch(e.request);
     })
   );
+
 });
