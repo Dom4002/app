@@ -325,18 +325,26 @@ body.dark-mode .filter-chip.active-chip {
 
                 <!-- VUE 1: DASHBOARD -->
             <section id="view-dash" class="view-section active">             
-            <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-2xl font-extrabold text-slate-800">Analyse de l'Effectif</h2>
-                    <div class="flex gap-3 items-center">
-                        <button onclick="refreshAllData(true)" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95">
-                            <i class="fa-solid fa-rotate" id="refresh-icon"></i> Actualiser
-                        </button>
-                        <button onclick="exportToCSV()" class="p-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95">
+<!-- EN-TÊTE RESPONSIVE (CORRIGÉ) -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h2 class="text-2xl font-extrabold text-slate-800">Analyse de l'Effectif</h2>
+                
+                <!-- Conteneur boutons : En ligne et flexible -->
+                <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                    <!-- Bouton Actualiser (Prend la moitié sur mobile) -->
+                    <button onclick="refreshAllData(true)" class="flex-1 md:flex-none justify-center p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95">
+                        <i class="fa-solid fa-rotate" id="refresh-icon"></i> <span class="hidden sm:inline">Actualiser</span><span class="sm:hidden">Sync</span>
+                    </button>
+                    
+                    <!-- Bouton Exporter (Prend la moitié sur mobile) -->
+                    <button onclick="exportToCSV()" class="flex-1 md:flex-none justify-center p-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95">
                        <i class="fa-solid fa-file-excel"></i> Exporter
-                        </button>
-                        <div id="current-date" class="bg-blue-50 text-blue-700 px-4 py-2.5 rounded-xl font-bold text-sm border border-blue-100 italic">--</div>
-                    </div>
+                    </button>
+                    
+                    <!-- Date (Pleine largeur sur tout petit écran, ou auto) -->
+                    <div id="current-date" class="w-full sm:w-auto text-center bg-blue-50 text-blue-700 px-4 py-2.5 rounded-xl font-bold text-sm border border-blue-100 italic">--</div>
                 </div>
+            </div>
 
                 <!-- Stats Cards -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
