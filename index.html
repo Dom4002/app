@@ -619,91 +619,102 @@ body.dark-mode .filter-chip.active-chip {
                     </div>
                 </section>
 
-                <!-- VUE 5: MON PROFIL -->
-                <section id="view-my-profile" class="view-section">
-                    <div class="max-w-6xl mx-auto">
-                        <h2 class="text-2xl font-extrabold text-slate-800 mb-8">Mon Espace Personnel</h2>
+                <!-- VUE 5: MON PROFIL (STRUCTURE CORRIGÉE PLEINE LARGEUR) -->
+<section id="view-my-profile" class="view-section">
+    <div class="max-w-6xl mx-auto">
+        <h2 class="text-2xl font-extrabold text-slate-800 mb-8">Mon Espace Personnel</h2>
 
-                        <!-- WIDGET POINTAGE & ACTION -->
-                        <div class="bg-slate-900 rounded-3xl p-6 mb-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
-                            <!-- Déco d'arrière plan -->
-                            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-[80px] opacity-20 pointer-events-none"></div>
-                            
-                            <div class="z-10 mb-6 md:mb-0 text-center md:text-left">
-                                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">État Actuel</p>
-                                <div class="flex items-center gap-3 justify-center md:justify-start">
-                                    <div id="clock-status-dot" class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
-                                    <h3 id="clock-status-text" class="text-2xl font-black">NON POINTÉ</h3>
-                                </div>
-                                <p id="clock-last-action" class="text-xs text-slate-500 mt-1 font-mono">Dernière action : Aucune</p>
-                            </div>
+        <!-- WIDGET POINTAGE & ACTION -->
+        <div class="bg-slate-900 rounded-3xl p-6 mb-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full blur-[80px] opacity-20 pointer-events-none"></div>
+            
+            <div class="z-10 mb-6 md:mb-0 text-center md:text-left">
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">État Actuel</p>
+                <div class="flex items-center gap-3 justify-center md:justify-start">
+                    <div id="clock-status-dot" class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                    <h3 id="clock-status-text" class="text-2xl font-black">NON POINTÉ</h3>
+                </div>
+                <p id="clock-last-action" class="text-xs text-slate-500 mt-1 font-mono">Dernière action : Aucune</p>
+            </div>
 
-                            <div class="flex gap-4 z-10 w-full md:w-auto">
-                                <button onclick="handleClockInOut()" id="btn-clock" class="flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-400 text-white px-8 py-4 rounded-2xl font-black uppercase transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-fingerprint"></i> <span>ENTRÉE</span>
-                                </button>
-                                <button onclick="openLeaveModal()" class="flex-1 md:flex-none bg-slate-800 hover:bg-slate-700 text-white px-6 py-4 rounded-2xl font-bold uppercase transition-all border border-slate-700 active:scale-95 text-xs">
-                                    <i class="fa-solid fa-plane-departure mr-2"></i> Demander un Congé
-                                </button>
-                            </div>
+            <div class="flex gap-4 z-10 w-full md:w-auto">
+                <button onclick="handleClockInOut()" id="btn-clock" class="flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-400 text-white px-8 py-4 rounded-2xl font-black uppercase transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-fingerprint"></i> <span>ENTRÉE</span>
+                </button>
+                <button onclick="openLeaveModal()" class="flex-1 md:flex-none bg-slate-800 hover:bg-slate-700 text-white px-6 py-4 rounded-2xl font-bold uppercase transition-all border border-slate-700 active:scale-95 text-xs">
+                    <i class="fa-solid fa-plane-departure mr-2"></i> Demander un Congé
+                </button>
+            </div>
+        </div>
+
+        <!-- ZONE HAUTE : PHOTO (Gauche) + FORMULAIRE (Droite) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            
+            <!-- COLONNE GAUCHE : PHOTO & IDENTITÉ -->
+            <div class="space-y-6">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center relative overflow-hidden h-full">
+                    <div class="absolute top-0 left-0 w-full h-24 bg-blue-600/10"></div>
+                    <div class="relative">
+                        <div class="w-28 h-28 bg-white p-1 rounded-full mx-auto mb-4 shadow-lg overflow-hidden relative group">
+                            <span id="emp-avatar" class="w-full h-full flex items-center justify-center text-3xl font-bold text-slate-300 bg-slate-50">?</span>
+                            <img id="emp-photo-real" class="w-full h-full object-cover hidden">
+                            <div onclick="triggerPhotoUpload()" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"><i class="fa-solid fa-camera text-white"></i></div>
                         </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <div class="space-y-6">
-                                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center relative overflow-hidden">
-                                    <div class="absolute top-0 left-0 w-full h-24 bg-blue-600/10"></div>
-                                    <div class="relative">
-                                        <div class="w-28 h-28 bg-white p-1 rounded-full mx-auto mb-4 shadow-lg overflow-hidden relative group">
-                                            <span id="emp-avatar" class="w-full h-full flex items-center justify-center text-3xl font-bold text-slate-300 bg-slate-50">?</span>
-                                            <img id="emp-photo-real" class="w-full h-full object-cover hidden">
-                                            <div onclick="triggerPhotoUpload()" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity"><i class="fa-solid fa-camera text-white"></i></div>
-                                        </div>
-                                        <h3 id="emp-name" class="font-bold text-xl text-slate-800">...</h3>
-                                        <p id="emp-job" class="text-sm text-blue-600 font-bold mb-4 uppercase">...</p>
-                                        <div class="bg-slate-50 rounded-2xl p-4 text-xs space-y-2 text-left border border-slate-100">
-                                            <div class="flex justify-between font-bold uppercase tracking-tighter"><span>Début :</span> <span id="emp-start-date" class="text-slate-800">--/--/----</span></div>
-                                            <div class="flex justify-between font-bold uppercase tracking-tighter"><span>Fin :</span> <span id="emp-end-date" class="text-slate-800">--/--/----</span></div>
-                                        </div>
-                                        <button onclick="downloadMyBadge()" class="w-full bg-slate-900 text-white py-3.5 rounded-xl text-sm font-black mt-6 shadow-xl active:scale-95 transition-all"><i class="fa-solid fa-id-card mr-2"></i> MON BADGE D'ACCÈS</button>
-                                    </div>
-                                </div>
-                                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                                    <h3 class="font-black text-[10px] uppercase text-slate-400 mb-4 flex items-center gap-2"><i class="fa-solid fa-folder-open text-yellow-500"></i> Mes Documents</h3>
-                                    <div id="doc-container" class="space-y-3"></div>
-
-
-                                    <!-- BLOC BULLETINS DE PAIE -->
-                                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mt-6">
-                                        <h3 class="font-black text-[10px] uppercase text-slate-400 mb-4 flex items-center gap-2">
-                                            <i class="fa-solid fa-file-invoice-dollar text-emerald-500"></i> Mes Bulletins de Paie
-                                        </h3>
-                                        <div id="payroll-container" class="space-y-3">
-                                            <!-- Sera rempli par fetchPayrollData() -->
-                                            <p class="text-[10px] text-slate-400 italic text-center py-4">Recherche des bulletins...</p>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-                            </div>
-                            <div class="md:col-span-2 space-y-6">
-                                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                                    <div class="flex justify-between items-center mb-8"><h3 class="font-bold text-lg text-slate-800">Coordonnées</h3><button onclick="toggleEditMode()" class="text-blue-600 text-sm font-bold bg-blue-50 px-4 py-1.5 rounded-lg active:scale-95 transition-all">Modifier</button></div>
-                                    <form id="form-self-update" class="space-y-5">
-                                        <input type="file" id="emp-upload-photo" class="hidden" accept="image/*" onchange="previewPhoto(event)">
-                                        <div class="grid grid-cols-2 gap-6">
-                                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Date de Naissance</label><input type="date" id="emp-dob" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
-                                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Téléphone</label><input type="tel" id="emp-phone" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
-                                        </div>
-                                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Email Personnel</label><input type="email" id="emp-email" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
-                                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Adresse Résidentielle</label><textarea id="emp-address" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl resize-none outline-none" disabled></textarea></div>
-                                        <div id="save-btn-container" class="hidden pt-6 flex justify-end gap-3"><button type="button" onclick="toggleEditMode()" class="px-6 py-3 font-bold text-slate-400 text-sm">Annuler</button><button type="button" onclick="saveMyProfile()" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-black shadow-lg uppercase text-xs">Sauvegarder</button></div>
-                                    </form>
-                                </div>
-                            </div>
+                        <h3 id="emp-name" class="font-bold text-xl text-slate-800">...</h3>
+                        <p id="emp-job" class="text-sm text-blue-600 font-bold mb-4 uppercase">...</p>
+                        <div class="bg-slate-50 rounded-2xl p-4 text-xs space-y-2 text-left border border-slate-100">
+                            <div class="flex justify-between font-bold uppercase tracking-tighter"><span>Début :</span> <span id="emp-start-date" class="text-slate-800">--/--/----</span></div>
+                            <div class="flex justify-between font-bold uppercase tracking-tighter"><span>Fin :</span> <span id="emp-end-date" class="text-slate-800">--/--/----</span></div>
                         </div>
+                        <button onclick="downloadMyBadge()" class="w-full bg-slate-900 text-white py-3.5 rounded-xl text-sm font-black mt-6 shadow-xl active:scale-95 transition-all"><i class="fa-solid fa-id-card mr-2"></i> MON BADGE D'ACCÈS</button>
                     </div>
-                </section>
+                </div>
+            </div>
+
+            <!-- COLONNE DROITE : FORMULAIRE -->
+            <div class="md:col-span-2 space-y-6">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 h-full">
+                    <div class="flex justify-between items-center mb-8"><h3 class="font-bold text-lg text-slate-800">Coordonnées</h3><button onclick="toggleEditMode()" class="text-blue-600 text-sm font-bold bg-blue-50 px-4 py-1.5 rounded-lg active:scale-95 transition-all">Modifier</button></div>
+                    <form id="form-self-update" class="space-y-5">
+                        <input type="file" id="emp-upload-photo" class="hidden" accept="image/*" onchange="previewPhoto(event)">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Date de Naissance</label><input type="date" id="emp-dob" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
+                            <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Téléphone</label><input type="tel" id="emp-phone" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
+                        </div>
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Email Personnel</label><input type="email" id="emp-email" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none" disabled></div>
+                        <div><label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1">Adresse Résidentielle</label><textarea id="emp-address" rows="3" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl resize-none outline-none" disabled></textarea></div>
+                        <div id="save-btn-container" class="hidden pt-6 flex justify-end gap-3"><button type="button" onclick="toggleEditMode()" class="px-6 py-3 font-bold text-slate-400 text-sm">Annuler</button><button type="button" onclick="saveMyProfile()" class="bg-blue-600 text-white px-10 py-3 rounded-xl font-black shadow-lg uppercase text-xs">Sauvegarder</button></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ZONE BASSE : DOCUMENTS & PAIE (PLEINE LARGEUR MAINTENANT) -->
+        <div class="space-y-8">
+            
+            <!-- BLOC DOCUMENTS -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                <h3 class="font-black text-xs uppercase text-slate-400 mb-6 flex items-center gap-2 tracking-widest">
+                    <i class="fa-solid fa-folder-open text-yellow-500 text-lg"></i> Mes Documents Administratifs
+                </h3>
+                <!-- Le conteneur ID doc-container sera rempli par le JS en mode grille -->
+                <div id="doc-container" class="w-full"></div>
+            </div>
+
+            <!-- BLOC BULLETINS DE PAIE -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                <h3 class="font-black text-xs uppercase text-slate-400 mb-6 flex items-center gap-2 tracking-widest">
+                    <i class="fa-solid fa-file-invoice-dollar text-emerald-500 text-lg"></i> Mes Bulletins de Paie
+                </h3>
+                <div id="payroll-container" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Sera rempli par fetchPayrollData() -->
+                    <div class="col-span-full text-center py-4 text-slate-400 italic text-xs">Recherche des bulletins...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
 
 
 
@@ -1100,6 +1111,7 @@ body.dark-mode .filter-chip.active-chip {
         const URL_GET_CONFIG = `${BASE_API}/read-config`; // Nouvelle route à créer dans Make
         // SON DE NOTIFICATION (Bip professionnel)
         const NOTIF_SOUND = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+        let currentView = 'dash'; 
         let allLeaves = []; // Pour stocker tous les congés et les comparer
         let myPayrolls = [];
         let currentFilter = 'all';
@@ -1509,66 +1521,67 @@ function setSession(n, r, id){
                     }
                 }
 
-
-
-async function refreshAllData(force = false) {
+ async function refreshAllData(force = false) {
     const now = Date.now();
     const icon = document.getElementById('refresh-icon'); 
     if(icon) icon.classList.add('fa-spin');
 
     // On n'affiche le message de synchronisation que si c'est une action forcée
     const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false});
-    if(force) Toast.fire({icon: 'info', title: 'Synchronisation forcée...'});
+    if(force) Toast.fire({icon: 'info', title: 'Actualisation intelligente...'});
 
     try {
         const tasks = [];
 
-        // 1. CONFIG GPS (Seulement si force ou plus d'une heure)
+        // --- 1. FONCTIONS GLOBALES (Légères) ---
+        // GPS (seulement si nécessaire)
         if (force || (now - lastFetchTimes.global > 3600000)) {
             tasks.push(fetchCompanyConfig().then(() => lastFetchTimes.global = now).catch(e => console.warn("GPS ignoré", e)));
         }
+        // Flash Info (Utile partout pour les alertes)
+        tasks.push(fetchFlashMessage().then(() => lastFetchTimes.flash = now).catch(e => console.warn("Flash ignoré", e)));
 
-        // 2. FLASH INFO (Seulement si force ou plus de 10 minutes)
-        if (force || (now - lastFetchTimes.flash > 600000)) {
-            tasks.push(fetchFlashMessage().then(() => lastFetchTimes.flash = now).catch(e => console.warn("Flash ignoré", e)));
-        }
 
-        // 3. CHARGEMENT CRITIQUE DES EMPLOYÉS (Seulement si force ou plus de 5 minutes)
-        if (force || (now - lastFetchTimes.employees > REFRESH_THRESHOLD)) {
-            await fetchData(force); 
+        // --- 2. ACTUALISATION CIBLÉE SELON LA VUE ---
+        
+        if (currentView === 'dash') {
+            // DASHBOARD : Besoin des Employés (pour les stats) et des Congés (pour les graphiques)
+            // On recharge les employés seulement si > 5 min ou forcé
+            if (force || (now - lastFetchTimes.employees > REFRESH_THRESHOLD)) {
+                await fetchData(force); 
+                lastFetchTimes.employees = now;
+            }
+            // On recharge les congés si manager
+            if (currentUser.role !== 'EMPLOYEE') {
+                tasks.push(fetchLeaveRequests().then(() => lastFetchTimes.leaves = now));
+            }
+        } 
+        else if (currentView === 'employees' || currentView === 'add-new') {
+            // VUE EMPLOYÉS : On force la mise à jour de la liste employés
+            await fetchData(true);
             lastFetchTimes.employees = now;
-
-            // On charge le profil et la paie pour l'utilisateur connecté
+        }
+        else if (currentView === 'recruitment') {
+            // VUE RECRUTEMENT : Uniquement les candidats (Gros gain de crédits !)
+            tasks.push(fetchCandidates().then(() => lastFetchTimes.candidates = now));
+        }
+        else if (currentView === 'logs') {
+            // VUE LOGS : Uniquement les logs
+            tasks.push(fetchLogs());
+        }
+        else if (currentView === 'my-profile') {
+            // VUE PROFIL : Mes infos et ma paie
             loadMyProfile(); 
-            tasks.push(fetchPayrollData().then(() => lastFetchTimes.payroll = now).catch(e => console.warn("Paie ignorée", e)));
+            tasks.push(fetchPayrollData().then(() => lastFetchTimes.payroll = now));
         }
 
-        // --- L'ACCOLADE EN TROP A ÉTÉ SUPPRIMÉE ICI ---
-
-        // 4. MODULES DE GESTION (RH / Admin / Manager)
-        if (currentUser && currentUser.role !== 'EMPLOYEE') {
-            // Congés (5 minutes)
-            if (force || (now - lastFetchTimes.leaves > REFRESH_THRESHOLD)) {
-                tasks.push(fetchLeaveRequests().then(() => lastFetchTimes.leaves = now).catch(e => console.warn("Congés ignorés", e)));
-            }
-
-            // Recrutement (RH et Admin - 5 minutes)
-            if (['RH', 'ADMIN'].includes(currentUser.role)) {
-                if (force || (now - lastFetchTimes.candidates > REFRESH_THRESHOLD)) {
-                    tasks.push(fetchCandidates().then(() => lastFetchTimes.candidates = now).catch(e => console.warn("Candidats ignorés", e)));
-                }
-            }
-
-            // Audit Logs (Admin seulement)
-            if (currentUser.role === 'ADMIN') {
-                tasks.push(fetchLogs().catch(e => console.log(e)));
-            }
-        }
-
-        // Lancement de toutes les tâches secondaires en parallèle
+        // Exécution des tâches ciblées
         await Promise.all(tasks);
 
-        renderCharts();
+        // Mise à jour des graphiques uniquement si on est sur le dashboard (pour éviter les erreurs)
+        if (currentView === 'dash') {
+            renderCharts();
+        }
 
         if(force) Toast.fire({icon: 'success', title: 'Données à jour !', timer: 2000});
 
@@ -1578,6 +1591,14 @@ async function refreshAllData(force = false) {
         if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 500);
     }
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -2182,6 +2203,11 @@ function getDriveId(link) {
 
 
 
+
+
+
+
+
 function loadMyProfile() {
     // 1. Sécurité : Si la liste est vide, on arrête
     if (!employees || employees.length === 0) {
@@ -2247,7 +2273,7 @@ function loadMyProfile() {
     document.getElementById('emp-address').value = myData.adresse || ""; 
     document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
     
-    // Remplissage Documents
+    // --- GESTION DES DOCUMENTS (MODE GRILLE + VOIR PLUS) ---
     const dC = document.getElementById('doc-container'); 
     dC.innerHTML = '';
 
@@ -2260,28 +2286,63 @@ function loadMyProfile() {
         { label: 'Attestations', link: myData.attestation_link, icon: 'fa-file-invoice', color: 'orange', key: 'attestation' } 
     ];
 
-    allDocs.forEach(doc => {
+    // CONFIGURATION GRILLE
+    const VISIBLE_LIMIT = 4; // Nombre de documents visibles avant "Voir plus"
+    let gridHtml = '<div class="grid grid-cols-1 md:grid-cols-4 gap-4">'; // 1 col sur mobile, 4 sur PC
+
+    allDocs.forEach((doc, index) => {
         const hasLink = doc.link && doc.link.length > 5;
         const safeLabel = doc.label.replace(/'/g, "\\'");
+        
+        // Cache les éléments qui dépassent la limite
+        const hiddenClass = index >= VISIBLE_LIMIT ? 'hidden more-docs' : '';
 
-        dC.innerHTML += `
-            <div class="flex items-center justify-between p-3 border border-slate-100 bg-white rounded-xl hover:bg-slate-50 transition-all group mb-3 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="bg-${doc.color}-50 text-${doc.color}-600 p-2.5 rounded-lg"><i class="fa-solid ${doc.icon}"></i></div>
-                    <p class="text-xs font-bold text-slate-700">${doc.label}</p>
+        gridHtml += `
+            <div class="${hiddenClass} flex flex-col justify-between p-4 border border-slate-100 bg-white rounded-2xl hover:shadow-md transition-all group h-full">
+                
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-${doc.color}-50 text-${doc.color}-600 p-3 rounded-xl shrink-0">
+                        <i class="fa-solid ${doc.icon} text-lg"></i>
+                    </div>
+                    <div class="overflow-hidden">
+                        <p class="text-xs font-bold text-slate-700 truncate" title="${doc.label}">${doc.label}</p>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Document</p>
+                    </div>
                 </div>
-                <div class="flex gap-2">
-                    ${hasLink ? `<button onclick="viewDocument('${doc.link}', '${safeLabel}')" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg"><i class="fa-solid fa-eye"></i></button>` : ''}
+
+                <div class="flex gap-2 mt-auto">
+                    ${hasLink ? `
+                    <button onclick="viewDocument('${doc.link}', '${safeLabel}')" class="flex-1 py-2 text-[10px] font-bold uppercase bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                        <i class="fa-solid fa-eye mr-1"></i> Voir
+                    </button>` : `
+                    <div class="flex-1 py-2 text-[10px] font-bold uppercase bg-slate-50 text-slate-300 rounded-lg text-center cursor-not-allowed">
+                        Vide
+                    </div>`}
                     
-                    <!-- CORRECTION : Le bouton modifier n'apparaît QUE pour la Pièce d'Identité -->
                     ${doc.key === 'id_card' ? `
-                        <button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg">
-                            <i class="fa-solid fa-file-arrow-up"></i>
-                        </button>
+                    <button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="w-10 flex items-center justify-center bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-800 hover:text-white transition-all" title="Mettre à jour">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
                     ` : ''}
                 </div>
             </div>`;
     });
+
+    gridHtml += '</div>';
+
+    // Ajout du bouton "Voir plus" si nécessaire
+    if (allDocs.length > VISIBLE_LIMIT) {
+        const countHidden = allDocs.length - VISIBLE_LIMIT;
+        gridHtml += `
+            <div class="text-center mt-4 pt-2 border-t border-slate-50">
+                <button onclick="toggleMoreDocs(this)" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
+                    <i class="fa-solid fa-circle-plus"></i> Voir ${countHidden} autre(s) document(s)
+                </button>
+            </div>
+        `;
+    }
+
+    dC.innerHTML = gridHtml;
 }
 
 
@@ -2293,66 +2354,76 @@ function loadMyProfile() {
 
 
 
-function switchView(v) { 
-            // 1. Arrêt des caméras (Nettoyage)
-            if(videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
-            if(contractStream) { contractStream.getTracks().forEach(t => t.stop()); contractStream = null; }
-            
-            // 2. Masquer TOUTES les sections
-            document.querySelectorAll('.view-section').forEach(section => {
-                section.classList.remove('active');
-            });
 
-            // 3. Afficher la section demandée
-            const target = document.getElementById('view-' + v);
-            if(target) target.classList.add('active');
 
-            // 4. Gestion des boutons du menu (Style actif)
-            document.querySelectorAll('.nav-btn').forEach(b => {
-                b.classList.remove('bg-blue-600', 'text-white');
-                // On remet le style par défaut
-            });
-            
-            // On active le bouton cliqué (celui qui a switchView('v') dans son onclick)
-            const activeBtn = document.querySelector(`button[onclick="switchView('${v}')"]`);
-            if(activeBtn) activeBtn.classList.add('bg-blue-600', 'text-white');
 
-            // --- CORRECTION MAJEURE ICI : RESET DU SCROLL ---
-            // On force le conteneur principal à remonter tout en haut
-            const mainContainer = document.getElementById('main-scroll-container');
-            if(mainContainer) {
-                mainContainer.scrollTo(0, 0); // Remonte instantanément
-            }
-            window.scrollTo(0, 0); // Sécurité pour le body aussi
+ function switchView(v) { 
+    // --- MODIFICATION : On mémorise la vue active ---
+    currentView = v;
+    console.log("Vue active :", currentView);
 
-            // 5. Logique spécifique par vue
-            const searchContainer = document.getElementById('global-search-container');
-            if(v === 'employees' || v === 'logs') { 
-                if(currentUser && currentUser.role !== 'EMPLOYEE') { 
-                    searchContainer.style.visibility = 'visible'; 
-                    searchContainer.style.opacity = '1'; 
-                }
-            } else { 
-                searchContainer.style.visibility = 'hidden'; 
-                searchContainer.style.opacity = '0'; 
-            }
-            
-            if(v === 'add-new') { 
-                document.getElementById('form-onboarding').reset(); 
-                resetCamera(); 
-            }
-            
-            if(v === 'logs') fetchLogs(); 
+    // 1. Arrêt des caméras (Nettoyage)
+    if(videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+    if(contractStream) { contractStream.getTracks().forEach(t => t.stop()); contractStream = null; }
+    
+    // 2. Masquer TOUTES les sections
+    document.querySelectorAll('.view-section').forEach(section => {
+        section.classList.remove('active');
+    });
 
-            // 6. Fermer sidebar sur mobile
-            if(window.innerWidth < 768) { 
-                const sb = document.getElementById('sidebar'); 
-                if(!sb.classList.contains('-translate-x-full')) toggleSidebar(); 
-            }
+    // 3. Afficher la section demandée
+    const target = document.getElementById('view-' + v);
+    if(target) target.classList.add('active');
+
+    // 4. Gestion des boutons du menu (Style actif)
+    document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white');
+        // On remet le style par défaut
+    });
+    
+    // On active le bouton cliqué (celui qui a switchView('v') dans son onclick)
+    const activeBtn = document.querySelector(`button[onclick="switchView('${v}')"]`);
+    if(activeBtn) activeBtn.classList.add('bg-blue-600', 'text-white');
+
+    // --- CORRECTION MAJEURE ICI : RESET DU SCROLL ---
+    // On force le conteneur principal à remonter tout en haut
+    const mainContainer = document.getElementById('main-scroll-container');
+    if(mainContainer) {
+        mainContainer.scrollTo(0, 0); // Remonte instantanément
+    }
+    window.scrollTo(0, 0); // Sécurité pour le body aussi
+
+    // 5. Logique spécifique par vue
+    const searchContainer = document.getElementById('global-search-container');
+    if(v === 'employees' || v === 'logs') { 
+        if(currentUser && currentUser.role !== 'EMPLOYEE') { 
+            searchContainer.style.visibility = 'visible'; 
+            searchContainer.style.opacity = '1'; 
         }
+    } else { 
+        searchContainer.style.visibility = 'hidden'; 
+        searchContainer.style.opacity = '0'; 
+    }
+    
+if(v === 'add-new') { 
+        document.getElementById('form-onboarding').reset(); 
+        resetCamera(); 
+    }
+    
+    // --- CORRECTION : Chargement automatique des données selon l'onglet ---
+    if(v === 'logs') fetchLogs(); 
+    if(v === 'recruitment') fetchCandidates();
+    if(v === 'my-profile') {
+        loadMyProfile(); 
+        fetchPayrollData(); // C'EST CETTE LIGNE QUI MANQUAIT !
+    }
 
-
-
+    // 6. Fermer sidebar sur mobile
+    if(window.innerWidth < 768) { 
+        const sb = document.getElementById('sidebar'); 
+        if(!sb.classList.contains('-translate-x-full')) toggleSidebar(); 
+    }
+}
 
 
 
@@ -3459,7 +3530,16 @@ async function fetchFlashMessage() {
 
 
 
-
+// Fonction pour afficher les documents cachés
+function toggleMoreDocs(btn) {
+    // Affiche tous les éléments cachés
+    document.querySelectorAll('.more-docs').forEach(el => {
+        el.classList.remove('hidden');
+        el.classList.add('animate-fadeIn'); // Petit effet d'apparition
+    });
+    // Supprime le bouton après le clic
+    btn.parentElement.remove();
+}
 
 
 
