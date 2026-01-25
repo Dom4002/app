@@ -30,167 +30,148 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
 
 
-                                                                <style>
+  <style>
     /* ============================================================
-       1. DARK MODE ULTRA-CLEAN (FORCE LE BLEU NUIT & LISIBILITÉ)
+       1. VARIABLES DE MARQUE & CONFIGURATION (ROOT)
        ============================================================ */
-    body.dark-mode {
-        background-color: #020617 !important; 
-        color: #f1f5f9 !important;
+    :root {
+        --primary: #0f172a;
+        --accent: #2563eb;
+        --font-main: 'Plus Jakarta Sans', sans-serif;
+        --base-size: 14px;
+        /* Variables de contraste calculées par le JS */
+        --text-on-primary: #ffffff;
+        --text-on-accent: #ffffff;
     }
 
-    /* Sidebar */
-    body.dark-mode aside {
-        background-color: #020617 !important;
-        border-right: 1px solid #1e293b !important;
-    }
-
-    /* Header et Glass effect */
-    body.dark-mode header, 
-    body.dark-mode .glass {
-        background: rgba(2, 6, 23, 0.9) !important;
-        border-bottom: 1px solid #1e293b !important;
-        box-shadow: none !important;
-        color: white !important;
-    }
-
-    /* FORCE LE FOND SOMBRE SUR TOUTES LES CARTES ET SECTIONS */
-    body.dark-mode .bg-white,
-    body.dark-mode section,
-    body.dark-mode .rounded-3xl,
-    body.dark-mode .rounded-2xl,
-    body.dark-mode .shadow-xl,
-    body.dark-mode .bg-slate-50,
+    /* ============================================================
+       2. DARK MODE ULTRA-CLEAN
+       ============================================================ */
+    body.dark-mode { background-color: #020617 !important; color: #f1f5f9 !important; }
+    body.dark-mode aside { background-color: #020617 !important; border-right: 1px solid #1e293b !important; }
+    body.dark-mode header, body.dark-mode .glass { background: rgba(2, 6, 23, 0.9) !important; border-bottom: 1px solid #1e293b !important; box-shadow: none !important; color: white !important; }
+    
+    /* Cartes et Sections en Dark Mode */
+    body.dark-mode .bg-white, body.dark-mode section, body.dark-mode .rounded-3xl, 
+    body.dark-mode .rounded-2xl, body.dark-mode .shadow-xl, body.dark-mode .bg-slate-50, 
     body.dark-mode .bg-slate-100 {
-        background-color: #0f172a !important; 
-        border: 1px solid #1e293b !important; 
-        box-shadow: none !important;
-        color: #f1f5f9 !important;
+        background-color: #0f172a !important; border: 1px solid #1e293b !important; box-shadow: none !important; color: #f1f5f9 !important;
     }
 
-    /* TABLEAUX */
+    /* Tableaux Dark Mode */
     body.dark-mode table thead { background-color: #1e293b !important; }
     body.dark-mode table thead th { color: #94a3b8 !important; border-bottom: 1px solid #334155 !important; }
     body.dark-mode table tbody tr { background-color: transparent !important; border-bottom: 1px solid #1e293b !important; }
     body.dark-mode table tbody tr:hover { background-color: #1e293b !important; }
     body.dark-mode td { color: #cbd5e1 !important; }
 
-    /* INPUTS, SELECTS ET TEXTAREAS */
-    body.dark-mode input, 
-    body.dark-mode select, 
-    body.dark-mode textarea {
-        background-color: #1e293b !important; 
-        border: 1px solid #334155 !important;
-        color: #ffffff !important;
-        box-shadow: none !important;
+    /* Inputs Dark Mode */
+    body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
+        background-color: #1e293b !important; border: 1px solid #334155 !important; color: #ffffff !important; box-shadow: none !important;
     }
 
-    /* TITRES ET TEXTES */
-    body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4,
-    body.dark-mode .text-slate-800, body.dark-mode .text-slate-900 {
-        color: #f8fafc !important;
-    }
-    body.dark-mode .text-slate-500, body.dark-mode .text-slate-400 {
-        color: #94a3b8 !important;
-    }
+    /* Textes Dark Mode */
+    body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4, body.dark-mode .text-slate-800, body.dark-mode .text-slate-900 { color: #f8fafc !important; }
+    body.dark-mode .text-slate-500, body.dark-mode .text-slate-400 { color: #94a3b8 !important; }
 
-    /* --- CORRECTION SWEETALERT (POUR LES CHARGEMENTS ILLISIBLES) --- */
-    body.dark-mode .swal2-popup {
-        background-color: #0f172a !important; /* Fond bleu nuit */
-        color: #f1f5f9 !important;
-        border: 1px solid #334155 !important;
-    }
-    body.dark-mode .swal2-title, 
-    body.dark-mode .swal2-html-container,
-    body.dark-mode .swal2-content {
-        color: #f1f5f9 !important; /* Texte blanc/gris clair */
-    }
-    body.dark-mode .swal2-timer-progress-bar {
-        background: #2563eb !important;
-    }
-
-    /* MODALES STANDARDS */
-    body.dark-mode #folder-modal > div,
-    body.dark-mode #edit-modal > div,
-    body.dark-mode #contract-modal > div,
-    body.dark-mode #flash-modal > div,
-    body.dark-mode #leave-modal > div {
-        background-color: #0f172a !important;
-        border: 1px solid #334155 !important;
-    }
-
-
-
-
-
-
-/* Style des puces de filtre */
-.filter-chip {
-    background-color: white;
-    border-color: #e2e8f0;
-    color: #64748b;
-}
-.filter-chip:hover { border-color: #3b82f6; color: #3b82f6; }
-.filter-chip.active-chip {
-    background-color: #2563eb !important;
-    border-color: #2563eb !important;
-    color: white !important;
-}
-
-/* Adaptation Dark Mode pour les filtres */
-body.dark-mode .filter-chip {
-    background-color: #1e293b;
-    border-color: #334155;
-    color: #94a3b8;
-}
-body.dark-mode .filter-chip.active-chip {
-    background-color: #3b82f6 !important;
-    color: white !important;
-}
-
-
-
-
-
-
-
-/* CACHER LA BARRE DE SCROLL MAIS GARDER LE SCROLL */
-    .no-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    .no-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
-    }
-
-
-
-
+    /* SweetAlert Dark Mode */
+    body.dark-mode .swal2-popup { background-color: #0f172a !important; color: #f1f5f9 !important; border: 1px solid #334155 !important; }
+    body.dark-mode .swal2-title, body.dark-mode .swal2-html-container, body.dark-mode .swal2-content { color: #f1f5f9 !important; }
+    body.dark-mode .swal2-timer-progress-bar { background: #2563eb !important; }
 
     /* ============================================================
-       2. STYLES DE BASE (FONCTIONNELS)
+       3. STYLES DE BASE & LAYOUT
        ============================================================ */
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; }
+    body { font-family: var(--font-main); font-size: var(--base-size); background-color: #f1f5f9; }
+    
+                                                    /* ============================================================
+   STYLE DE LA BARRE DE SCROLL "PROFESSIONNEL"
+   ============================================================ */
+
+/* 1. Largeur de la barre (très fine) */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+/* 2. Fond de la barre (Transparent pour ne pas faire de bande moche) */
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* 3. Le curseur (la partie qui bouge) */
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1); /* Couleur discrète par défaut */
+    border-radius: 20px;
+    transition: background 0.3s;
+}
+
+/* 4. Au survol du menu, on rend la barre un peu plus visible */
+aside:hover ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* 5. Style spécifique pour le mode clair (Main content) */
+main ::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.1);
+}
+
+main:hover ::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.2);
+}
+
+
+    /* Gestion des vues */
     .view-section { display: none !important; opacity: 0; }
     .view-section.active { display: block !important; opacity: 1; animation: fadeIn 0.3s ease-out; }
+    
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Squelettes et Progressions */
+    .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite linear; }
+    @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    @keyframes loadingBar { 0% { width: 0%; transform: translateX(-100%); } 50% { width: 70%; transform: translateX(0); } 100% { width: 100%; transform: translateX(100%); } }
+
+    /* Rôles et visibilité */
     .admin-only, .rh-only, .management-only { display: none !important; }
     body.role-admin .admin-only, body.role-admin .rh-only, body.role-admin .management-only { display: block !important; } 
     body.role-rh .rh-only, body.role-rh .management-only { display: block !important; }       
     body.role-manager .management-only { display: block !important; }
-    .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
-    #reader { width: 100%; border-radius: 12px; overflow: hidden; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    main header { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.85); }
-    .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite linear; }
-    @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    @keyframes progress { 0% { width: 0%; margin-left: 0; } 50% { width: 50%; margin-left: 25%; } 100% { width: 100%; margin-left: 100%; } }
-    .animate-\[progress_1\.5s_ease-in-out_infinite\] { animation: loadingBar 2s infinite ease-in-out; }
-    @keyframes loadingBar { 0% { width: 0%; transform: translateX(-100%); } 50% { width: 70%; transform: translateX(0); } 100% { width: 100%; transform: translateX(100%); } }
-</style>
 
+    /* Éléments fixes */
+    .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    main header { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(12px); background: rgba(255, 255, 255, 0.85); }
+    #reader { width: 100%; border-radius: 12px; overflow: hidden; }
+
+    /* ============================================================
+       4. BRANDING DYNAMIQUE ET COMPOSANTS
+       ============================================================ */
+    
+    /* Couleurs de marque appliquées aux éléments clés */
+    aside { background-color: var(--primary) !important; color: var(--text-on-primary) !important; }
+    .nav-btn.bg-blue-600, #btn-login, .bg-blue-600 { background-color: var(--accent) !important; color: var(--text-on-accent) !important; }
+
+    /* Correction du nom de l'entreprise (Ellipsis) */
+    .company-name-display {
+        display: inline-block;
+        max-width: 150px; 
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+
+    /* Dashboard et Header */
+    #main-scroll-container { padding-top: 1.5rem !important; }
+    #login-screen img { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+
+    /* Filtres et Chips */
+    .filter-chip { background-color: white; border-color: #e2e8f0; color: #64748b; }
+    .filter-chip:hover { border-color: #3b82f6; color: #3b82f6; }
+    .filter-chip.active-chip { background-color: var(--accent) !important; border-color: var(--accent) !important; color: var(--text-on-accent) !important; }
+    body.dark-mode .filter-chip { background-color: #1e293b; border-color: #334155; color: #94a3b8; }
+
+</style>
 
 
 
@@ -260,7 +241,14 @@ body.dark-mode .filter-chip.active-chip {
         <aside id="sidebar" class="w-72 bg-slate-900 text-slate-300 flex flex-col fixed md:relative inset-y-0 left-0 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 border-r border-slate-800">
             <div class="p-8 flex-1 overflow-y-auto">
                 <div class="flex items-center justify-between mb-10 text-white">
-                    <div class="flex items-center gap-3"><div class="p-2 bg-blue-600 rounded-lg shadow-lg"><i class="fa-solid fa-shield-halved"></i></div><span class="font-bold text-xl tracking-tighter">SIRH SECURE</span></div>
+ 
+<div class="flex items-center gap-3">
+    <div class="p-1.5 rounded-xl shadow-lg flex items-center justify-center" style="background-color: var(--accent); min-width: 40px; height: 40px;">
+        <img src="" class="app-logo-display w-7 h-7 object-contain">
+    </div>
+    <span class="font-black text-lg tracking-tighter company-name-display">SIRH SECURE</span>
+</div>
+
                     <button onclick="toggleSidebar()" class="md:hidden text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
                 </div>
                 <nav class="space-y-2">
@@ -1077,38 +1065,87 @@ body.dark-mode .filter-chip.active-chip {
 
 
 
-        // --- CONFIGURATION ---
-        const BASE_API = "https://mon-api-rh.onrender.com/api"; 
+// ==========================================
+// CONFIGURATION DE PERSONNALISATION (SAAS)
+// ==========================================
+const SIRH_CONFIG = {
+    company: {
+        name: "PROELITES",
+        logo: "https://cdn-icons-png.flaticon.com/128/13383/13383354.png",
+        supportEmail: "rh@entreprise.com"
+    },
+    theme: {
+        primary: "#0f172a",   // Couleur Sidebar
+        accent: "#2563eb",    // Couleur Boutons / Éléments actifs
+        fontFamily: "'Plus Jakarta Sans', sans-serif", // Choix de police
+        baseFontSize: "14px" // Taille de base (14px ou 16px recommandé)
+    },
 
-        const URL_LOGIN = `${BASE_API}/login`; 
-        const URL_READ = `${BASE_API}/read`; 
-        const URL_WRITE_POST = `${BASE_API}/write`; 
-        const URL_UPDATE = `${BASE_API}/update`; 
-        const URL_LOG = `${BASE_API}/log`; 
-        const URL_READ_LOGS = `${BASE_API}/read-logs`; 
-        const URL_GATEKEEPER = `${BASE_API}/gatekeeper`; 
-        const URL_BADGE_GEN = `${BASE_API}/badge`; 
-        const URL_EMPLOYEE_UPDATE = `${BASE_API}/emp-update`; 
-        const URL_CONTRACT_GENERATE = `${BASE_API}/contract-gen`;
-        const URL_UPLOAD_SIGNED_CONTRACT = `${BASE_API}/contract-upload`;
-        const URL_LEAVE_REQUEST = `${BASE_API}/leave`;  
-        const URL_CLOCK_ACTION = `${BASE_API}/clock`;
-        const URL_READ_LEAVES = `${BASE_API}/read-leaves`;
-        const URL_LEAVE_ACTION = `${BASE_API}/leave-action`;
-        // --- AJOUTER ICI ---
-        const URL_READ_CANDIDATES = `${BASE_API}/read-candidates`; 
-        const URL_CANDIDATE_ACTION = `${BASE_API}/candidate-action`;
-        const URL_READ_PAYROLL = `${BASE_API}/read-payroll`;
+    // 3. PARAMÈTRES GPS MULTI-SIÈGES
+    // Note : Cette liste pourra être remplie dynamiquement par Airtable plus tard
+    gps: {
+        enabled: true,         // Activer la vérification GPS ?
+        strictMode: true,      // Bloquer le pointage si hors zone ?
+        
+        // Liste des sièges autorisés
+        offices: [
+            { 
+                name: "Siège Principal", 
+                lat: 6.36,   // Latitude
+                lon: 2.40,   // Longitude
+                radius: 10000  // Rayon autorisé en mètres
+            },
+            { 
+                name: "Agence Nord", 
+                lat: 6.4521, 
+                lon: 2.3845, 
+                radius: 50 
+            },
+            { 
+                name: "Entrepôt Logistique", 
+                lat: 6.3500, 
+                lon: 2.5000, 
+                radius: 200 
+            }
+        ]
+    },
 
+    // 4. MODULES ACTIFS
+    features: {
+        recruitment: true,
+        payroll: true,
+        auditLogs: true
+    },
 
-        const URL_READ_FLASH = `${BASE_API}/read-flash`;
-        const URL_WRITE_FLASH = `${BASE_API}/write-flash`;
+    // 5. SERVEUR (BASE API)
+    apiBaseUrl: "https://mon-api-rh.onrender.com/api"
+};
+
+// --- GÉNÉRATION AUTOMATIQUE DES LIENS ---
+// (On utilise SIRH_CONFIG.apiBaseUrl pour ne rien changer en bas)
+const URL_LOGIN = `${SIRH_CONFIG.apiBaseUrl}/login`; 
+const URL_READ = `${SIRH_CONFIG.apiBaseUrl}/read`; 
+const URL_WRITE_POST = `${SIRH_CONFIG.apiBaseUrl}/write`; 
+const URL_UPDATE = `${SIRH_CONFIG.apiBaseUrl}/update`; 
+const URL_READ_LOGS = `${SIRH_CONFIG.apiBaseUrl}/read-logs`; 
+const URL_GATEKEEPER = `${SIRH_CONFIG.apiBaseUrl}/gatekeeper`; 
+const URL_BADGE_GEN = `${SIRH_CONFIG.apiBaseUrl}/badge`; 
+const URL_EMPLOYEE_UPDATE = `${SIRH_CONFIG.apiBaseUrl}/emp-update`; 
+const URL_CONTRACT_GENERATE = `${SIRH_CONFIG.apiBaseUrl}/contract-gen`;
+const URL_UPLOAD_SIGNED_CONTRACT = `${SIRH_CONFIG.apiBaseUrl}/contract-upload`;
+const URL_LEAVE_REQUEST = `${SIRH_CONFIG.apiBaseUrl}/leave`;  
+const URL_CLOCK_ACTION = `${SIRH_CONFIG.apiBaseUrl}/clock`;
+const URL_READ_LEAVES = `${SIRH_CONFIG.apiBaseUrl}/read-leaves`;
+const URL_LEAVE_ACTION = `${SIRH_CONFIG.apiBaseUrl}/leave-action`;
+const URL_READ_CANDIDATES = `${SIRH_CONFIG.apiBaseUrl}/read-candidates`; 
+const URL_CANDIDATE_ACTION = `${SIRH_CONFIG.apiBaseUrl}/candidate-action`;
+const URL_READ_PAYROLL = `${SIRH_CONFIG.apiBaseUrl}/read-payroll`;
+const URL_READ_FLASH = `${SIRH_CONFIG.apiBaseUrl}/read-flash`;
+const URL_WRITE_FLASH = `${SIRH_CONFIG.apiBaseUrl}/write-flash`;
 
         const SCAN_KEY = "SIGD_SECURE_2025"; 
         const URL_REDIRECT_FAILURE = "https://google.com";
 
-                // --- CONFIG SAAS (Géolocalisation dynamique) ---
-        const URL_GET_CONFIG = `${BASE_API}/read-config`; // Nouvelle route à créer dans Make
         // SON DE NOTIFICATION (Bip professionnel)
         const NOTIF_SOUND = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
         let currentView = 'dash'; 
@@ -1156,6 +1193,7 @@ body.dark-mode .filter-chip.active-chip {
 
  // --- AUTO-RECONNEXION AVEC LOADER ---
         window.addEventListener('DOMContentLoaded', () => {
+            applyBranding(); 
             const session = localStorage.getItem('sirh_user_session');
             const loader = document.getElementById('initial-loader');
 
@@ -1471,6 +1509,7 @@ async function handleLogin(e) {
 
 function setSession(n, r, id){ 
             currentUser = { nom: n, role: r, id: id }; 
+            applyBranding();
             document.getElementById('login-screen').classList.add('hidden'); 
             document.getElementById('app-layout').classList.remove('hidden'); 
             document.getElementById('name-display').innerText = n; 
@@ -1520,6 +1559,12 @@ function setSession(n, r, id){
                         console.warn("⚠️ Impossible de charger la config GPS (Mode par défaut)", e);
                     }
                 }
+
+
+
+
+
+
 
  async function refreshAllData(force = false) {
     const now = Date.now();
@@ -1946,102 +1991,114 @@ function renderData() {
 
 
 
+        
 
 
 
 
 
 
-                 async function handleClockInOut() {
+        
+
+ async function handleClockInOut() {
                     const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
                     const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
                     
                     let locationCoords = "Non détecté";
                     let dist = 0;
-                    
+                    let userIp = "Inconnue";
+                    let deviceType = navigator.userAgentData ? navigator.userAgentData.platform : navigator.platform;
+
                     // 1. Feedback visuel immédiat
                     Swal.fire({ 
-                        title: 'Géolocalisation...', 
-                        text: 'Vérification de la zone autorisée...', 
+                        title: 'Sécurisation du pointage...', 
+                        text: 'Vérification GPS, IP et Appareil...', 
                         didOpen: () => Swal.showLoading(), 
                         allowOutsideClick: false 
                     });
 
                     try {
-                        // 2. Récupération Position Téléphone
-                        const pos = await new Promise((resolve, reject) => {
+                        // 2. RÉCUPÉRATION IP & INFOS SIMULTANÉES
+                        const ipPromise = fetch('https://api.ipify.org?format=json').then(r => r.json()).catch(() => ({ip: "Erreur IP"}));
+                        
+                        // 3. RÉCUPÉRATION POSITION GPS
+                        const posPromise = new Promise((resolve, reject) => {
                             navigator.geolocation.getCurrentPosition(resolve, reject, {
-                                enableHighAccuracy: true, 
-                                timeout: 20000, 
-                                maximumAge: 0
+                                enableHighAccuracy: true, timeout: 15000, maximumAge: 0
                             });
                         });
 
+                        const [ipData, pos] = await Promise.all([ipPromise, posPromise]);
+                        
+                        userIp = ipData.ip;
                         const userLat = pos.coords.latitude;
                         const userLon = pos.coords.longitude;
                         locationCoords = `${userLat},${userLon}`;
 
-                        // 3. VÉRIFICATION DE LA ZONE (Si la config SaaS est chargée)
-                        // On vérifie si la variable globale companyConfig contient des coordonnées
-                        if (typeof companyConfig !== 'undefined' && companyConfig.latitude && companyConfig.longitude) {
-                            
-                            // Calcul de la distance
-                            dist = getDistance(userLat, userLon, companyConfig.latitude, companyConfig.longitude);
-                            
-                            console.log(`📏 Distance: ${Math.round(dist)}m (Max: ${companyConfig.radius}m)`);
+                        // 4. VÉRIFICATION MULTI-SIÈGES (Basée sur SIRH_CONFIG)
+                        let isInsideAnyOffice = false;
+                        let nearestOfficeName = "";
+                        let minDistanceFound = Infinity;
 
-                            // Si la validation stricte est active et qu'on est trop loin
-                            if (companyConfig.geo_required && dist > companyConfig.radius) {
+                        if (SIRH_CONFIG.gps.enabled) {
+                            SIRH_CONFIG.gps.offices.forEach(office => {
+                                const d = getDistance(userLat, userLon, office.lat, office.lon);
+                                if (d <= office.radius) {
+                                    isInsideAnyOffice = true;
+                                    dist = d;
+                                    nearestOfficeName = office.name;
+                                }
+                                if (d < minDistanceFound) {
+                                    minDistanceFound = d;
+                                    if(!isInsideAnyOffice) nearestOfficeName = office.name;
+                                }
+                            });
+
+                            if (SIRH_CONFIG.gps.strictMode && !isInsideAnyOffice) {
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Hors Zone',
-                                    html: `Vous êtes à <b>${Math.round(dist)} mètres</b> du bureau.<br>Le pointage est autorisé uniquement dans un rayon de ${companyConfig.radius}m.`,
+                                    title: 'Zone non autorisée',
+                                    html: `Vous êtes à <b>${Math.round(minDistanceFound)}m</b> de <b>${nearestOfficeName}</b>.<br>Pointage impossible ici.`,
                                     confirmButtonColor: '#ef4444'
                                 });
-                                return; // ⛔ STOP : On arrête tout ici, rien n'est envoyé.
+                                return; 
                             }
+                            dist = isInsideAnyOffice ? Math.round(dist) : Math.round(minDistanceFound);
                         }
 
                     } catch(e) { 
-                        console.warn("Erreur GPS:", e.message);
-                        // Si la config exige le GPS mais qu'on ne peut pas le récupérer
-                        if (typeof companyConfig !== 'undefined' && companyConfig.geo_required) {
-                            return Swal.fire('GPS Requis', 'Impossible de valider votre position. Activez le GPS et réessayez.', 'warning');
+                        console.warn("Erreur identification:", e.message);
+                        if (SIRH_CONFIG.gps.enabled && SIRH_CONFIG.gps.strictMode) {
+                            return Swal.fire('Sécurité GPS', 'Activez votre localisation pour pointer.', 'warning');
                         }
-                        locationCoords = "Erreur/Désactivé";
                     }
 
-                    // 4. Préparation des données (Payload)
+                    // 5. Préparation des données (Payload enrichi)
                     const payload = {
                         id: currentUser.id, 
                         nom: currentUser.nom, 
                         action: action, 
                         time: new Date().toISOString(), 
                         gps: locationCoords, 
-                        distance_bureau: Math.round(dist), // On ajoute la distance pour les logs
+                        distance_bureau: dist,
+                        ip: userIp,
+                        device: navigator.userAgent, // Envoie le détail complet au serveur
                         agent: currentUser.nom
                     };
 
-                    // 5. Gestion Hors-Ligne (Stockage local)
+                    // 6. Gestion Hors-Ligne
                     if (!navigator.onLine) {
                         const queue = JSON.parse(localStorage.getItem('sirh_offline_queue') || '[]');
                         queue.push(payload);
                         localStorage.setItem('sirh_offline_queue', JSON.stringify(queue));
-
                         const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
                         localStorage.setItem('clock_status_' + currentUser.id, newStatus);
                         updateClockUI(newStatus === 'IN');
-                        document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString() + " (En attente réseau)";
-
-                        Swal.fire({ 
-                            icon: 'info', title: 'Mode Hors-Ligne', 
-                            text: 'Pointage enregistré. Il sera envoyé dès le retour de la connexion.',
-                            confirmButtonColor: '#f59e0b'
-                        });
+                        Swal.fire({ icon: 'info', title: 'Mode Hors-Ligne', text: 'Pointage sécurisé en local.' });
                         return;
                     }
 
-                    // 6. Envoi au Serveur (Mode Connecté)
+                    // 7. Envoi au Serveur
                     try {
                         const response = await secureFetch(URL_CLOCK_ACTION, { 
                             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
@@ -2051,23 +2108,18 @@ function renderData() {
                             const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
                             localStorage.setItem('clock_status_' + currentUser.id, newStatus);
                             updateClockUI(newStatus === 'IN');
-                            document.getElementById('clock-last-action').innerText = "Dernière action : " + new Date().toLocaleTimeString();
-                            
-                            // Message de succès avec la distance affichée
-                            const distMsg = (typeof companyConfig !== 'undefined' && companyConfig.latitude) ? `(à ${Math.round(dist)}m du bureau)` : "";
                             
                             Swal.fire({ 
                                 icon: 'success', 
                                 title: action === 'CLOCK_IN' ? 'Bienvenue !' : 'Au revoir !', 
-                                text: `Pointage validé ${distMsg}`,
-                                timer: 2000, showConfirmButton: false 
+                                html: `<div class="text-xs text-slate-500 mt-2">Identifié via IP: ${userIp}<br>Appareil: ${deviceType}</div>`,
+                                timer: 3000, showConfirmButton: false 
                             });
                         }
                     } catch (e) { 
                         Swal.fire('Echec', 'Erreur serveur : ' + e.message, 'error'); 
                     }
                 }
-
 
 
 
@@ -4267,6 +4319,66 @@ function applySmartFilter(filterType) {
 
     renderData(); // On redessine le tableau
 }
+
+
+
+
+
+
+// Fonction magique pour décider si on écrit en blanc ou en noir sur une couleur
+function getContrastColor(hexColor) {
+    // Nettoyer le hex
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    // Calcul de la luminosité (formule standard)
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#1e293b' : '#ffffff'; // Si clair -> texte noir, si sombre -> texte blanc
+}
+
+
+function applyBranding() {
+    const theme = SIRH_CONFIG.theme;
+
+    // 1. Calcul des couleurs de texte intelligentes
+    const textOnPrimary = getContrastColor(theme.primary);
+    const textOnAccent = getContrastColor(theme.accent);
+
+    // 2. Application des variables CSS
+    const root = document.documentElement;
+    root.style.setProperty('--primary', theme.primary);
+    root.style.setProperty('--accent', theme.accent);
+    root.style.setProperty('--font-main', theme.fontFamily);
+    root.style.setProperty('--base-size', theme.baseFontSize);
+    root.style.setProperty('--text-on-primary', textOnPrimary);
+    root.style.setProperty('--text-on-accent', textOnAccent);
+
+    // 3. Sidebar : Nom et Logo
+    const nameEls = document.querySelectorAll('.company-name-display');
+    nameEls.forEach(el => {
+        el.innerText = SIRH_CONFIG.company.name;
+        el.style.color = textOnPrimary; // Le nom s'adapte à la couleur de fond
+    });
+
+    const logoSidebar = document.querySelector('.app-logo-display');
+    if(logoSidebar) logoSidebar.src = SIRH_CONFIG.company.logo;
+
+    // 4. Écran de Connexion
+    const loginTitle = document.querySelector('#login-screen h1');
+    if(loginTitle) loginTitle.innerText = SIRH_CONFIG.company.name;
+    
+    const loginIconContainer = document.querySelector('#login-screen .inline-flex');
+    if(loginIconContainer && SIRH_CONFIG.company.logo) {
+        loginIconContainer.innerHTML = `<img src="${SIRH_CONFIG.company.logo}" class="w-14 h-14 object-contain">`;
+    }
+
+    // 5. Titre du navigateur
+    document.title = SIRH_CONFIG.company.name + " | Portail RH";
+
+    console.log(`🎨 Branding intelligent appliqué (${textOnAccent} sur ${theme.accent})`);
+}
+
 </script>
 
 
