@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -288,7 +288,9 @@ main:hover ::-webkit-scrollbar-thumb {
                     <div id="avatar-display" class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold uppercase shadow-lg">?</div>
                     <div class="overflow-hidden"><p id="name-display" class="text-sm font-bold text-white truncate">User</p><p id="role-display" class="text-[10px] uppercase font-black text-blue-400">Rôle</p></div>
                 </div>
-                
+                <button id="install-button" class="hidden w-full flex items-center justify-center gap-2 p-3 mb-2 text-xs font-bold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-xl transition-all uppercase tracking-tighter border border-emerald-500/30">
+                    <i class="fa-solid fa-download"></i> Installer l'App
+                </button>
                 <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 p-3 text-xs font-bold text-red-400 hover:bg-red-500/10 rounded-xl transition-all uppercase tracking-tighter"><i class="fa-solid fa-power-off"></i> Déconnexion</button>           
             </div>
         </aside>
@@ -1091,9 +1093,9 @@ const SIRH_CONFIG = {
         offices: [
             { 
                 name: "Siège Principal", 
-                lat: 6.390304,   // Latitude
+                lat: 6.390304,   // Latitude 
                 lon: 2.383381,   // Longitude
-                radius: 200  // Rayon autorisé en mètres
+                radius: 10000  // Rayon autorisé en mètres
             },
             { 
                 name: "Agence Nord", 
@@ -4378,6 +4380,42 @@ function applyBranding() {
 
     console.log(`🎨 Branding intelligent appliqué (${textOnAccent} sur ${theme.accent})`);
 }
+
+
+
+
+
+
+let deferredPrompt;
+const installBtn = document.getElementById('install-button');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Empêche Chrome d'afficher le pop-up automatique
+    e.preventDefault();
+    // Garde l'événement pour plus tard
+    deferredPrompt = e;
+    // Affiche notre bouton personnalisé
+    installBtn.classList.remove('hidden');
+
+    installBtn.addEventListener('click', async () => {
+        // Affiche le vrai pop-up d'installation
+        deferredPrompt.prompt();
+        // Attend la réponse de l'utilisateur
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('L\'utilisateur a installé l\'app');
+        }
+        // On cache le bouton car l'installation est faite ou demandée
+        installBtn.classList.add('hidden');
+        deferredPrompt = null;
+    });
+});
+
+// Cache le bouton si l'app est déjà installée
+window.addEventListener('appinstalled', () => {
+    installBtn.classList.add('hidden');
+    deferredPrompt = null;
+});
 
 </script>
 
