@@ -1627,7 +1627,7 @@ async function handleLogin(e) {
                     const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
                     Toast.fire({icon: 'success', title: 'Bienvenue ' + userData.nom});
                     
-                    setSession(userData.nom, userData.role, userData.id); 
+                   await setSession(userData.nom, userData.role, userData.id); 
                 } else { 
                     Swal.fire('Refusé', 'Identifiant ou mot de passe incorrect', 'error'); 
                 }
@@ -1660,41 +1660,54 @@ async function handleLogin(e) {
 
 
 
+  async function setSession(n, r, id){ 
+    currentUser = { nom: n, role: r, id: id }; 
+    applyBranding();
+    
+    // 1. On cache l'écran de connexion
+    document.getElementById('login-screen').classList.add('hidden'); 
+    
+    // 2. On s'assure que le LOADER est visible pendant le chargement des données
+    const loader = document.getElementById('initial-loader');
+    if(loader) loader.classList.remove('hidden');
 
+    document.getElementById('name-display').innerText = n; 
+    document.getElementById('role-display').innerText = r; 
+    document.getElementById('avatar-display').innerText = n[0]; 
+    document.body.className = "text-slate-900 overflow-hidden h-screen w-screen role-" + r.toLowerCase(); 
+    
+    // 3. CHARGEMENT BLOQUANT : On attend que les données soient là
+    try {
+        await refreshAllData(true); 
+    } catch(e) {
+        console.warn("Données chargées depuis le cache ou erreur:", e);
+    }
 
+    // Gestion de la vue par défaut
+    if(r === 'EMPLOYEE') { 
+        document.getElementById('nav-admin-section').style.display='none';
+        document.getElementById('global-search-container').style.display='none';
+        switchView('my-profile'); 
+    } else { 
+        switchView('dash'); 
+    }
 
-
-
-function setSession(n, r, id){ 
-            currentUser = { nom: n, role: r, id: id }; 
-            applyBranding();
-            document.getElementById('login-screen').classList.add('hidden'); 
-            document.getElementById('app-layout').classList.remove('hidden'); 
-            document.getElementById('name-display').innerText = n; 
-            document.getElementById('role-display').innerText = r; 
-            document.getElementById('avatar-display').innerText = n[0]; 
-            document.body.className = "text-slate-900 overflow-hidden h-screen w-screen role-" + r.toLowerCase(); 
-            
-            // Gestion de la vue par défaut
-            if(r === 'EMPLOYEE') { 
-                document.getElementById('nav-admin-section').style.display='none';
-                document.getElementById('global-search-container').style.display='none';
-                switchView('my-profile'); 
-            } else { 
-                switchView('dash'); 
-            }
-
-            // AFFICHAGE DES SKELETONS (Chargement visuel)
-            const skeletonRow = `<tr class="border-b"><td class="p-4 flex gap-3 items-center"><div class="w-10 h-10 rounded-full skeleton"></div><div class="space-y-2"><div class="h-3 w-24 rounded skeleton"></div><div class="h-2 w-16 rounded skeleton"></div></div></td><td class="p-4"><div class="h-3 w-32 rounded skeleton"></div></td><td class="p-4"><div class="h-6 w-16 rounded-lg skeleton"></div></td><td class="p-4"></td></tr>`;
-            document.getElementById('full-body').innerHTML = Array(6).fill(skeletonRow).join('');
-            
-            // --- LANCEMENT DE LA SYNCHRO GLOBALE ---
-            // Au lieu de fetchData(false), on lance tout pour être sûr d'avoir Congés, Candidats, etc.
-            refreshAllData();
-            requestNotificationPermission();
-            initDarkMode();
+    // AFFICHAGE DES SKELETONS (On garde pour la structure du tableau employés)
+    const skeletonRow = `<tr class="border-b"><td class="p-4 flex gap-3 items-center"><div class="w-10 h-10 rounded-full skeleton"></div><div class="space-y-2"><div class="h-3 w-24 rounded skeleton"></div><div class="h-2 w-16 rounded skeleton"></div></div></td><td class="p-4"><div class="h-3 w-32 rounded skeleton"></div></td><td class="p-4"><div class="h-6 w-16 rounded-lg skeleton"></div></td><td class="p-4"></td></tr>`;
+    document.getElementById('full-body').innerHTML = Array(6).fill(skeletonRow).join('');
+    
+    // 4. RÉVÉLATION : Tout est chargé, on affiche l'interface et on cache le loader en douceur
+    setTimeout(() => {
+        if(loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.classList.add('hidden'), 500);
         }
-
+        document.getElementById('app-layout').classList.remove('hidden'); 
+        
+        requestNotificationPermission();
+        initDarkMode();
+    }, 500); // Petit délai pour fluidité
+}
 
 
 
@@ -1721,72 +1734,55 @@ function setSession(n, r, id){
 
 
 
-
-
-
- async function refreshAllData(force = false) {
+async function refreshAllData(force = false) {
     const now = Date.now();
     const icon = document.getElementById('refresh-icon'); 
     if(icon) icon.classList.add('fa-spin');
 
-    // On n'affiche le message de synchronisation que si c'est une action forcée
-    const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false});
-    if(force) Toast.fire({icon: 'info', title: 'Actualisation intelligente...'});
+    if(force) {
+        const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false});
+        Toast.fire({icon: 'info', title: 'Actualisation...'});
+    }
 
     try {
         const tasks = [];
 
-        // --- 1. FONCTIONS GLOBALES (Légères) ---
-        // GPS (seulement si nécessaire)
+        // 1. GPS & Flash (inchangé)
         if (force || (now - lastFetchTimes.global > 3600000)) {
-            tasks.push(fetchCompanyConfig().then(() => lastFetchTimes.global = now).catch(e => console.warn("GPS ignoré", e)));
+            tasks.push(fetchCompanyConfig().catch(e => console.warn("GPS ignoré", e)));
         }
-        // Flash Info (Utile partout pour les alertes)
-        tasks.push(fetchFlashMessage().then(() => lastFetchTimes.flash = now).catch(e => console.warn("Flash ignoré", e)));
+        tasks.push(fetchFlashMessage().catch(e => console.warn("Flash ignoré", e)));
 
-
-        // --- 2. ACTUALISATION CIBLÉE SELON LA VUE ---
-        
-        if (currentView === 'dash') {
-            // DASHBOARD : Besoin des Employés (pour les stats) et des Congés (pour les graphiques)
-            // On recharge les employés seulement si > 5 min ou forcé
-            if (force || (now - lastFetchTimes.employees > REFRESH_THRESHOLD)) {
-                await fetchData(force); 
-                lastFetchTimes.employees = now;
-            }
-            // On recharge les congés si manager
-            if (currentUser.role !== 'EMPLOYEE') {
-                tasks.push(fetchLeaveRequests().then(() => lastFetchTimes.leaves = now));
-            }
-        } 
-        else if (currentView === 'employees' || currentView === 'add-new') {
-            // VUE EMPLOYÉS : On force la mise à jour de la liste employés
-            await fetchData(true);
+        // --- CORRECTION MAJEURE ICI ---
+        // Avant, on ne chargeait pas si on était sur 'my-profile'.
+        // Maintenant, si la liste 'employees' est vide, ON FORCE LE CHARGEMENT.
+        // C'est ça qui va déclencher le Webhook pour l'employé.
+        if (force || employees.length === 0 || (now - lastFetchTimes.employees > REFRESH_THRESHOLD)) {
+            // On attend que les données soient là avant de continuer
+            await fetchData(force); 
             lastFetchTimes.employees = now;
         }
-        else if (currentView === 'recruitment') {
-            // VUE RECRUTEMENT : Uniquement les candidats (Gros gain de crédits !)
-            tasks.push(fetchCandidates().then(() => lastFetchTimes.candidates = now));
+
+        // 3. Autres chargements spécifiques (inchangé)
+        if (currentView === 'recruitment') tasks.push(fetchCandidates());
+        if (currentView === 'logs') tasks.push(fetchLogs());
+        if (currentView === 'my-profile') {
+            loadMyProfile(); // On recharge l'affichage local
+            tasks.push(fetchPayrollData()); // On va chercher les bulletins
         }
-        else if (currentView === 'logs') {
-            // VUE LOGS : Uniquement les logs
-            tasks.push(fetchLogs());
-        }
-        else if (currentView === 'my-profile') {
-            // VUE PROFIL : Mes infos et ma paie
-            loadMyProfile(); 
-            tasks.push(fetchPayrollData().then(() => lastFetchTimes.payroll = now));
+        if (currentUser.role !== 'EMPLOYEE') {
+            tasks.push(fetchLeaveRequests());
         }
 
-        // Exécution des tâches ciblées
         await Promise.all(tasks);
+        
+        // Mise à jour finale de l'interface
+        if (currentView === 'dash') renderCharts();
 
-        // Mise à jour des graphiques uniquement si on est sur le dashboard (pour éviter les erreurs)
-        if (currentView === 'dash') {
-            renderCharts();
+        if(force) {
+             const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
+             Toast.fire({icon: 'success', title: 'Données à jour !'});
         }
-
-        if(force) Toast.fire({icon: 'success', title: 'Données à jour !', timer: 2000});
 
     } catch (error) {
         console.error("Erreur Sync:", error);
@@ -1794,7 +1790,6 @@ function setSession(n, r, id){
         if(icon) setTimeout(() => icon.classList.remove('fa-spin'), 500);
     }
 }
-
 
 
 
@@ -1841,88 +1836,90 @@ function setSession(n, r, id){
 
 
 
+async function fetchData(forceUpdate = false) {
+    console.log("🚀 fetchData lancée. Force:", forceUpdate, "Role:", currentUser.role);
 
+    const CACHE_KEY = 'sirh_data_v1';
+    
+    // 1. On construit l'URL
+    let fetchUrl = `${URL_READ}?agent=${encodeURIComponent(currentUser.nom)}`;
 
+    // Si c'est un employé, on ajoute son ID pour aider Make à filtrer (optionnel mais recommandé)
+    if (currentUser.role === 'EMPLOYEE') {
+        fetchUrl += `&target_id=${encodeURIComponent(currentUser.id)}`;
+    }
 
+    try {
+        console.log("📞 Appel API vers :", fetchUrl);
+        
+        // 2. Appel Réseau
+        const r = await secureFetch(fetchUrl);
+        const d = await r.json();
 
+        console.log("✅ Réponse reçue :", d.length, "enregistrements");
 
-async function fetchData(forceUpdate = false){ 
-            const CACHE_KEY = 'sirh_data_v1';
-            const CACHE_TIME = 1000 * 60 * 60; 
+        // 3. Mapping (Nettoyage des données)
+        employees = d.map(x => {
+            const getRawLink = (l) => {
+                 if (!l) return '';
+                 if (Array.isArray(l) && l.length > 0) return l[0].url || l[0];
+                 if (typeof l === 'object' && l.url) return l.url;
+                 return String(l);
+            };
 
-            if (!forceUpdate) {
-                const cached = localStorage.getItem(CACHE_KEY);
-                const cachedTime = localStorage.getItem(CACHE_KEY + '_time');
-                if (cached && cachedTime && (Date.now() - cachedTime < CACHE_TIME)) {
-                    employees = JSON.parse(cached);
-                    renderData(); loadMyProfile(); renderCharts();
-                    return; 
-                }
-            }
+            return { 
+                id: x.employee_id || x.id, 
+                nom: x.nom || x.Nom, 
+                date: x.date_embauche || x.date, 
+                poste: x.poste || x.Poste, 
+                dept: x['département'] || x.departement || "Non défini", 
+                limit: x.type_contrat || 365, 
+                photo: x.photo || x.Photo || '', 
+                statut: x.Statut || 'Actif', 
+                email: x.email, 
+                telephone: x.telephone || x['téléphone'], 
+                adresse: x.adresse, 
+                date_naissance: x.date_naissance, 
+                role: x.role || x.Role || 'EMPLOYEE',
+                doc: getRawLink(x.contrat_pdf || x.doc),
+                contract_status: x.contract_status || 'Non signé',
+                cv_link: getRawLink(x.cv_link),
+                id_card_link: getRawLink(x.id_card_link),
+                diploma_link: getRawLink(x.diploma_link),
+                attestation_link: getRawLink(x.attestation_link || x.attestation),
+                lm_link: getRawLink(x.lm_link)
+            };
+        });
 
-            try{ 
-                let fetchUrl = `${URL_READ}?agent=${encodeURIComponent(currentUser.nom)}`;
-                const r = await secureFetch(fetchUrl); 
-                const d = await r.json(); 
-                
-                employees = d.map(x => {
-                    const getRawLink = (l) => {
-                         if (!l) return '';
-                         if (Array.isArray(l) && l.length > 0) return l[0].url || l[0];
-                         if (typeof l === 'object' && l.url) return l.url;
-                         return String(l);
-                    };
+        // 4. Sauvegarde Cache
+        localStorage.setItem(CACHE_KEY, JSON.stringify(employees));
+        localStorage.setItem(CACHE_KEY + '_time', Date.now());
 
-                    return { 
-                        id: x.employee_id || x.id, 
-                        nom: x.nom || x.Nom, 
-                        date: x.date_embauche || x.date, 
-                        poste: x.poste || x.Poste, 
-                        dept: x['département'] || x.departement || "Non défini", 
-                        limit: x.type_contrat || 365, 
-                        photo: x.photo || x.Photo || '', 
-                        statut: x.Statut || 'Actif', 
-                        email: x.email, 
-                        telephone: x.telephone || x['téléphone'], 
-                        adresse: x.adresse, 
-                        date_naissance: x.date_naissance, 
-                        role: x.role || x.Role || 'EMPLOYEE',
-                        doc: getRawLink(x.contrat_pdf || x.doc),
-                        contract_status: x.contract_status || 'Non signé',
-                        cv_link: getRawLink(x.cv_link),
-                        id_card_link: getRawLink(x.id_card_link),
-                        diploma_link: getRawLink(x.diploma_link),
-                        attestation_link: getRawLink(x.attestation_link || x.attestation),
-                        lm_link: getRawLink(x.lm_link)
-                    };
-                });
+        // 5. Mise à jour Interface
+        renderData();
+        loadMyProfile(); // IMPORTANT : On recharge le profil maintenant qu'on a les données
+        renderCharts();
 
-                localStorage.setItem(CACHE_KEY, JSON.stringify(employees));
-                localStorage.setItem(CACHE_KEY + '_time', Date.now());
-                
-                renderData(); loadMyProfile(); renderCharts(); fetchLeaveRequests(); 
-
-            } catch(e){ 
-                console.error("Erreur Fetch:", e); 
-                let diagnostic = "Erreur Système";
-                if (!navigator.onLine) diagnostic = "Connexion Internet coupée";
-                else if (e.message.includes("403") || e.message.includes("429")) diagnostic = "Quota Make.com épuisé (Crédits)";
-                else if (e.message.includes("500")) diagnostic = "Service indisponible (Erreur Serveur)";
-
-                const cached = localStorage.getItem(CACHE_KEY);
-                if(cached) {
-                    employees = JSON.parse(cached);
-                    renderData(); loadMyProfile(); renderCharts();
-                    const Toast = Swal.mixin({toast: true, position: 'bottom-end', showConfirmButton: false, timer: 5000});
-                    Toast.fire({ icon: 'warning', title: diagnostic, text: 'Données locales affichées.' });
-                } else { 
-                    Swal.fire('Erreur Critique', diagnostic, 'error'); 
-                }
-            } 
+        // 6. Si Manager, on charge les congés
+        if (currentUser.role !== 'EMPLOYEE') {
+            fetchLeaveRequests();
         }
 
-
-
+    } catch (e) {
+        console.error("❌ ERREUR FETCH:", e);
+        
+        // En cas d'erreur, on essaie quand même d'afficher le cache si dispo
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+            console.log("⚠️ Utilisation du cache de secours");
+            employees = JSON.parse(cached);
+            renderData();
+            loadMyProfile();
+        } else {
+            Swal.fire('Erreur Connexion', 'Impossible de charger vos informations.', 'error');
+        }
+    }
+}
          
 
 
@@ -2429,44 +2426,72 @@ function getDriveId(link) {
 
 
 
-
 function loadMyProfile() {
-    // 1. Sécurité : Si la liste est vide, on arrête
+    console.log("🔍 --- DÉBUT DEBUG PROFIL ---");
+    console.log("👤 Utilisateur connecté :", currentUser);
+    console.log("📋 Données reçues (Employees) :", employees);
+
+    // 1. Sécurité : Si la liste est vide
     if (!employees || employees.length === 0) {
-        console.warn("Liste employés vide, impossible de charger le profil.");
+        console.warn("⚠️ Liste vide. En attente du chargement...");
         return;
     }
 
-    // 2. Recherche Intelligente (Smart Matching)
-    const cleanUser = currentUser.nom.toLowerCase().replace(/[\.-_]/g, ' ').trim();
+    let myData = null;
 
-    let myData = employees.find(e => {
-        const cleanEmp = e.nom.toLowerCase().replace(/[\.-_]/g, ' ').trim();
-        return cleanEmp.includes(cleanUser) || cleanUser.includes(cleanEmp);
-    });
-
-    // 3. Fallback : Si on ne trouve pas par nom, on cherche par ID si disponible
-    if (!myData && currentUser.id) {
-        myData = employees.find(e => e.id === currentUser.id);
-    }
-
-    // Si toujours rien trouvé
+    // --- TENTATIVE 1 : LE COUP DE POKER (Si 1 seul résultat, on le prend) ---
+    // Si Make a renvoyé un seul résultat (filtrage ID), c'est forcément le bon.
+    if (employees.length === 1) {
+        console.log("✅ Une seule fiche trouvée, sélection automatique.");
+        myData = employees[0];
+    } 
+    
+    // --- TENTATIVE 2 : PAR ID (Le plus fiable) ---
     if (!myData) {
-        console.error("Profil introuvable pour :", currentUser.nom);
-        return;
+        // On compare l'ID stocké avec l'ID du tableau (en texte pour éviter les bugs de type)
+        myData = employees.find(e => String(e.id) === String(currentUser.id));
+        if(myData) console.log("✅ Trouvé par ID exact.");
+    }
+
+    // --- TENTATIVE 3 : PAR NOM (Si l'ID échoue, ex: RecordID vs Matricule) ---
+    if (!myData) {
+        // Nettoyage des noms (minuscule, sans accents, sans espaces inutiles)
+        const normalize = (s) => String(s || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const searchName = normalize(currentUser.nom);
+        
+        myData = employees.find(e => {
+            const empName = normalize(e.nom);
+            return empName.includes(searchName) || searchName.includes(empName);
+        });
+        if(myData) console.log("✅ Trouvé par correspondance de Nom.");
+    }
+
+    // --- RÉSULTAT FINAL ---
+    if (!myData) {
+        console.error("❌ ÉCHEC TOTAL : Impossible de lier l'utilisateur aux données.");
+        console.log("👉 Vérifiez que l'ID ou le Nom correspond entre le Login et Airtable.");
+        // Pour éviter l'écran blanc, on affiche quand même le premier si dispo (mode dégradé)
+        if(employees.length > 0) {
+            console.warn("⚠️ Affichage forcé du premier élément disponible.");
+            myData = employees[0];
+        } else {
+            return;
+        }
     }
     
-    // --- Remplissage de l'interface ---
-    document.getElementById('emp-name').innerText = myData.nom; 
-    document.getElementById('emp-job').innerText = myData.poste;
+    // --- REMPLISSAGE DE L'INTERFACE ---
+    console.log("📝 Remplissage avec :", myData.nom);
+
+    document.getElementById('emp-name').innerText = myData.nom || "Utilisateur"; 
+    document.getElementById('emp-job').innerText = myData.poste || "Poste non défini";
     
-    // --- Mise à jour du nom et de l'initiale en bas à gauche (Sidebar) ---
+    // Sidebar
     const nameDisplay = document.getElementById('name-display');
     const avatarDisplay = document.getElementById('avatar-display');
-    if (nameDisplay) nameDisplay.innerText = myData.nom;
-    if (avatarDisplay) avatarDisplay.innerText = myData.nom.charAt(0).toUpperCase();
+    if (nameDisplay) nameDisplay.innerText = myData.nom || currentUser.nom;
+    if (avatarDisplay) avatarDisplay.innerText = (myData.nom || currentUser.nom).charAt(0).toUpperCase();
     
-    // Gestion Photo
+    // Photo
     const photoEl = document.getElementById('emp-photo-real');
     const avatarEl = document.getElementById('emp-avatar');
     
@@ -2477,10 +2502,10 @@ function loadMyProfile() {
     } else {
         photoEl.classList.add('hidden'); 
         avatarEl.classList.remove('hidden');
-        avatarEl.innerText = myData.nom.charAt(0).toUpperCase();
+        avatarEl.innerText = (myData.nom || "U").charAt(0).toUpperCase();
     }
 
-    // Gestion Dates
+    // Dates
     if(myData.date) { 
         let sD = parseDateSmart(myData.date); 
         document.getElementById('emp-start-date').innerText = sD.toLocaleDateString('fr-FR'); 
@@ -2489,102 +2514,63 @@ function loadMyProfile() {
         document.getElementById('emp-end-date').innerText = eD.toLocaleDateString('fr-FR'); 
     }
 
-    // Remplissage formulaires
+    // Formulaires
     document.getElementById('emp-email').value = myData.email || ""; 
     document.getElementById('emp-phone').value = myData.telephone || ""; 
     document.getElementById('emp-address').value = myData.adresse || ""; 
     document.getElementById('emp-dob').value = convertToInputDate(myData.date_naissance); 
     
-    // --- GESTION DES DOCUMENTS (MODE GRILLE + VOIR PLUS) ---
+    // Documents
     const dC = document.getElementById('doc-container'); 
-    dC.innerHTML = '';
+    if (dC) {
+        dC.innerHTML = '';
+        const allDocs = [ 
+            { label: 'Contrat Actuel', link: myData.doc, icon: 'fa-file-signature', color: 'blue', key: 'contrat' }, 
+            { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo', key: 'cv' }, 
+            { label: 'Lettre Motivation', link: myData.lm_link, icon: 'fa-envelope-open-text', color: 'pink', key: 'lm' },
+            { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate', key: 'id_card' }, 
+            { label: 'Diplômes/Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald', key: 'diploma' },
+            { label: 'Attestations', link: myData.attestation_link, icon: 'fa-file-invoice', color: 'orange', key: 'attestation' } 
+        ];
 
-    const allDocs = [ 
-        { label: 'Contrat Actuel', link: myData.doc, icon: 'fa-file-signature', color: 'blue', key: 'contrat' }, 
-        { label: 'Curriculum Vitae', link: myData.cv_link, icon: 'fa-file-pdf', color: 'indigo', key: 'cv' }, 
-        { label: 'Lettre Motivation', link: myData.lm_link, icon: 'fa-envelope-open-text', color: 'pink', key: 'lm' },
-        { label: 'Pièce d\'Identité', link: myData.id_card_link, icon: 'fa-id-card', color: 'slate', key: 'id_card' }, 
-        { label: 'Diplômes/Certifs', link: myData.diploma_link, icon: 'fa-graduation-cap', color: 'emerald', key: 'diploma' },
-        { label: 'Attestations', link: myData.attestation_link, icon: 'fa-file-invoice', color: 'orange', key: 'attestation' } 
-    ];
+        const VISIBLE_LIMIT = 4;
+        let gridHtml = '<div class="grid grid-cols-1 md:grid-cols-4 gap-4">'; 
 
-    // CONFIGURATION GRILLE
-    const VISIBLE_LIMIT = 4; // Nombre de documents visibles avant "Voir plus"
-    let gridHtml = '<div class="grid grid-cols-1 md:grid-cols-4 gap-4">'; // 1 col sur mobile, 4 sur PC
+        allDocs.forEach((doc, index) => {
+            const hasLink = doc.link && doc.link.length > 5;
+            const safeLabel = doc.label.replace(/'/g, "\\'");
+            const hiddenClass = index >= VISIBLE_LIMIT ? 'hidden more-docs' : '';
 
-    allDocs.forEach((doc, index) => {
-        const hasLink = doc.link && doc.link.length > 5;
-        const safeLabel = doc.label.replace(/'/g, "\\'");
-        
-        // Cache les éléments qui dépassent la limite
-        const hiddenClass = index >= VISIBLE_LIMIT ? 'hidden more-docs' : '';
-
-        gridHtml += `
-            <div class="${hiddenClass} flex flex-col justify-between p-4 border border-slate-100 bg-white rounded-2xl hover:shadow-md transition-all group h-full">
-                
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="bg-${doc.color}-50 text-${doc.color}-600 p-3 rounded-xl shrink-0">
-                        <i class="fa-solid ${doc.icon} text-lg"></i>
+            gridHtml += `
+                <div class="${hiddenClass} flex flex-col justify-between p-4 border border-slate-100 bg-white rounded-2xl hover:shadow-md transition-all group h-full">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-${doc.color}-50 text-${doc.color}-600 p-3 rounded-xl shrink-0">
+                            <i class="fa-solid ${doc.icon} text-lg"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-xs font-bold text-slate-700 truncate" title="${doc.label}">${doc.label}</p>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Document</p>
+                        </div>
                     </div>
-                    <div class="overflow-hidden">
-                        <p class="text-xs font-bold text-slate-700 truncate" title="${doc.label}">${doc.label}</p>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Document</p>
+                    <div class="flex gap-2 mt-auto">
+                        ${hasLink ? `
+                        <button onclick="viewDocument('${doc.link}', '${safeLabel}')" class="flex-1 py-2 text-[10px] font-bold uppercase bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
+                            <i class="fa-solid fa-eye mr-1"></i> Voir
+                        </button>` : `
+                        <div class="flex-1 py-2 text-[10px] font-bold uppercase bg-slate-50 text-slate-300 rounded-lg text-center cursor-not-allowed">
+                            Vide
+                        </div>`}
+                        ${doc.key === 'id_card' ? `<button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="w-10 flex items-center justify-center bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-800 hover:text-white transition-all"><i class="fa-solid fa-pen"></i></button>` : ''}
                     </div>
-                </div>
-
-                <div class="flex gap-2 mt-auto">
-                    ${hasLink ? `
-                    <button onclick="viewDocument('${doc.link}', '${safeLabel}')" class="flex-1 py-2 text-[10px] font-bold uppercase bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all">
-                        <i class="fa-solid fa-eye mr-1"></i> Voir
-                    </button>` : `
-                    <div class="flex-1 py-2 text-[10px] font-bold uppercase bg-slate-50 text-slate-300 rounded-lg text-center cursor-not-allowed">
-                        Vide
-                    </div>`}
-                    
-                    ${doc.key === 'id_card' ? `
-                    <button onclick="updateSingleDoc('${doc.key}', '${myData.id}')" class="w-10 flex items-center justify-center bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-800 hover:text-white transition-all" title="Mettre à jour">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-                    ` : ''}
-                </div>
-            </div>`;
-    });
-
-    gridHtml += '</div>';
-
-    // Ajout du bouton "Voir plus" si nécessaire
-    if (allDocs.length > VISIBLE_LIMIT) {
-        const countHidden = allDocs.length - VISIBLE_LIMIT;
-        gridHtml += `
-            <div class="text-center mt-4 pt-2 border-t border-slate-50">
-                <button onclick="toggleMoreDocs(this)" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
-                    <i class="fa-solid fa-circle-plus"></i> Voir ${countHidden} autre(s) document(s)
-                </button>
-            </div>
-        `;
-    }
-    dC.innerHTML = gridHtml;
-
-            // --- RESTAURATION DU STATUT DE POINTAGE ---
-    const savedStatus = localStorage.getItem('clock_status_' + currentUser.id);
-    const savedTime = localStorage.getItem('clock_last_time_' + currentUser.id);
-    
-    if (savedStatus) {
-        updateClockUI(savedStatus === 'IN');
-        if (savedTime) {
-            document.getElementById('clock-last-action').innerText = `Dernière action : ${savedStatus} à ${savedTime}`;
+                </div>`;
+        });
+        gridHtml += '</div>';
+        if (allDocs.length > VISIBLE_LIMIT) {
+            gridHtml += `<div class="text-center mt-4 pt-2 border-t border-slate-50"><button onclick="toggleMoreDocs(this)" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fa-solid fa-circle-plus"></i> Voir plus</button></div>`;
         }
-    } else {
-        document.getElementById('clock-last-action').innerText = "Dernière action : Aucune";
+        dC.innerHTML = gridHtml;
     }
-
-
-
 }
-
-
-
-
 
 
 
