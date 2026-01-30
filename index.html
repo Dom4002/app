@@ -11,9 +11,9 @@
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="theme-color" content="#0f172a">
             <!-- Icône pour l'onglet du navigateur -->
-        <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/128/17100/17100829.png">
+        <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/128/13594/13594876.png">
         <!-- Icône pour iPhone/iPad (Apple) -->
-        <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/128/17100/17100829.png">
+        <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/128/13594/13594876.png">
 
 
 
@@ -1136,7 +1136,7 @@
     const SIRH_CONFIG = {
         company: {
             name: "SIRH-SECURE",
-            logo: "https://cdn-icons-png.flaticon.com/128/17100/17100829.png",
+            logo: "https://cdn-icons-png.flaticon.com/128/13594/13594876.png",
             supportEmail: "rh@entreprise.com"
         },
         theme: {
@@ -1153,26 +1153,7 @@
             strictMode: true,      // Bloquer le pointage si hors zone ?
             
             // Liste des sièges autorisés
-            offices: [
-                { 
-                    name: "Siège Principal", 
-                    lat: 6.390347,   // Latitude 6.390347, 2.383424
-                    lon: 2.383424,   // Longitude
-                    radius: 100 // Rayon autorisé en mètres
-                },
-                { 
-                    name: "Agence Nord", 
-                    lat: 6.4521, 
-                    lon: 2.3845, 
-                    radius: 50 
-                },
-                { 
-                    name: "Entrepôt Logistique", 
-                    lat: 6.3500, 
-                    lon: 2.5000, 
-                    radius: 200 
-                }
-            ]
+            offices: []
         },
 
         // 4. MODULES ACTIFS
@@ -1207,8 +1188,9 @@
     const URL_READ_PAYROLL = `${SIRH_CONFIG.apiBaseUrl}/read-payroll`;
     const URL_READ_FLASH = `${SIRH_CONFIG.apiBaseUrl}/read-flash`;
     const URL_WRITE_FLASH = `${SIRH_CONFIG.apiBaseUrl}/write-flash`;
-    // --- URL DÉDUITE AUTOMATIQUEMENT ---
     const URL_READ_REPORT = `${SIRH_CONFIG.apiBaseUrl}/read-report`;
+    const URL_GET_CONFIG = `${SIRH_CONFIG.apiBaseUrl}/read-config`;
+
 
             const SCAN_KEY = "SIGD_SECURE_2025"; 
             const URL_REDIRECT_FAILURE = "https://google.com";
@@ -1701,28 +1683,32 @@ async function triggerManualContractUpload(employeeId) {
 }
 
 
+async function fetchCompanyConfig() {
+    try {
+        // On suppose que tu as créé une route Make qui renvoie la liste des zones
+        // Si tu l'as mise dans ton URL_READ global, adapte l'URL
+        const response = await secureFetch(`${URL_GET_CONFIG}?agent=${encodeURIComponent(currentUser.nom)}&type=zones`);
+        const data = await response.json();
 
-                    async function fetchCompanyConfig() {
-                        try {
-                            // On demande la config spécifique à l'agent connecté
-                            const response = await secureFetch(`${URL_GET_CONFIG}?agent=${encodeURIComponent(currentUser.nom)}`);
-                            const data = await response.json();
-
-                            // On s'attend à recevoir : { "lat": 6.36, "lon": 2.40, "radius": 50, "active": true }
-                            if (data.lat && data.lon) {
-                                companyConfig.latitude = parseFloat(data.lat);
-                                companyConfig.longitude = parseFloat(data.lon);
-                                companyConfig.radius = parseInt(data.radius) || 100;
-                                companyConfig.geo_required = (data.active === true || data.active === "true");
-                                
-                                console.log("📍 Bureau localisé (SaaS) :", companyConfig);
-                            }
-                        } catch (e) {
-                            console.warn("⚠️ Impossible de charger la config GPS (Mode par défaut)", e);
-                        }
-                    }
-
-
+        // Si on reçoit une liste (Array) de zones
+        if (Array.isArray(data) && data.length > 0) {
+            console.log("📍 Zones chargées depuis le serveur :", data.length);
+            
+            // On écrase la config vide par celle du serveur
+            SIRH_CONFIG.gps.offices = data.map(z => ({
+                name: z.Nom || z.name || "Zone Inconnue", // Adapte selon tes noms de colonnes Airtable/Make
+                lat: parseFloat(z.Latitude || z.lat),
+                lon: parseFloat(z.Longitude || z.lon),
+                radius: parseInt(z.Rayon || z.radius) || 50
+            }));
+            
+            console.log("✅ Configuration GPS mise à jour :", SIRH_CONFIG.gps.offices);
+        }
+    } catch (e) {
+        console.warn("⚠️ Impossible de charger les zones GPS (Utilisation secours ou vide)", e);
+        // Optionnel : Tu peux définir une zone de secours ici en dur si le réseau échoue
+    }
+}
 
 
     async function refreshAllData(force = false) {
