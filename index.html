@@ -11,9 +11,9 @@
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="theme-color" content="#0f172a">
             <!-- Icône pour l'onglet du navigateur -->
-        <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/128/13383/13383354.png">
+        <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/128/13594/13594876.png">
         <!-- Icône pour iPhone/iPad (Apple) -->
-        <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/128/13383/13383354.png">
+        <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/128/13594/13594876.png">
 
 
 
@@ -1135,8 +1135,8 @@
     // ==========================================
     const SIRH_CONFIG = {
         company: {
-            name: "PROELITES",
-            logo: "https://cdn-icons-png.flaticon.com/128/13383/13383354.png",
+            name: "SIRH-SECURE",
+            logo: "https://cdn-icons-png.flaticon.com/128/13594/13594876.png",
             supportEmail: "rh@entreprise.com"
         },
         theme: {
@@ -2146,21 +2146,39 @@ async function fetchAttendanceReport(mode = 'PERSONAL', period = 'monthly') {
                             <tbody class="divide-y divide-slate-50 text-xs">
                 `;
 
-                reports.forEach(item => {
+                
+
+
+
+                                                    reports.forEach(item => {
+                    // 1. Récupération du nom
                     let nomAffiche = item.nom || item['Employé'] || 'Inconnu';
                     if (Array.isArray(nomAffiche)) nomAffiche = nomAffiche[0];
+                    
+                    // 2. Récupération de la zone (Celle envoyée par le pointage)
+                    // On vérifie 'zone' ou 'Zone' venant de ton Airtable
+                    let zoneAffichee = item.zone || item.Zone || 'Bureau';
 
+                    // 3. Extraction de l'heure
                     let hRaw = item.heure || item.Heure || '--:--';
-                    let hAffiche = hRaw.match(/(\d{2}:\d{2})/) ? hRaw.match(/(\d{2}:\d{2})/)[1] : hRaw;
+                    let hAffiche = '--:--';
+                    const match = hRaw.match(/(\d{2}:\d{2})/);
+                    hAffiche = match ? match[1] : hRaw;
 
                     tableHtml += `
                         <tr>
                             <td class="p-3 font-bold text-slate-700">${nomAffiche}</td>
                             <td class="p-3 text-center font-mono text-blue-600">${hAffiche}</td>
-                            <td class="p-3 text-center text-slate-500">Bureau</td>
+                            <td class="p-3 text-center text-slate-500">${zoneAffichee}</td>
                             <td class="p-3 text-right"><span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold text-[9px]">PRÉSENT</span></td>
-                        </tr>`;
+                        </tr>
+                    `;
                 });
+
+
+
+
+
                 if(reports.length === 0) tableHtml += `<tr><td colspan="4" class="p-10 text-center text-slate-400 italic">Aucun pointage aujourd'hui.</td></tr>`;
 
             } else {
@@ -2502,10 +2520,17 @@ async function handleClockInOut() {
         // --- VÉRIFICATION ZONE GPS ---
         let isInside = false;
         let dist = 0;
+        let validatedZone = "Inconnu"; // <--- AJOUTE CETTE LIGNE
+
         SIRH_CONFIG.gps.offices.forEach(office => {
             const d = getDistance(userLat, userLon, office.lat, office.lon);
-            if (d <= office.radius) { isInside = true; dist = Math.round(d); }
+            if (d <= office.radius) { 
+                isInside = true; 
+                dist = Math.round(d); 
+                validatedZone = office.name; // <--- ON CAPTURE LE NOM ICI
+            }
         });
+        
 
         if (SIRH_CONFIG.gps.strictMode && !isInside) {
             return Swal.fire({
@@ -2524,6 +2549,7 @@ async function handleClockInOut() {
             time: new Date().toISOString(),
             gps: `${userLat},${userLon}`,
             distance_bureau: dist,
+            zone: validatedZone, // <--- ON AJOUTE CETTE LIGNE
             ip: userIp,
             agent: currentUser.nom
         };
