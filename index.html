@@ -2335,142 +2335,175 @@ async function triggerManualContractUpload(employeeId) {
 
 
 
+
+
+
+
+function syncClockInterface() {
+    const userId = currentUser.id;
+    const today = new Date().toLocaleDateString('fr-CA');
+    const lastActionDate = localStorage.getItem(`clock_date_${userId}`);
+    
+    // Si on change de jour, on remet l'affichage à zéro visuellement
+    if (lastActionDate !== today) {
+        localStorage.setItem(`clock_status_${userId}`, 'OUT');
+        updateClockUI(false);
+    } else {
+        // Sinon on affiche l'état stocké (IN ou OUT)
+        const currentStatus = localStorage.getItem(`clock_status_${userId}`) || 'OUT';
+        updateClockUI(currentStatus === 'IN');
+    }
+}
+
+
+
+
+
+
+
+
+
+
             
 
-    async function handleClockInOut() {
-                        const currentStatus = localStorage.getItem('clock_status_' + currentUser.id);
-                        const action = currentStatus === 'IN' ? 'CLOCK_OUT' : 'CLOCK_IN';
-                        
-                        let locationCoords = "Non détecté";
-                        let dist = 0;
-                        let userIp = "Inconnue";
-                        let deviceType = navigator.userAgentData ? navigator.userAgentData.platform : navigator.platform;
-
-                        // 1. Feedback visuel immédiat
-                        Swal.fire({ 
-                            title: 'Sécurisation du pointage...', 
-                            text: 'Vérification GPS, IP et Appareil...', 
-                            didOpen: () => Swal.showLoading(), 
-                            allowOutsideClick: false 
-                        });
-
-                        try {
-                            // 2. RÉCUPÉRATION IP & INFOS SIMULTANÉES
-                            const ipPromise = fetch('https://api.ipify.org?format=json').then(r => r.json()).catch(() => ({ip: "Erreur IP"}));
-                            
-                            // 3. RÉCUPÉRATION POSITION GPS
-                            const posPromise = new Promise((resolve, reject) => {
-                                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                                    enableHighAccuracy: true, timeout: 15000, maximumAge: 0
-                                });
-                            });
-
-                            const [ipData, pos] = await Promise.all([ipPromise, posPromise]);
-                            
-                            userIp = ipData.ip;
-                            const userLat = pos.coords.latitude;
-                            const userLon = pos.coords.longitude;
-                            locationCoords = `${userLat},${userLon}`;
-
-                            // 4. VÉRIFICATION MULTI-SIÈGES (Basée sur SIRH_CONFIG)
-                            let isInsideAnyOffice = false;
-                            let nearestOfficeName = "";
-                            let minDistanceFound = Infinity;
-
-                            if (SIRH_CONFIG.gps.enabled) {
-                                SIRH_CONFIG.gps.offices.forEach(office => {
-                                    const d = getDistance(userLat, userLon, office.lat, office.lon);
-                                    if (d <= office.radius) {
-                                        isInsideAnyOffice = true;
-                                        dist = d;
-                                        nearestOfficeName = office.name;
-                                    }
-                                    if (d < minDistanceFound) {
-                                        minDistanceFound = d;
-                                        if(!isInsideAnyOffice) nearestOfficeName = office.name;
-                                    }
-                                });
-
-                                if (SIRH_CONFIG.gps.strictMode && !isInsideAnyOffice) {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Zone non autorisée',
-                                        html: `Vous êtes à <b>${Math.round(minDistanceFound)}m</b> de <b>${nearestOfficeName}</b>.<br>Pointage impossible ici.`,
-                                        confirmButtonColor: '#ef4444'
-                                    });
-                                    return; 
-                                }
-                                dist = isInsideAnyOffice ? Math.round(dist) : Math.round(minDistanceFound);
-                            }
-
-                        } catch(e) { 
-                            console.warn("Erreur identification:", e.message);
-                            if (SIRH_CONFIG.gps.enabled && SIRH_CONFIG.gps.strictMode) {
-                                return Swal.fire('Sécurité GPS', 'Activez votre localisation pour pointer.', 'warning');
-                            }
-                        }
-
-                        // 5. Préparation des données (Payload enrichi)
-                        const payload = {
-                            id: currentUser.id, 
-                            nom: currentUser.nom, 
-                            action: action, 
-                            time: new Date().toISOString(), 
-                            gps: locationCoords, 
-                            distance_bureau: dist,
-                            ip: userIp,
-                            device: navigator.userAgent, // Envoie le détail complet au serveur
-                            agent: currentUser.nom
-                        };
-
-                        // 6. Gestion Hors-Ligne
-                        if (!navigator.onLine) {
-                            const queue = JSON.parse(localStorage.getItem('sirh_offline_queue') || '[]');
-                            queue.push(payload);
-                            localStorage.setItem('sirh_offline_queue', JSON.stringify(queue));
-                            const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
-                            localStorage.setItem('clock_status_' + currentUser.id, newStatus);
-                            updateClockUI(newStatus === 'IN');
-                            Swal.fire({ icon: 'info', title: 'Mode Hors-Ligne', text: 'Pointage sécurisé en local.' });
-                            return;
-                        }
-
-                        // 7. Envoi au Serveur
-                        try {
-                            const response = await secureFetch(URL_CLOCK_ACTION, { 
-                                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) 
-                            });
 
 
 
-                            if (response.ok) {
-                                const newStatus = action === 'CLOCK_IN' ? 'IN' : 'OUT';
-                                const nowStr = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
-                                
-                                // On enregistre le statut ET l'heure
-                                localStorage.setItem('clock_status_' + currentUser.id, newStatus);
-                                localStorage.setItem('clock_last_time_' + currentUser.id, nowStr);
-                                
-                                updateClockUI(newStatus === 'IN');
-                                
-                                // On met à jour le texte immédiatement
-                                document.getElementById('clock-last-action').innerText = `Dernière action : ${newStatus} à ${nowStr}`;
-                                
-                                Swal.fire({ 
-                                    icon: 'success', 
-                                    title: action === 'CLOCK_IN' ? 'Bienvenue !' : 'Au revoir !', 
-                                    html: `<div class="text-xs text-slate-500 mt-2">Identifié via IP: ${userIp}<br>Appareil: ${deviceType}</div>`,
-                                    timer: 3000, showConfirmButton: false 
-                                });
-                            }
+            
+
+async function handleClockInOut() {
+    const today = new Date().toLocaleDateString('fr-CA'); // Format YYYY-MM-DD
+    const userId = currentUser.id;
+    
+    // --- RÉCUPÉRATION DES ÉTATS DEPUIS L'APPAREIL ---
+    const lastActionDate = localStorage.getItem(`clock_date_${userId}`);
+    let inDone = localStorage.getItem(`clock_in_done_${userId}`) === 'true';
+    let outDone = localStorage.getItem(`clock_out_done_${userId}`) === 'true';
+
+    // --- RÉINITIALISATION SI NOUVEAU JOUR ---
+    if (lastActionDate !== today) {
+        inDone = false;
+        outDone = false;
+        localStorage.setItem(`clock_date_${userId}`, today);
+        localStorage.setItem(`clock_in_done_${userId}`, 'false');
+        localStorage.setItem(`clock_out_done_${userId}`, 'false');
+        localStorage.setItem(`clock_status_${userId}`, 'OUT');
+    }
+
+    const currentStatus = localStorage.getItem(`clock_status_${userId}`) || 'OUT';
+
+    // --- LOGIQUE DE BLOCAGE ---
+    if (inDone && outDone) {
+        return Swal.fire({
+            icon: 'info',
+            title: 'Service Terminé',
+            text: 'Vous avez déjà effectué votre entrée et votre sortie pour aujourd\'hui. À demain !',
+            confirmButtonColor: '#0f172a'
+        });
+    }
+
+    const action = (currentStatus === 'OUT') ? 'CLOCK_IN' : 'CLOCK_OUT';
+
+    // Sécurité supplémentaire : si on essaie de faire une entrée alors qu'elle est déjà faite
+    if (action === 'CLOCK_IN' && inDone) {
+        return Swal.fire('Erreur', 'Entrée déjà enregistrée pour aujourd\'hui.', 'warning');
+    }
+
+    // --- DÉBUT DU POINTAGE (GÉOLOCALISATION) ---
+    Swal.fire({ 
+        title: 'Vérification position...', 
+        text: 'Analyse GPS en cours...', 
+        didOpen: () => Swal.showLoading(), 
+        allowOutsideClick: false 
+    });
+
+    try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        const userIp = ipData.ip;
+
+        const pos = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+            });
+        });
+
+        const userLat = pos.coords.latitude;
+        const userLon = pos.coords.longitude;
+
+        // --- VÉRIFICATION ZONE GPS ---
+        let isInside = false;
+        let dist = 0;
+        SIRH_CONFIG.gps.offices.forEach(office => {
+            const d = getDistance(userLat, userLon, office.lat, office.lon);
+            if (d <= office.radius) { isInside = true; dist = Math.round(d); }
+        });
+
+        if (SIRH_CONFIG.gps.strictMode && !isInside) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'Zone non autorisée',
+                text: 'Vous devez être sur votre lieu de travail pour pointer.',
+                confirmButtonColor: '#ef4444'
+            });
+        }
+
+        // --- ENVOI AU SERVEUR ---
+        const payload = {
+            id: userId,
+            nom: currentUser.nom,
+            action: action,
+            time: new Date().toISOString(),
+            gps: `${userLat},${userLon}`,
+            distance_bureau: dist,
+            ip: userIp,
+            agent: currentUser.nom
+        };
+
+        const response = await secureFetch(URL_CLOCK_ACTION, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(payload) 
+        });
+
+        if (response.ok) {
+            const nowStr = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+            
+            // --- ENREGISTREMENT DU SUCCÈS SUR L'APPAREIL ---
+            if (action === 'CLOCK_IN') {
+                localStorage.setItem(`clock_in_done_${userId}`, 'true');
+                localStorage.setItem(`clock_status_${userId}`, 'IN');
+            } else {
+                localStorage.setItem(`clock_out_done_${userId}`, 'true');
+                localStorage.setItem(`clock_status_${userId}`, 'OUT');
+            }
+            
+            localStorage.setItem(`clock_last_time_${userId}`, nowStr);
+            updateClockUI(localStorage.getItem(`clock_status_${userId}`) === 'IN');
+            
+            // Mise à jour du texte
+            document.getElementById('clock-last-action').innerText = `Dernière action : ${action === 'CLOCK_IN' ? 'Entrée' : 'Sortie'} à ${nowStr}`;
+
+            Swal.fire({
+                icon: 'success',
+                title: action === 'CLOCK_IN' ? 'Entrée Enregistrée' : 'Sortie Enregistrée',
+                text: action === 'CLOCK_IN' ? 'Bonne journée de travail !' : 'Travail terminé, bonne soirée !',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+
+    } catch (e) {
+        Swal.fire('Erreur', 'Problème de connexion ou de GPS : ' + e.message, 'error');
+    }
+}
 
 
-                        } catch (e) { 
-                            Swal.fire('Echec', 'Erreur serveur : ' + e.message, 'error'); 
-                        }
-                    }
 
 
+
+
+            
 
 
 
