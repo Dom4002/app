@@ -374,11 +374,13 @@
                         <button onclick="exportToCSV()" class="flex-1 md:flex-none justify-center p-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95">
                         <i class="fa-solid fa-file-excel"></i> Exporter
                         </button>
-                        <!-- Bouton Rapport Présence (Admin/Manager) -->
-    <button onclick="fetchAttendanceReport('GLOBAL')" class="flex-1 md:flex-none justify-center p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95 management-only">
-        <i class="fa-solid fa-clipboard-list"></i> Rapport Présence
-    </button>
-                        
+
+                        <button onclick="openAttendancePicker()" class="flex-1 md:flex-none justify-center p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2 text-sm font-bold active:scale-95 management-only">
+                            <i class="fa-solid fa-clipboard-list"></i> Rapport Présence
+                        </button>
+
+
+
                         <!-- Date (Pleine largeur sur tout petit écran, ou auto) -->
                         <div id="current-date" class="w-full sm:w-auto text-center bg-blue-50 text-blue-700 px-4 py-2.5 rounded-xl font-bold text-sm border border-blue-100 italic">--</div>
                     </div>
@@ -1255,128 +1257,8 @@
 
 
 
-    
 
 
-    // --- URL DÉDUITE AUTOMATIQUEMENT ---
-
-
-    async function fetchAttendanceReport(mode = 'PERSONAL') {
-        const container = document.getElementById('personal-report-container');
-        
-        if (mode === 'GLOBAL') {
-            Swal.fire({ title: 'Génération du rapport...', text: 'Récupération des données consolidées', didOpen: () => Swal.showLoading() });
-        } else {
-            if(container) container.innerHTML = '<div class="flex justify-center p-4"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500"></i></div>';
-        }
-
-        try {
-            const r = await secureFetch(`${URL_READ_REPORT}?agent=${encodeURIComponent(currentUser.nom)}&requester_id=${encodeURIComponent(currentUser.id)}&mode=${mode}`);
-            const reports = await r.json();
-
-            // Fonction sécurisée pour les nombres
-            const getSafeValue = (val) => {
-                if (val === undefined || val === null) return 0;
-                if (Array.isArray(val)) return val.length > 0 ? val[0] : 0;
-                return val;
-            };
-
-            const cleanReports = reports.map(rep => {
-                let rawNom = rep['nom (from Employé)'] || rep['Employé'] || rep.nom || rep.Employe || 'Inconnu';
-                if (Array.isArray(rawNom)) rawNom = rawNom[0];
-
-                let rawJours = rep['Jours de présence'] || rep['Jours de presence'] || rep['jours_presence'] || rep.Jours_Presence || 0;
-
-                return {
-                    mois: rep['Mois/Année'] || rep['Mois_Annee'] || rep.Mois || '-',
-                    nom: rawNom,
-                    heures: getSafeValue(rep['Total Heures'] || rep.Total_Heures),
-                    jours: getSafeValue(rawJours),
-                    statut: "Validé"
-                };
-            });
-
-            // --- SAUVEGARDE POUR L'EXPORT EXCEL ---
-            currentReportData = cleanReports; 
-
-            // CAS 1 : AFFICHAGE ADMIN (MODALE TABLEAU)
-            if (mode === 'GLOBAL') {
-                let tableHtml = `
-                    <div class="flex justify-end mb-4">
-                        <button onclick="downloadReportCSV()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase shadow hover:bg-emerald-700 transition-all flex items-center gap-2">
-                            <i class="fa-solid fa-file-csv"></i> Télécharger Excel
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto max-h-[60vh]">
-                        <table class="w-full text-left whitespace-nowrap">
-                            <thead class="bg-slate-100 text-[10px] uppercase font-black text-slate-500 sticky top-0">
-                                <tr>
-                                    <th class="p-3">Mois</th>
-                                    <th class="p-3">Employé</th>
-                                    <th class="p-3 text-center">Jours Prés.</th>
-                                    <th class="p-3 text-center">Heures Tot.</th>
-                                    <th class="p-3 text-right">Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50 text-xs">
-                `;
-
-                cleanReports.forEach(item => {
-                    tableHtml += `
-                        <tr>
-                            <td class="p-3 font-bold text-slate-700">${item.mois}</td>
-                            <td class="p-3 font-medium">${item.nom}</td>
-                            <td class="p-3 text-center font-bold text-slate-800">${item.jours}</td>
-                            <td class="p-3 text-center font-mono text-blue-600">${item.heures}h</td>
-                            <td class="p-3 text-right"><span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold text-[9px]">${item.statut}</span></td>
-                        </tr>
-                    `;
-                });
-
-                tableHtml += `</tbody></table></div>`;
-
-                Swal.fire({
-                    title: 'Rapport de Présence',
-                    html: tableHtml,
-                    width: '900px',
-                    showConfirmButton: true,
-                    confirmButtonText: 'Fermer',
-                    confirmButtonColor: '#0f172a'
-                });
-            } 
-            // CAS 2 : AFFICHAGE PERSONNEL
-            else {
-                if (!cleanReports || cleanReports.length === 0) {
-                    container.innerHTML = '<p class="text-xs text-slate-400 italic">Aucun rapport disponible.</p>';
-                    return;
-                }
-                container.innerHTML = '';
-                cleanReports.forEach(item => {
-                    const letter = item.mois && item.mois.length > 0 ? item.mois.charAt(0) : '?';
-                    container.innerHTML += `
-                        <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">${letter}</div>
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-sm capitalize">${item.mois}</h4>
-                                    <p class="text-[10px] text-slate-500 font-medium">Cumul mensuel clôturé</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm font-black text-slate-800">${item.heures}h <span class="text-[10px] text-slate-400 font-normal">/ ${item.jours}j</span></p>
-                                <span class="text-[9px] font-bold text-emerald-500 uppercase">Validé</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-        } catch (e) {
-            console.error("Erreur rapport:", e);
-            const msg = "Impossible de charger le rapport.";
-            if (mode === 'GLOBAL') Swal.fire('Erreur', msg, 'error');
-            else if (container) container.innerHTML = `<p class="text-xs text-red-400">${msg}</p>`;
-        }
-    }
 
 
 
@@ -2184,6 +2066,191 @@ async function triggerManualContractUpload(employeeId) {
         document.querySelectorAll('.btn-prev-global').forEach(btn => { btn.disabled = currentPage === 1; btn.classList.toggle('opacity-30', currentPage === 1); });
         document.querySelectorAll('.btn-next-global').forEach(btn => { btn.disabled = currentPage >= totalPages; btn.classList.toggle('opacity-30', currentPage >= totalPages); });
     }
+
+
+
+
+
+
+
+
+
+
+
+    // 1. LA FONCTION DE CHOIX (PICKER)
+async function openAttendancePicker() {
+    Swal.fire({
+        title: 'Rapport de Présence',
+        text: 'Quelle période souhaitez-vous consulter ?',
+        icon: 'question',
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '🕒 Aujourd\'hui',
+        denyButtonText: '📅 Mensuel (Cumul)',
+        cancelButtonText: 'Annuler',
+        confirmButtonColor: '#4f46e5',
+        denyButtonColor: '#0f172a',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetchAttendanceReport('GLOBAL', 'today');
+        } else if (result.isDenied) {
+            fetchAttendanceReport('GLOBAL', 'monthly');
+        }
+    });
+}
+
+
+
+
+
+
+
+// 2. LA FONCTION DE RÉCUPÉRATION (FETCH) - VERSION FINALE CORRIGÉE
+async function fetchAttendanceReport(mode = 'PERSONAL', period = 'monthly') {
+    const container = document.getElementById('personal-report-container');
+    
+    if (mode === 'GLOBAL') {
+        Swal.fire({ title: 'Chargement...', text: 'Récupération des données en cours', didOpen: () => Swal.showLoading() });
+    } else {
+        if(container) container.innerHTML = '<div class="flex justify-center p-4"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500"></i></div>';
+    }
+
+    try {
+        const url = `${URL_READ_REPORT}?agent=${encodeURIComponent(currentUser.nom)}&requester_id=${encodeURIComponent(currentUser.id)}&mode=${mode}&period=${period}`;
+        const r = await secureFetch(url);
+        const reports = await r.json();
+
+        if (mode === 'GLOBAL') {
+            let tableHtml = '';
+            
+            if (period === 'today') {
+                // --- RAPPORT JOURNALIER ---
+                const totalActifs = employees.filter(e => e.statut === 'Actif').length;
+                const presents = reports.length;
+                const taux = totalActifs > 0 ? Math.round((presents / totalActifs) * 100) : 0;
+
+                tableHtml = `
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div class="text-center sm:text-left">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Taux de présence (Actifs)</p>
+                            <h3 class="text-2xl font-black text-indigo-600">${presents} / ${totalActifs} <span class="text-sm text-slate-400">Présents</span></h3>
+                        </div>
+                        <div class="w-16 h-16 rounded-full border-4 border-indigo-100 flex items-center justify-center font-black text-indigo-600 bg-white shadow-sm">${taux}%</div>
+                        <button onclick="downloadReportCSV('${period}')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase shadow hover:bg-emerald-700 transition-all flex items-center gap-2"><i class="fa-solid fa-file-csv"></i> Excel</button>
+                    </div>
+                    <div class="overflow-x-auto max-h-[50vh]">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-100 text-[10px] uppercase font-black text-slate-500 sticky top-0">
+                                <tr><th class="p-3">Employé</th><th class="p-3 text-center">Arrivée</th><th class="p-3 text-center">Zone</th><th class="p-3 text-right">Statut</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 text-xs">
+                `;
+
+                reports.forEach(item => {
+                    let nomAffiche = item.nom || item['Employé'] || 'Inconnu';
+                    if (Array.isArray(nomAffiche)) nomAffiche = nomAffiche[0];
+
+                    let hRaw = item.heure || item.Heure || '--:--';
+                    let hAffiche = hRaw.match(/(\d{2}:\d{2})/) ? hRaw.match(/(\d{2}:\d{2})/)[1] : hRaw;
+
+                    tableHtml += `
+                        <tr>
+                            <td class="p-3 font-bold text-slate-700">${nomAffiche}</td>
+                            <td class="p-3 text-center font-mono text-blue-600">${hAffiche}</td>
+                            <td class="p-3 text-center text-slate-500">Bureau</td>
+                            <td class="p-3 text-right"><span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold text-[9px]">PRÉSENT</span></td>
+                        </tr>`;
+                });
+                if(reports.length === 0) tableHtml += `<tr><td colspan="4" class="p-10 text-center text-slate-400 italic">Aucun pointage aujourd'hui.</td></tr>`;
+
+            } else {
+                // --- RAPPORT MENSUEL (CORRECTION DES CLÉS AIRTABLE) ---
+                tableHtml = `
+                    <div class="flex justify-end mb-4">
+                        <button onclick="downloadReportCSV('${period}')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase shadow hover:bg-emerald-700 transition-all flex items-center gap-2"><i class="fa-solid fa-file-csv"></i> Télécharger Cumul</button>
+                    </div>
+                    <div class="overflow-x-auto max-h-[60vh]">
+                        <table class="w-full text-left whitespace-nowrap">
+                            <thead class="bg-slate-100 text-[10px] uppercase font-black text-slate-500 sticky top-0">
+                                <tr><th class="p-3">Mois</th><th class="p-3">Employé</th><th class="p-3 text-center">Jours Prés.</th><th class="p-3 text-center">Heures Tot.</th><th class="p-3 text-right">Statut</th></tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 text-xs">
+                `;
+
+                reports.forEach(item => {
+                    // Mapping exact avec tes captures Make
+                    let moisAffiche = item.mois || item['Mois/Année'] || '-';
+                    
+                    let nomRaw = item.nom || item['nom (from Employé)'] || item['Employé'] || 'Inconnu';
+                    let nomAffiche = Array.isArray(nomRaw) ? nomRaw[0] : nomRaw;
+
+                    let joursAffiche = item.jours || item['Jours de présence'] || 0;
+                    let heuresAffiche = item.heures || item['Total Heures'] || 0;
+
+                    tableHtml += `
+                        <tr>
+                            <td class="p-3 font-bold text-slate-700">${moisAffiche}</td>
+                            <td class="p-3 font-medium">${nomAffiche}</td>
+                            <td class="p-3 text-center font-bold text-slate-800">${joursAffiche}</td>
+                            <td class="p-3 text-center font-mono text-blue-600">${heuresAffiche}h</td>
+                            <td class="p-3 text-right"><span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold text-[9px]">Clôturé</span></td>
+                        </tr>`;
+                });
+                if(reports.length === 0) tableHtml += `<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">Aucune donnée mensuelle trouvée.</td></tr>`;
+            }
+
+            tableHtml += `</tbody></table></div>`;
+            Swal.fire({
+                title: period === 'today' ? 'Pointages du Jour' : 'Rapport Mensuel',
+                html: tableHtml,
+                width: '850px',
+                confirmButtonText: 'Fermer',
+                confirmButtonColor: '#0f172a'
+            });
+            currentReportData = reports;
+        } else {
+            // Mode Personnel (Mon Profil)
+            renderPersonalReport(reports, container);
+        }
+    } catch (e) {
+        console.error("Erreur rapport:", e);
+        Swal.fire('Erreur', "Impossible de charger les données du serveur.", 'error');
+    }
+}
+
+// Fonction helper pour l'affichage sur le profil employé
+function renderPersonalReport(reports, container) {
+    if (!container) return;
+    if (!reports || reports.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400 italic">Aucun rapport disponible.</p>';
+        return;
+    }
+    container.innerHTML = '';
+    reports.forEach(item => {
+        let mois = item.mois || item['Mois/Année'] || '-';
+        let heures = item.heures || item['Total Heures'] || 0;
+        let jours = item.jours || item['Jours de présence'] || 0;
+        const letter = mois !== '-' ? mois.charAt(0) : '?';
+        
+        container.innerHTML += `
+            <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">${letter}</div>
+                    <div><h4 class="font-bold text-slate-800 text-sm capitalize">${mois}</h4><p class="text-[10px] text-slate-500 font-medium">Cumul validé</p></div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-black text-slate-800">${heures}h <span class="text-[10px] text-slate-400 font-normal">/ ${jours}j</span></p>
+                    <span class="text-[9px] font-bold text-emerald-500 uppercase">Validé</span>
+                </div>
+            </div>
+        `;
+    });
+}
+
+
+
+
+
 
 
 
