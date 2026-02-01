@@ -44,6 +44,7 @@
             --text-on-accent: #ffffff;
         }
 
+
         /* ============================================================
         2. DARK MODE ULTRA-CLEAN
         ============================================================ */
@@ -85,7 +86,8 @@
         /* FIX: Fond sombre par défaut pour éviter le flash blanc au démarrage */
         html, body { background-color: #0f172a !important; font-family: var(--font-main); font-size: var(--base-size); }
         
-                                                        /* ============================================================
+    
+    /* ============================================================
     STYLE DE LA BARRE DE SCROLL "PROFESSIONNEL"
     ============================================================ */
 
@@ -211,6 +213,32 @@
         .filter-chip.active-chip { background-color: var(--accent) !important; border-color: var(--accent) !important; color: var(--text-on-accent) !important; }
         body.dark-mode .filter-chip { background-color: #1e293b; border-color: #334155; color: #94a3b8; }
 
+
+
+
+                        /* SCROLLBAR INTERNE POUR LES BLOCS */
+        .custom-scroll {
+            overflow-y: auto;
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: #cbd5e1 transparent; /* Couleur / Fond */
+        }
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        .custom-scroll:hover::-webkit-scrollbar-thumb {
+            background-color: #94a3b8;
+        }
+
+
     </style>
 
 
@@ -297,6 +325,7 @@
                             <i class="fa-solid fa-circle-info w-5"></i> 
                             <span class="font-semibold">Infos & Aide</span>
                         </button>
+
                                             
                         <div id="nav-admin-section" class="management-only pt-4 border-t border-slate-800 mt-4">
                             <p class="text-[10px] font-black text-slate-500 uppercase mb-2 ml-4 tracking-widest">Gestion</p>
@@ -482,6 +511,8 @@
                 </div>
             </div>
 
+
+
             <!-- PAGINATION HAUT -->
             <div class="flex items-center gap-3">
                 <button onclick="changePage(-1)" class="btn-prev-global w-8 h-8 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
@@ -524,6 +555,35 @@
                 </div>
             </div>
         </div>
+
+
+
+
+        
+                        <!-- NOUVEAU : SOLDE CONGÉS MANAGER -->
+            <div id="manager-leave-balance" class="management-only bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden mt-8 mb-10">
+                <div class="px-8 py-6 border-b border-slate-100 font-extrabold text-slate-700 flex justify-between items-center">
+                    <span>Solde de Congés par Collaborateur</span>
+                    <button onclick="fetchEmployeeLeaveBalances()" class="text-blue-600 hover:text-blue-800 transition-all text-sm font-bold">
+                        <i class="fa-solid fa-rotate mr-2"></i> Actualiser
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left whitespace-nowrap">
+                        <thead class="bg-slate-50/80 text-[10px] uppercase font-black text-slate-400">
+                            <tr>
+                                <th class="px-8 py-4">Nom</th>
+                                <th class="px-8 py-4">Département</th>
+                                <th class="px-8 py-4 text-center">Statut Demande</th>
+                                <th class="px-8 py-4 text-right">Jours Restants</th>
+                            </tr>
+                        </thead>
+                        <tbody id="manager-leave-body">
+                            <!-- Les soldes apparaîtront ici via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
     </section>
 
 
@@ -616,13 +676,30 @@
 
 
 
-                            <!-- VUE 7: RECRUTEMENT / ATS -->
-                        <section id="view-recruitment" class="view-section">
-                            <div class="flex justify-between items-center mb-8">
-                            <h2 class="text-2xl font-extrabold text-slate-800">Candidatures (Via Google Form)</h2>
-                            <button onclick="fetchCandidates()" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm font-bold text-sm">
-                                <i class="fa-solid fa-rotate mr-2"></i> Actualiser
-                            </button>
+      <!-- VUE 7: RECRUTEMENT / ATS -->
+                    <section id="view-recruitment" class="view-section">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                            <div>
+                                <h2 class="text-2xl font-extrabold text-slate-800">Candidatures (Airtable)</h2>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Portail de recrutement et gestion</p>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <!-- Bouton Partager -->
+                                <button onclick="copyFormLink()" class="flex items-center gap-2 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm font-bold active:scale-95">
+                                    <i class="fa-solid fa-share-nodes"></i> <span class="hidden sm:inline">Partager le lien</span>
+                                </button>
+                                
+                                <!-- Bouton Modifier -->
+                                <button onclick="openFormEditor()" class="flex items-center gap-2 p-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 transition-all shadow-md text-sm font-bold active:scale-95">
+                                    <i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">Modifier</span>
+                                </button>
+
+                                <!-- Votre bouton Actualiser original -->
+                                <button onclick="fetchCandidates()" class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm font-bold text-sm active:scale-95">
+                                    <i class="fa-solid fa-rotate"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
@@ -643,6 +720,8 @@
                             </div>
                         </div>
                     </section>
+
+
 
                     <!-- VUE 4: LOGS -->
                     <section id="view-logs" class="view-section">
@@ -678,6 +757,22 @@
                         <i class="fa-solid fa-plane-departure mr-2"></i> Demander un Congé
                     </button>
                 </div>
+            </div>
+
+
+                        <!-- NOUVEAU WIDGET SOLDE CONGÉS -->
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8 flex justify-between items-center">
+                <div>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Solde Congés Restant</p>
+                    <h3 id="leave-balance-display" class="text-4xl font-black mt-2 text-indigo-600">--</h3>
+                </div>
+                <div class="p-3 bg-indigo-100 text-indigo-600 rounded-xl"><i class="fa-solid fa-calendar-check text-3xl"></i></div>
+            </div>
+            <!-- FIN NOUVEAU WIDGET SOLDE CONGÉS -->
+
+            <!-- WIDGET POINTAGE & ACTION (Qui est déjà là) -->
+            <div class="bg-slate-900 rounded-3xl p-6 mb-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between relative overflow-hidden">
+                <!-- ... le reste du code du pointage ... -->
             </div>
 
             <!-- ZONE HAUTE : PHOTO (Gauche) + FORMULAIRE (Droite) -->
@@ -722,6 +817,36 @@
                 </div>
             </div>
 
+
+
+
+
+            
+
+                <!-- BLOC SUIVI DEMANDES CONGÉS (Employé) -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
+        <h3 class="font-black text-xs uppercase text-slate-400 mb-6 flex items-center gap-2 tracking-widest">
+            <i class="fa-solid fa-hourglass-half text-blue-500 text-lg"></i> Mes Demandes de Congés
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left whitespace-nowrap">
+                <thead class="bg-slate-50/80 text-[10px] uppercase font-black text-slate-400">
+                    <tr>
+                        <th class="px-6 py-3">Période</th>
+                        <th class="px-6 py-3">Type</th>
+                        <th class="px-6 py-3">Motif</th>
+                        <th class="px-6 py-3 text-right">Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="my-leave-requests-body">
+                    <!-- Rempli par le JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- FIN BLOC SUIVI DEMANDES CONGÉS -->
+
+
             <!-- ZONE BASSE : DOCUMENTS & PAIE (PLEINE LARGEUR MAINTENANT) -->
             <div class="space-y-8">
                 
@@ -736,34 +861,58 @@
 
 
 
-    <!-- Bouton Rapport Perso (Employé) -->
-    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="font-black text-xs uppercase text-slate-400 flex items-center gap-2 tracking-widest">
-                <i class="fa-solid fa-clock-rotate-left text-indigo-500 text-lg"></i> Mes Rapports d'Activité
-            </h3>
-            <button onclick="fetchAttendanceReport('PERSONAL')" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-all">
-                <i class="fa-solid fa-rotate mr-1"></i> Actualiser
-            </button>
-        </div>
-        <!-- Conteneur pour afficher les rapports -->
-        <div id="personal-report-container" class="space-y-3">
-            <p class="text-[10px] text-slate-400 italic">Cliquez sur actualiser pour voir vos rapports.</p>
-        </div>
-    </div>
 
 
 
-                <!-- BLOC BULLETINS DE PAIE -->
-                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <h3 class="font-black text-xs uppercase text-slate-400 mb-6 flex items-center gap-2 tracking-widest">
-                        <i class="fa-solid fa-file-invoice-dollar text-emerald-500 text-lg"></i> Mes Bulletins de Paie
+
+
+
+
+
+
+
+
+
+            <!-- Bloc Rapports avec Scroll -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 mb-8">
+                <div class="flex justify-between items-center mb-4"> <!-- mb réduit -->
+                    <h3 class="font-black text-xs uppercase text-slate-400 flex items-center gap-2 tracking-widest">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-500 text-lg"></i> Mes Rapports d'Activité
                     </h3>
-                    <div id="payroll-container" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <!-- Sera rempli par fetchPayrollData() -->
-                        <div class="col-span-full text-center py-4 text-slate-400 italic text-xs">Recherche des bulletins...</div>
+                    <button onclick="fetchAttendanceReport('PERSONAL')" class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-all">
+                        <i class="fa-solid fa-rotate mr-1"></i> Actualiser
+                    </button>
+                </div>
+                
+                <!-- ICI : On ajoute max-h-[300px] et custom-scroll -->
+                <div id="personal-report-container" class="space-y-3 max-h-[300px] custom-scroll pr-2">
+                    <p class="text-[10px] text-slate-400 italic">Cliquez sur actualiser pour voir vos rapports.</p>
+                </div>
+            </div>
+
+
+
+                                        <!-- Bloc Paie avec Scroll -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-black text-xs uppercase text-slate-400 flex items-center gap-2 tracking-widest">
+                            <i class="fa-solid fa-file-invoice-dollar text-emerald-500 text-lg"></i> Mes Bulletins de Paie
+                        </h3>
+                        <span class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-2 py-1 rounded">
+                            Total : <span id="count-payroll">0</span>
+                        </span>
+                    </div>
+
+                    <!-- ICI : Scroll vertical + Grille responsive -->
+                    <div class="max-h-[350px] custom-scroll pr-2">
+                        <div id="payroll-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <!-- Sera rempli par fetchPayrollData() -->
+                            <div class="col-span-full text-center py-4 text-slate-400 italic text-xs">Recherche des bulletins...</div>
+                        </div>
                     </div>
                 </div>
+
+
 
             </div>
         </div>
@@ -1116,7 +1265,6 @@
 
 
 
-
         <script>
 
 
@@ -1227,8 +1375,8 @@
                 geo_required: false  // Force le GPS ou non
             };
 
-            let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null;
-                            
+            let currentUser = null, employees = [], videoStream = null, capturedBlob = null, contractBlob = null, contractStream = null, signaturePad = null;
+         
             
             let offsetSuivant = null; // Mémorise le marque-page pour le lot suivant
             let currentPage = 1;
@@ -1236,21 +1384,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // --- AUTO-RECONNEXION AVEC LOADER ---
             window.addEventListener('DOMContentLoaded', () => {
                 applyBranding(); 
                 const session = localStorage.getItem('sirh_user_session');
@@ -1415,71 +1548,88 @@
 
 
 
+
+
+
+
+
+
     
 
 
 
 
-    async function secureFetch(url, options = {}) {
-        // 0. SÉCURITÉ RÉSEAU IMMÉDIATE
-        if (!navigator.onLine) {
-            throw new Error("Vous êtes hors ligne. Vérifiez votre connexion internet.");
-        }
 
-        const token = localStorage.getItem('sirh_token');
-        const headers = options.headers || {};
-        
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
 
-        // 1. TIMEOUT 60 SECONDES
-        const TIMEOUT_MS = 60000; 
-        
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS); 
 
-        try {
-            // 2. APPEL RÉSEAU
-            const response = await fetch(url, { 
-                ...options, 
-                headers, 
-                signal: controller.signal 
-            });
 
-            clearTimeout(timeoutId); 
-
-            // 3. GESTION DES ERREURS HTTP
-            if (!response.ok) {
-                let errorMessage = `Erreur serveur (${response.status})`;
-                try {
-                    const errData = await response.json();
-                    if (errData.error) errorMessage = errData.error;
-                } catch (e) { }
-
-                if (response.status === 401 || response.status === 403) {
-                    throw new Error("Session expirée. Veuillez vous reconnecter.");
-                }
-                throw new Error(errorMessage);
-            }
-
-            return response;
-
-        } catch (error) {
-            // 4. GESTION DES ERREURS TECHNIQUES
-            if (error.name === 'AbortError') {
-                throw new Error("Le serveur met trop de temps à répondre (> 60s). Réessayez.");
-            }
-            if (error.message.includes('Failed to fetch')) {
-                throw new Error("Erreur de connexion. Vérifiez votre accès internet.");
-            }
-            throw error; 
-        }
+async function secureFetch(url, options = {}) {
+    // 0. SÉCURITÉ RÉSEAU IMMÉDIATE
+    if (!navigator.onLine) {
+        throw new Error("Vous êtes hors ligne. Vérifiez votre connexion internet.");
     }
 
+    const token = localStorage.getItem('sirh_token');
+    const headers = options.headers || {};
+    
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
 
+    // --- CORRECTION ICI : ON PASSE DE 60000 à 120000 (2 minutes) ---
+    // Cela laisse le temps à Render/Make de se réveiller sans planter
+    const TIMEOUT_MS = 120000; 
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS); 
 
+    try {
+        // 2. APPEL RÉSEAU
+        const response = await fetch(url, { 
+            ...options, 
+            headers, 
+            signal: controller.signal 
+        });
 
+        clearTimeout(timeoutId); 
+
+        // 3. GESTION DES ERREURS HTTP
+        if (!response.ok) {
+            let errorMessage = `Erreur serveur (${response.status})`;
+            let specificMessage = null; 
+
+            try {
+                const errData = await response.json();
+                if (errData.error) {
+                    errorMessage = errData.error;
+                    specificMessage = errData.error; 
+                }
+            } catch (e) { }
+
+            if (response.status === 401 || response.status === 403) {
+                if (specificMessage) {
+                    throw new Error(`AUTH_ERROR_SPECIFIC:${specificMessage}`);
+                }
+                throw new Error("Session expirée. Veuillez vous reconnecter.");
+            }
+            
+            throw new Error(errorMessage);
+        }
+
+        return response;
+
+    } catch (error) {
+        // 4. GESTION DES ERREURS TECHNIQUES
+        if (error.name === 'AbortError') {
+            // Message plus clair pour l'utilisateur
+            throw new Error("Le serveur démarre (Délai > 2min). Veuillez réessayer dans 30 secondes.");
+        }
+        if (error.message.includes('Failed to fetch')) {
+            throw new Error("Erreur de connexion. Vérifiez votre accès internet.");
+        }
+        throw error; 
+    }
+}
 
 
 
@@ -1575,6 +1725,14 @@ async function setSession(n, r, id) {
     document.getElementById('name-display').innerText = n; 
     document.getElementById('role-display').innerText = r; 
     document.getElementById('avatar-display').innerText = n[0]; 
+    // Dans la fonction setSession, assurez-vous d'avoir ceci :
+
+                                                // Dans la fonction setSession :
+    
+
+
+    // Continuez avec le reste (document.body.className = ...)
+
     document.body.className = "text-slate-900 overflow-hidden h-screen w-screen role-" + r.toLowerCase(); 
 
     // 3. Injecter les SKELETONS immédiatement pour l'état initial de l'app
@@ -1749,7 +1907,14 @@ async function fetchCompanyConfig() {
             }
             if (currentUser.role !== 'EMPLOYEE') {
                 tasks.push(fetchLeaveRequests());
+                fetchEmployeeLeaveBalances(); // <--- AJOUTE L'APPEL ICI !
+
             }
+            
+            else {
+                    // AJOUTE CET APPEL ICI : L'employé doit aussi charger ses propres demandes
+                    tasks.push(fetchLeaveRequests()); 
+                }
 
             await Promise.all(tasks);
             
@@ -1842,7 +2007,7 @@ async function fetchCompanyConfig() {
                     if (Array.isArray(l) && l.length > 0) return l[0].url || l[0];
                     if (typeof l === 'object' && l.url) return l.url;
                     return String(l);
-                };
+                };  
 
                 return { 
                     id: x.employee_id || x.id, 
@@ -1850,6 +2015,7 @@ async function fetchCompanyConfig() {
                     date: x.date_embauche || x.date, 
                     poste: x.poste || x.Poste, 
                     dept: x['département'] || x.departement || "Non défini", 
+                    Solde_Conges: parseFloat(x.Solde_Conges) || 0,// on utilise le nom exact
                     limit: x.type_contrat || 365, 
                     photo: x.photo || x.Photo || '', 
                     statut: x.Statut || 'Actif', 
@@ -1864,7 +2030,7 @@ async function fetchCompanyConfig() {
                     id_card_link: getRawLink(x.id_card_link),
                     diploma_link: getRawLink(x.diploma_link),
                     attestation_link: getRawLink(x.attestation_link || x.attestation),
-                    lm_link: getRawLink(x.lm_link)
+                    lm_link: getRawLink(x.lm_link),
                 };
             });
 
@@ -1874,7 +2040,6 @@ async function fetchCompanyConfig() {
 
             // 5. Mise à jour Interface
             renderData();
-            loadMyProfile(); // IMPORTANT : On recharge le profil maintenant qu'on a les données
             renderCharts();
 
             // 6. Si Manager, on charge les congés
@@ -2091,6 +2256,13 @@ async function openAttendancePicker() {
 
 
 
+
+
+
+
+
+
+
 // 2. LA FONCTION DE RÉCUPÉRATION (FETCH) - VERSION FINALE CORRIGÉE
 async function fetchAttendanceReport(mode = 'PERSONAL', period = 'monthly') {
     const container = document.getElementById('personal-report-container');
@@ -2104,15 +2276,35 @@ async function fetchAttendanceReport(mode = 'PERSONAL', period = 'monthly') {
     try {
         const url = `${URL_READ_REPORT}?agent=${encodeURIComponent(currentUser.nom)}&requester_id=${encodeURIComponent(currentUser.id)}&mode=${mode}&period=${period}`;
         const r = await secureFetch(url);
-        const reports = await r.json();
+        const rawReports = await r.json();
 
+        // --- DEBUT : NORMALISATION DES DONNÉES POUR L'EXPORT ET L'AFFICHAGE ---
+        const cleanReports = rawReports.map(rep => {
+            // Récupère la valeur du nom (gère les listes)
+            let nomRaw = rep.nom || rep['nom (from Employé)'] || rep.Employé || 'Inconnu';
+            let nomAffiche = Array.isArray(nomRaw) ? nomRaw[0] : nomRaw;
+
+            // Retourne un objet avec des clés simples et sans accents
+            return {
+                mois: rep.mois || rep['Mois/Année'] || '-',
+                nom: nomAffiche,
+                jours: rep.jours || rep['Jours de présence'] || 0,
+                heures: rep.heures || rep['Total Heures'] || 0,
+                statut: rep.Statut || 'Clôturé',
+                // Pour le rapport "Today" :
+                heure_arrivee: rep.heure || rep.Heure || '--:--',
+                zone: rep.zone || rep.Zone || 'Bureau'
+            };
+        });
+        // --- FIN : NORMALISATION ---
+        
         if (mode === 'GLOBAL') {
             let tableHtml = '';
             
             if (period === 'today') {
                 // --- RAPPORT JOURNALIER ---
                 const totalActifs = employees.filter(e => e.statut === 'Actif').length;
-                const presents = reports.length;
+                const presents = cleanReports.length; // <-- UTILISE cleanReports
                 const taux = totalActifs > 0 ? Math.round((presents / totalActifs) * 100) : 0;
 
                 tableHtml = `
@@ -2132,43 +2324,24 @@ async function fetchAttendanceReport(mode = 'PERSONAL', period = 'monthly') {
                             <tbody class="divide-y divide-slate-50 text-xs">
                 `;
 
-                
-
-
-
-                                                    reports.forEach(item => {
-                    // 1. Récupération du nom
-                    let nomAffiche = item.nom || item['Employé'] || 'Inconnu';
-                    if (Array.isArray(nomAffiche)) nomAffiche = nomAffiche[0];
-                    
-                    // 2. Récupération de la zone (Celle envoyée par le pointage)
-                    // On vérifie 'zone' ou 'Zone' venant de ton Airtable
-                    let zoneAffichee = item.zone || item.Zone || 'Bureau';
-
-                    // 3. Extraction de l'heure
-                    let hRaw = item.heure || item.Heure || '--:--';
-                    let hAffiche = '--:--';
-                    const match = hRaw.match(/(\d{2}:\d{2})/);
-                    hAffiche = match ? match[1] : hRaw;
+                // UTILISE cleanReports ICI
+                cleanReports.forEach(item => {
+                    let hAffiche = item.heure_arrivee.match(/(\d{2}:\d{2})/) ? item.heure_arrivee.match(/(\d{2}:\d{2})/)[1] : item.heure_arrivee;
 
                     tableHtml += `
                         <tr>
-                            <td class="p-3 font-bold text-slate-700">${nomAffiche}</td>
+                            <td class="p-3 font-bold text-slate-700">${item.nom}</td>
                             <td class="p-3 text-center font-mono text-blue-600">${hAffiche}</td>
-                            <td class="p-3 text-center text-slate-500">${zoneAffichee}</td>
+                            <td class="p-3 text-center text-slate-500">${item.zone}</td>
                             <td class="p-3 text-right"><span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold text-[9px]">PRÉSENT</span></td>
                         </tr>
                     `;
                 });
-
-
-
-
-
-                if(reports.length === 0) tableHtml += `<tr><td colspan="4" class="p-10 text-center text-slate-400 italic">Aucun pointage aujourd'hui.</td></tr>`;
+                
+                if(cleanReports.length === 0) tableHtml += `<tr><td colspan="4" class="p-10 text-center text-slate-400 italic">Aucun pointage aujourd'hui.</td></tr>`;
 
             } else {
-                // --- RAPPORT MENSUEL (CORRECTION DES CLÉS AIRTABLE) ---
+                // --- RAPPORT MENSUEL ---
                 tableHtml = `
                     <div class="flex justify-end mb-4">
                         <button onclick="downloadReportCSV('${period}')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase shadow hover:bg-emerald-700 transition-all flex items-center gap-2"><i class="fa-solid fa-file-csv"></i> Télécharger Cumul</button>
@@ -2181,26 +2354,18 @@ async function fetchAttendanceReport(mode = 'PERSONAL', period = 'monthly') {
                             <tbody class="divide-y divide-slate-50 text-xs">
                 `;
 
-                reports.forEach(item => {
-                    // Mapping exact avec tes captures Make
-                    let moisAffiche = item.mois || item['Mois/Année'] || '-';
-                    
-                    let nomRaw = item.nom || item['nom (from Employé)'] || item['Employé'] || 'Inconnu';
-                    let nomAffiche = Array.isArray(nomRaw) ? nomRaw[0] : nomRaw;
-
-                    let joursAffiche = item.jours || item['Jours de présence'] || 0;
-                    let heuresAffiche = item.heures || item['Total Heures'] || 0;
-
+                // UTILISE cleanReports ICI
+                cleanReports.forEach(item => {
                     tableHtml += `
                         <tr>
-                            <td class="p-3 font-bold text-slate-700">${moisAffiche}</td>
-                            <td class="p-3 font-medium">${nomAffiche}</td>
-                            <td class="p-3 text-center font-bold text-slate-800">${joursAffiche}</td>
-                            <td class="p-3 text-center font-mono text-blue-600">${heuresAffiche}h</td>
+                            <td class="p-3 font-bold text-slate-700">${item.mois}</td>
+                            <td class="p-3 font-medium">${item.nom}</td>
+                            <td class="p-3 text-center font-bold text-slate-800">${item.jours}</td>
+                            <td class="p-3 text-center font-mono text-blue-600">${item.heures}h</td>
                             <td class="p-3 text-right"><span class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded font-bold text-[9px]">Clôturé</span></td>
                         </tr>`;
                 });
-                if(reports.length === 0) tableHtml += `<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">Aucune donnée mensuelle trouvée.</td></tr>`;
+                if(cleanReports.length === 0) tableHtml += `<tr><td colspan="5" class="p-10 text-center text-slate-400 italic">Aucune donnée mensuelle trouvée.</td></tr>`;
             }
 
             tableHtml += `</tbody></table></div>`;
@@ -2211,10 +2376,10 @@ async function fetchAttendanceReport(mode = 'PERSONAL', period = 'monthly') {
                 confirmButtonText: 'Fermer',
                 confirmButtonColor: '#0f172a'
             });
-            currentReportData = reports;
+            currentReportData = cleanReports; // <-- ENREGISTRE LES DONNÉES NORMALISÉES
         } else {
             // Mode Personnel (Mon Profil)
-            renderPersonalReport(reports, container);
+            renderPersonalReport(cleanReports, container); // <-- UTILISE cleanReports
         }
     } catch (e) {
         console.error("Erreur rapport:", e);
@@ -2222,35 +2387,59 @@ async function fetchAttendanceReport(mode = 'PERSONAL', period = 'monthly') {
     }
 }
 
-// Fonction helper pour l'affichage sur le profil employé
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function renderPersonalReport(reports, container) {
     if (!container) return;
     if (!reports || reports.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-400 italic">Aucun rapport disponible.</p>';
+        container.innerHTML = '<p class="text-xs text-slate-400 italic p-4 text-center">Aucun rapport disponible.</p>';
         return;
     }
+    
+    // --- TRI LONG TERME : On inverse l'ordre (le dernier arrivé en premier) ---
+    // Si 'reports' vient d'Airtable, c'est souvent du plus ancien au plus récent.
+    // On fait un reverse() simple pour afficher le dernier mois en haut.
+    const sortedReports = [...reports].reverse(); 
+
     container.innerHTML = '';
-    reports.forEach(item => {
+    
+    sortedReports.forEach(item => {
+        // ... (Le reste de votre code d'affichage reste identique) ...
+        // Utilisez 'item' ici
         let mois = item.mois || item['Mois/Année'] || '-';
         let heures = item.heures || item['Total Heures'] || 0;
         let jours = item.jours || item['Jours de présence'] || 0;
         const letter = mois !== '-' ? mois.charAt(0) : '?';
         
         container.innerHTML += `
-            <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl">
+            <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-xl hover:bg-white transition-colors">
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">${letter}</div>
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg shadow-sm border border-indigo-200">${letter}</div>
                     <div><h4 class="font-bold text-slate-800 text-sm capitalize">${mois}</h4><p class="text-[10px] text-slate-500 font-medium">Cumul validé</p></div>
                 </div>
                 <div class="text-right">
                     <p class="text-sm font-black text-slate-800">${heures}h <span class="text-[10px] text-slate-400 font-normal">/ ${jours}j</span></p>
-                    <span class="text-[9px] font-bold text-emerald-500 uppercase">Validé</span>
+                    <span class="text-[9px] font-bold text-emerald-500 uppercase bg-emerald-50 px-2 py-0.5 rounded">Validé</span>
                 </div>
             </div>
         `;
     });
 }
-
 
 
 
@@ -2441,55 +2630,57 @@ function syncClockInterface() {
 
 
 
-            
+
+
+
+
+
+
+
+
+
+
+
+
 
 async function handleClockInOut() {
-    const today = new Date().toLocaleDateString('fr-CA'); // Format YYYY-MM-DD
     const userId = currentUser.id;
+    const today = new Date().toLocaleDateString('fr-CA');
     
-    // --- RÉCUPÉRATION DES ÉTATS DEPUIS L'APPAREIL ---
+    // --- 1. NETTOYAGE INTELLIGENT DU JOUR ---
     const lastActionDate = localStorage.getItem(`clock_date_${userId}`);
-    let inDone = localStorage.getItem(`clock_in_done_${userId}`) === 'true';
-    let outDone = localStorage.getItem(`clock_out_done_${userId}`) === 'true';
-
-    // --- RÉINITIALISATION SI NOUVEAU JOUR ---
+    
     if (lastActionDate !== today) {
-        inDone = false;
-        outDone = false;
+        // C'est un nouveau jour, on remet tout à zéro
         localStorage.setItem(`clock_date_${userId}`, today);
+        localStorage.setItem(`clock_status_${userId}`, 'OUT');
         localStorage.setItem(`clock_in_done_${userId}`, 'false');
         localStorage.setItem(`clock_out_done_${userId}`, 'false');
-        localStorage.setItem(`clock_status_${userId}`, 'OUT');
+        updateClockUI(false); 
     }
 
+    // --- 2. DÉCISION BASÉE SUR LE STATUT ACTUEL (Plus fiable) ---
+    // Si le téléphone pense qu'on est OUT, on tente d'entrer.
+    // Si le téléphone pense qu'on est IN, on tente de sortir.
     const currentStatus = localStorage.getItem(`clock_status_${userId}`) || 'OUT';
-
-    // --- LOGIQUE DE BLOCAGE ---
-    if (inDone && outDone) {
-        return Swal.fire({
-            icon: 'info',
-            title: 'Service Terminé',
-            text: 'Vous avez déjà effectué votre entrée et votre sortie pour aujourd\'hui. À demain !',
-            confirmButtonColor: '#0f172a'
-        });
-    }
-
     const action = (currentStatus === 'OUT') ? 'CLOCK_IN' : 'CLOCK_OUT';
 
-    // Sécurité supplémentaire : si on essaie de faire une entrée alors qu'elle est déjà faite
-    if (action === 'CLOCK_IN' && inDone) {
-        return Swal.fire('Erreur', 'Entrée déjà enregistrée pour aujourd\'hui.', 'warning');
+    // Petite sécurité pour éviter de re-pointer si la journée est finie
+    const outDone = localStorage.getItem(`clock_out_done_${userId}`) === 'true';
+    if (action === 'CLOCK_IN' && outDone && currentStatus === 'OUT') {
+         return Swal.fire('Journée terminée', 'Vous avez déjà fait votre sortie aujourd\'hui.', 'info');
     }
 
-    // --- DÉBUT DU POINTAGE (GÉOLOCALISATION) ---
+    // --- 3. DÉBUT DU POINTAGE ---
     Swal.fire({ 
-        title: 'Vérification position...', 
-        text: 'Analyse GPS en cours...', 
+        title: 'Vérification...', 
+        text: 'Analyse GPS et Serveur...', 
         didOpen: () => Swal.showLoading(), 
         allowOutsideClick: false 
     });
 
     try {
+        // Récupération IP & GPS (Code standard)
         const ipResponse = await fetch('https://api.ipify.org?format=json');
         const ipData = await ipResponse.json();
         const userIp = ipData.ip;
@@ -2500,42 +2691,33 @@ async function handleClockInOut() {
             });
         });
 
-        const userLat = pos.coords.latitude;
-        const userLon = pos.coords.longitude;
-
-        // --- VÉRIFICATION ZONE GPS ---
+        // Vérification Zone
+        let validatedZone = "Hors Zone";
         let isInside = false;
         let dist = 0;
-        let validatedZone = "Inconnu"; // <--- AJOUTE CETTE LIGNE
 
         SIRH_CONFIG.gps.offices.forEach(office => {
-            const d = getDistance(userLat, userLon, office.lat, office.lon);
+            const d = getDistance(pos.coords.latitude, pos.coords.longitude, office.lat, office.lon);
             if (d <= office.radius) { 
                 isInside = true; 
                 dist = Math.round(d); 
-                validatedZone = office.name; // <--- ON CAPTURE LE NOM ICI
+                validatedZone = office.name; 
             }
         });
         
-
         if (SIRH_CONFIG.gps.strictMode && !isInside) {
-            return Swal.fire({
-                icon: 'error',
-                title: 'Zone non autorisée',
-                text: 'Vous devez être sur votre lieu de travail pour pointer.',
-                confirmButtonColor: '#ef4444'
-            });
+            return Swal.fire({icon: 'error', title: 'Hors Zone', text: 'Rapprochez-vous du bureau.'});
         }
 
-        // --- ENVOI AU SERVEUR ---
+        // --- 4. ENVOI AU SERVEUR ---
         const payload = {
             id: userId,
             nom: currentUser.nom,
-            action: action,
+            action: action, // On envoie l'action déterminée
             time: new Date().toISOString(),
-            gps: `${userLat},${userLon}`,
+            gps: `${pos.coords.latitude},${pos.coords.longitude}`,
             distance_bureau: dist,
-            zone: validatedZone, // <--- ON AJOUTE CETTE LIGNE
+            zone: validatedZone,
             ip: userIp,
             agent: currentUser.nom
         };
@@ -2547,36 +2729,69 @@ async function handleClockInOut() {
         });
 
         if (response.ok) {
+            // SUCCÈS STANDARD
             const nowStr = new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
             
-            // --- ENREGISTREMENT DU SUCCÈS SUR L'APPAREIL ---
             if (action === 'CLOCK_IN') {
-                localStorage.setItem(`clock_in_done_${userId}`, 'true');
                 localStorage.setItem(`clock_status_${userId}`, 'IN');
+                localStorage.setItem(`clock_in_done_${userId}`, 'true');
+                updateClockUI(true); // Passe au ROUGE (Sortie)
             } else {
-                localStorage.setItem(`clock_out_done_${userId}`, 'true');
                 localStorage.setItem(`clock_status_${userId}`, 'OUT');
+                localStorage.setItem(`clock_out_done_${userId}`, 'true');
+                updateClockUI(false); // Passe au VERT (Entrée)
             }
             
-            localStorage.setItem(`clock_last_time_${userId}`, nowStr);
-            updateClockUI(localStorage.getItem(`clock_status_${userId}`) === 'IN');
-            
-            // Mise à jour du texte
-            document.getElementById('clock-last-action').innerText = `Dernière action : ${action === 'CLOCK_IN' ? 'Entrée' : 'Sortie'} à ${nowStr}`;
-
-            Swal.fire({
-                icon: 'success',
-                title: action === 'CLOCK_IN' ? 'Entrée Enregistrée' : 'Sortie Enregistrée',
-                text: action === 'CLOCK_IN' ? 'Bonne journée de travail !' : 'Travail terminé, bonne soirée !',
-                timer: 3000,
-                showConfirmButton: false
-            });
+            document.getElementById('clock-last-action').innerText = `Validé : ${action==='CLOCK_IN'?'Entrée':'Sortie'} à ${nowStr}`;
+            Swal.fire('Succès', 'Pointage enregistré avec succès.', 'success');
         }
 
-    } catch (e) {
-        Swal.fire('Erreur', 'Problème de connexion ou de GPS : ' + e.message, 'error');
+    } catch (e) { 
+        // --- 5. L'INTELLIGENCE ARTIFICIELLE DE RÉPARATION ---
+        // C'est ici que ça se joue. On analyse l'erreur du serveur.
+        
+        const errorMsg = e.message || "";
+
+        // Si Make/Airtable dit "Refusé" ou si le message d'erreur contient des indices de doublon
+        // (Adaptez les mots clés selon vos messages d'erreur Make exacts)
+        const isDuplicateError = errorMsg.includes("déjà") || errorMsg.includes("Refus") || errorMsg.includes("exist");
+
+        if (isDuplicateError) {
+            // LE SERVEUR DIT QU'ON EST DÉJÀ DANS L'ÉTAT VOULU
+            // Donc le téléphone se trompait. On corrige le téléphone.
+
+            if (action === 'CLOCK_IN') {
+                // On a essayé d'entrer, mais le serveur dit "Déjà fait". 
+                // Conclusion : On est DÉJÀ À L'INTÉRIEUR.
+                localStorage.setItem(`clock_status_${userId}`, 'IN');
+                localStorage.setItem(`clock_in_done_${userId}`, 'true');
+                updateClockUI(true); // On force l'affichage "EN POSTE"
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Synchronisation',
+                    text: 'Le serveur indique que vous êtes déjà pointé. Votre interface a été corrigée. Vous pouvez maintenant pointer la Sortie.',
+                    confirmButtonText: 'Compris'
+                });
+
+            } else if (action === 'CLOCK_OUT') {
+                // On a essayé de sortir, mais erreur (rare, mais possible si double clic).
+                localStorage.setItem(`clock_status_${userId}`, 'OUT');
+                localStorage.setItem(`clock_out_done_${userId}`, 'true');
+                updateClockUI(false);
+                Swal.fire('Info', 'Sortie déjà enregistrée.', 'info');
+            }
+
+        } else if (errorMsg.startsWith("AUTH_ERROR_SPECIFIC:")) {
+            // Autres erreurs spécifiques de Make
+            Swal.fire('Refusé', errorMsg.replace("AUTH_ERROR_SPECIFIC:", ""), 'warning');
+        } else {
+            // Erreur technique vraie (Réseau, Timeout)
+            Swal.fire('Erreur Technique', errorMsg, 'error');
+        }
     }
 }
+
 
 
 
@@ -2745,6 +2960,8 @@ async function handleClockInOut() {
         if (!myData) {
             // On compare l'ID stocké avec l'ID du tableau (en texte pour éviter les bugs de type)
             myData = employees.find(e => String(e.id) === String(currentUser.id));
+            // AJOUTE CETTE LIGNE DANS loadMyProfile pour voir la donnée brute
+            console.log("DEBUG: Solde brut reçu :", myData.Solde_Conges, myData.solde_conges);
             if(myData) console.log("✅ Trouvé par ID exact.");
         }
 
@@ -2864,85 +3081,178 @@ async function handleClockInOut() {
                 gridHtml += `<div class="text-center mt-4 pt-2 border-t border-slate-50"><button onclick="toggleMoreDocs(this)" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-500 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"><i class="fa-solid fa-circle-plus"></i> Voir plus</button></div>`;
             }
             dC.innerHTML = gridHtml;
+
+                            // --- NOUVEAU : AFFICHAGE DU SOLDE DE CONGÉS ---
+                    const leaveBalanceEl = document.getElementById('leave-balance-display');
+                    const solde = parseFloat(myData.Solde_Conges || myData.solde_conges) || 0; 
+                    
+                    if(leaveBalanceEl) {
+                        leaveBalanceEl.innerText = `${solde} jours`;
+                        
+                        // Logique de couleur rapide (Feedback visuel)
+                        if (solde <= 5) {
+                            leaveBalanceEl.classList.remove('text-indigo-600');
+                            leaveBalanceEl.classList.add('text-orange-600');
+                        } else {
+                            leaveBalanceEl.classList.remove('text-orange-600');
+                            leaveBalanceEl.classList.add('text-indigo-600');
+                        }
+                    }
+                } // La fonction loadMyProfile se termine ici
+
         }
+    
+
+
+
+
+
+
+
+
+async function fetchEmployeeLeaveBalances() {
+    const body = document.getElementById('manager-leave-body');
+    if (!body || currentUser.role === 'EMPLOYEE') return;
+
+    body.innerHTML = '<tr><td colspan="4" class="p-6 text-center italic text-slate-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Chargement des soldes...</td></tr>';
+
+    try {
+        // On réutilise fetchAllData qui charge déjà la liste des employés
+        // (En s'assurant que Make renvoie bien le Solde_Conges)
+        await fetchData(true); 
+        
+        body.innerHTML = '';
+        
+        employees.forEach(emp => {
+            // Seuls les actifs nous intéressent ici
+            if (emp.statut !== 'Actif') return; 
+
+            // Récupération des valeurs (s'assurer du nom de la colonne venant de Make)
+            const solde = parseFloat(emp.Solde_Conges || emp.solde_conges) || 0; 
+            const status = emp.Statut_Conge_Actuel || 'Aucune'; // A créer dans Airtable
+
+            let colorClass = 'text-emerald-600';
+            if (solde < 5) colorClass = 'text-red-600 font-bold';
+            else if (solde < 10) colorClass = 'text-orange-600';
+            
+            // Logique de demande en cours (on réutilise le statut existant)
+            const activeLeaveDot = allLeaves.some(l => l.nom === emp.nom && l.statut === 'en attente') 
+                                 ? '<span class="w-2 h-2 rounded-full bg-yellow-500 mr-2 inline-block"></span> En attente'
+                                 : 'Aucune';
+
+
+            body.innerHTML += `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-8 py-3 text-sm font-bold text-slate-800">${emp.nom}</td>
+                    <td class="px-8 py-3 text-xs text-slate-500">${emp.dept}</td>
+                    <td class="px-8 py-3 text-center text-[10px] font-black">${activeLeaveDot}</td>
+                    <td class="px-8 py-3 text-right text-sm font-black ${colorClass}">${solde} jours</td>
+                </tr>
+            `;
+        });
+
+    } catch (e) {
+        console.error("Erreur chargement soldes :", e);
+        body.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-red-500">Erreur de connexion au solde des congés.</td></tr>';
+    }
+}
+
+
+
+
+
+
+
+// Variable pour gérer l'actualisation automatique du chat
+let chatIntervalId = null;
+
+function switchView(v) { 
+    // --- MODIFICATION : On mémorise la vue active ---
+    currentView = v;
+    console.log("Vue active :", currentView);
+
+    // 1. Arrêt des caméras (Nettoyage)
+    if(videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+    if(contractStream) { contractStream.getTracks().forEach(t => t.stop()); contractStream = null; }
+    
+    // --- NOUVEAU : Nettoyage du Chat ---
+    // Si on change de page, on arrête de rafraîchir les messages en arrière-plan
+    if (chatIntervalId) {
+        clearInterval(chatIntervalId);
+        chatIntervalId = null;
     }
 
+    // 2. Masquer TOUTES les sections
+    document.querySelectorAll('.view-section').forEach(section => {
+        section.classList.remove('active');
+    });
 
+    // 3. Afficher la section demandée
+    const target = document.getElementById('view-' + v);
+    if(target) target.classList.add('active');
 
+    // 4. Gestion des boutons du menu (Style actif)
+    document.querySelectorAll('.nav-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white');
+        // On remet le style par défaut
+    });
+    
+    // On active le bouton cliqué (celui qui a switchView('v') dans son onclick)
+    const activeBtn = document.querySelector(`button[onclick="switchView('${v}')"]`);
+    if(activeBtn) activeBtn.classList.add('bg-blue-600', 'text-white');
 
+    // --- CORRECTION MAJEURE ICI : RESET DU SCROLL ---
+    // On force le conteneur principal à remonter tout en haut
+    const mainContainer = document.getElementById('main-scroll-container');
+    if(mainContainer) {
+        mainContainer.scrollTo(0, 0); // Remonte instantanément
+    }
+    window.scrollTo(0, 0); // Sécurité pour le body aussi
 
-
-
-
-
-    function switchView(v) { 
-        // --- MODIFICATION : On mémorise la vue active ---
-        currentView = v;
-        console.log("Vue active :", currentView);
-
-        // 1. Arrêt des caméras (Nettoyage)
-        if(videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
-        if(contractStream) { contractStream.getTracks().forEach(t => t.stop()); contractStream = null; }
-        
-        // 2. Masquer TOUTES les sections
-        document.querySelectorAll('.view-section').forEach(section => {
-            section.classList.remove('active');
-        });
-
-        // 3. Afficher la section demandée
-        const target = document.getElementById('view-' + v);
-        if(target) target.classList.add('active');
-
-        // 4. Gestion des boutons du menu (Style actif)
-        document.querySelectorAll('.nav-btn').forEach(b => {
-            b.classList.remove('bg-blue-600', 'text-white');
-            // On remet le style par défaut
-        });
-        
-        // On active le bouton cliqué (celui qui a switchView('v') dans son onclick)
-        const activeBtn = document.querySelector(`button[onclick="switchView('${v}')"]`);
-        if(activeBtn) activeBtn.classList.add('bg-blue-600', 'text-white');
-
-        // --- CORRECTION MAJEURE ICI : RESET DU SCROLL ---
-        // On force le conteneur principal à remonter tout en haut
-        const mainContainer = document.getElementById('main-scroll-container');
-        if(mainContainer) {
-            mainContainer.scrollTo(0, 0); // Remonte instantanément
+    // 5. Logique spécifique par vue
+    const searchContainer = document.getElementById('global-search-container');
+    if(v === 'employees' || v === 'logs') { 
+        if(currentUser && currentUser.role !== 'EMPLOYEE') { 
+            searchContainer.style.visibility = 'visible'; 
+            searchContainer.style.opacity = '1'; 
         }
-        window.scrollTo(0, 0); // Sécurité pour le body aussi
-
-        // 5. Logique spécifique par vue
-        const searchContainer = document.getElementById('global-search-container');
-        if(v === 'employees' || v === 'logs') { 
-            if(currentUser && currentUser.role !== 'EMPLOYEE') { 
-                searchContainer.style.visibility = 'visible'; 
-                searchContainer.style.opacity = '1'; 
-            }
-        } else { 
-            searchContainer.style.visibility = 'hidden'; 
-            searchContainer.style.opacity = '0'; 
-        }
-        
+    } else { 
+        searchContainer.style.visibility = 'hidden'; 
+        searchContainer.style.opacity = '0'; 
+    }
+    
     if(v === 'add-new') { 
-            document.getElementById('form-onboarding').reset(); 
-            resetCamera(); 
-        }
-        
-        // --- CORRECTION : Chargement automatique des données selon l'onglet ---
-        if(v === 'logs') fetchLogs(); 
-        if(v === 'recruitment') fetchCandidates();
-        if(v === 'my-profile') {
-            loadMyProfile(); 
-            fetchPayrollData(); // C'EST CETTE LIGNE QUI MANQUAIT !
-        }
-
-        // 6. Fermer sidebar sur mobile
-        if(window.innerWidth < 768) { 
-            const sb = document.getElementById('sidebar'); 
-            if(!sb.classList.contains('-translate-x-full')) toggleSidebar(); 
-        }
+        const form = document.getElementById('form-onboarding');
+        if(form) form.reset(); // Sécurité si le formulaire n'est pas encore chargé
+        resetCamera(); 
     }
 
+    // --- NOUVEAU : Logique spécifique pour le CHAT ---
+    if (v === 'chat') {
+        fetchMessages(); // Chargement immédiat
+        chatIntervalId = setInterval(fetchMessages, 5000); // Actualisation toutes les 5s
+        // Scroll automatique vers le bas
+        setTimeout(() => {
+            const c = document.getElementById('chat-messages');
+            if(c) c.scrollTop = c.scrollHeight;
+        }, 500);
+    }
+    
+    // --- CORRECTION : Chargement automatique des données selon l'onglet ---
+    if(v === 'logs') fetchLogs(); 
+    if(v === 'recruitment') fetchCandidates();
+    if(v === 'my-profile') {
+        loadMyProfile(); 
+        fetchPayrollData();
+        fetchLeaveRequests(); 
+    }
+
+    // 6. Fermer sidebar sur mobile
+    if(window.innerWidth < 768) { 
+        const sb = document.getElementById('sidebar'); 
+        if(!sb.classList.contains('-translate-x-full')) toggleSidebar(); 
+    }
+}
 
 
 
@@ -3062,6 +3372,24 @@ async function handleClockInOut() {
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
 
 
 
@@ -3758,63 +4086,65 @@ async function handleClockInOut() {
                 if(currentUser) refreshAllData();
             });
         
-        
-    async function fetchLeaveRequests() {
-        if (!currentUser || currentUser.role === 'EMPLOYEE') return;
+       
 
-        const body = document.getElementById('leave-requests-body');
-        const section = document.getElementById('manager-leave-section');
 
-        // Fonction de nettoyage interne (accents, majuscules, espaces)
-        const normalize = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    
 
-        try {
-            const r = await secureFetch(`${URL_READ_LEAVES}?agent=${encodeURIComponent(currentUser.nom)}`);
-            const rawLeaves = await r.json();
 
-            console.log("DEBUG - Données brutes reçues d'Airtable :", rawLeaves);
 
-            allLeaves = rawLeaves.map(l => {
-                const clean = (v) => Array.isArray(v) ? v[0] : v;
 
-                const rawNom = clean(l.Employees_nom || l.nom || l['Employé']);
-                const statutNet = normalize(clean(l.Statut || l.statut));
-                const typeNet = normalize(clean(l.Type || l.type));
-                const debutRaw = clean(l['Date Début'] || l['Date de début'] || l.debut);
-                const finRaw = clean(l['Date Fin'] || l['Date de fin'] || l.fin);
 
-                // --- AJOUT : Récupération du Motif et du Document ---
-                // On récupère 'justificatif_link' comme vu sur ta capture Make
-                const motifRaw = clean(l.motif || l.Motif || "Aucun motif");
-                const docRaw = clean(l.justificatif_link || l.Justificatif || l.doc || null);
+async function fetchLeaveRequests() {
+    // CORRECTION 1 : On ne bloque plus les employés ici !
+    if (!currentUser) return; 
 
-                return {
-                    id: l.record_id || l.id || '',
-                    nom: rawNom ? String(rawNom).trim() : null,
-                    nomIndex: normalize(rawNom), // Pour comparaison stricte
-                    statut: statutNet,
-                    type: typeNet,
-                    debut: debutRaw ? parseDateSmart(debutRaw) : null,
-                    fin: finRaw ? parseDateSmart(finRaw) : null,
-                    motif: motifRaw, // Stocké ici
-                    doc: docRaw      // Stocké ici
-                };
-            });
+    const body = document.getElementById('leave-requests-body');       // Tableau Manager
+    const section = document.getElementById('manager-leave-section');  // Section Manager
+    const myBody = document.getElementById('my-leave-requests-body');  // Tableau Personnel
 
-            // Interface Manager : On filtre uniquement les "En attente" pour validation
+    // Fonction de nettoyage interne
+    const normalize = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+    try {
+        const r = await secureFetch(`${URL_READ_LEAVES}?agent=${encodeURIComponent(currentUser.nom)}`);
+        const rawLeaves = await r.json();
+
+        // Mapping des données
+        allLeaves = rawLeaves.map(l => {
+            const clean = (v) => Array.isArray(v) ? v[0] : v;
+            const rawNom = clean(l.Employees_nom || l.nom || l['Employé']);
+            
+            return {
+                id: l.record_id || l.id || '',
+                nom: rawNom ? String(rawNom).trim() : null,
+                nomIndex: normalize(rawNom),
+                statut: normalize(clean(l.Statut || l.statut)),
+                type: normalize(clean(l.Type || l.type)),
+                debut: clean(l['Date Début'] || l['Date de début'] || l.debut) ? parseDateSmart(clean(l['Date Début'] || l['Date de début'] || l.debut)) : null,
+                fin: clean(l['Date Fin'] || l['Date de fin'] || l.fin) ? parseDateSmart(clean(l['Date Fin'] || l['Date de fin'] || l.fin)) : null,
+                motif: clean(l.motif || l.Motif || "Aucun motif"),
+                doc: clean(l.justificatif_link || l.Justificatif || l.doc || null)
+            };
+        });
+
+        // ============================================================
+        // PARTIE 1 : TABLEAU DE VALIDATION (POUR MANAGER / ADMIN / RH)
+        // ============================================================
+        if (currentUser.role !== 'EMPLOYEE') {
             const pending = allLeaves.filter(l => l.statut === 'en attente');
 
-            if (body) {
+            if (body && section) {
                 body.innerHTML = '';
-                if (pending.length > 0 && section) {
+                if (pending.length > 0) {
                     section.classList.remove('hidden');
-                    section.style.display = 'block';
                     pending.forEach(l => {
-                        // --- AJOUT : Préparation des variables sécurisées pour le onclick ---
                         const safeNom = encodeURIComponent(l.nom || 'Inconnu');
                         const safeType = encodeURIComponent(l.type || 'Congé');
                         const dStart = l.debut ? l.debut.toLocaleDateString() : '?';
                         const dEnd = l.fin ? l.fin.toLocaleDateString() : '?';
+                        const diffTime = Math.abs(l.fin.getTime() - l.debut.getTime());
+                        const daysDifference = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
                         const safeMotif = encodeURIComponent(l.motif);
                         const safeDoc = l.doc ? encodeURIComponent(l.doc) : '';
 
@@ -3826,30 +4156,80 @@ async function handleClockInOut() {
                                 </td>
                                 <td class="px-8 py-4 text-xs text-slate-500">${dStart} ➔ ${dEnd}</td>
                                 <td class="px-8 py-4 text-right flex justify-end items-center gap-2">
-                                    <!-- BOUTON APERÇU (ŒIL) AJOUTÉ ICI -->
                                     <button onclick="showLeaveDetail('${safeNom}', '${safeType}', '${dStart}', '${dEnd}', '${safeMotif}', '${safeDoc}')" 
-                                            class="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm mr-2" 
-                                            title="Voir les détails">
+                                            class="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm mr-2">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
-
-                                    <button onclick="processLeave('${l.id}', 'Validé')" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-md shadow-emerald-200">OUI</button>
-                                    <button onclick="processLeave('${l.id}', 'Refusé')" class="bg-white text-red-500 border border-red-100 px-4 py-2 rounded-xl text-[10px] font-black uppercase">NON</button>
+                                    <button onclick="processLeave('${l.id}', 'Validé', ${daysDifference})" class="bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase shadow-md shadow-emerald-200">OUI</button>
+                                    <button onclick="processLeave('${l.id}', 'Refusé', 0)" class="bg-white text-red-500 border border-red-100 px-4 py-2 rounded-xl text-[10px] font-black uppercase">NON</button>
                                 </td>
                             </tr>`;
                     });
-                } else if (section) {
+                } else {
                     section.classList.add('hidden');
                 }
             }
-
-            // RECALCUL DU GRAPHIQUE AVEC LES NOUVELLES DONNÉES
-            renderCharts();
-
-        } catch (e) {
-            console.error("Erreur fetchLeaveRequests:", e);
         }
+
+        // ============================================================
+        // PARTIE 2 : HISTORIQUE PERSONNEL (POUR TOUT LE MONDE)
+        // ============================================================
+        // CORRECTION 2 : Cette partie s'exécute maintenant car on a retiré le return au début
+        if (myBody) {
+            myBody.innerHTML = '';
+            
+            // On filtre les demandes qui appartiennent à l'utilisateur connecté
+            // Utilisation de normalize pour éviter les erreurs d'espaces/majuscules
+            const myNameNormalized = normalize(currentUser.nom);
+            const myRequests = allLeaves.filter(l => l.nomIndex === myNameNormalized);
+
+            if (myRequests.length === 0) {
+                myBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-400 italic">Aucune demande soumise.</td></tr>';
+            } else {
+                // On trie par date (plus récent en haut)
+                myRequests.sort((a, b) => b.debut - a.debut);
+
+                myRequests.forEach(r => {
+                    const dStart = r.debut ? r.debut.toLocaleDateString() : '?';
+                    const dEnd = r.fin ? r.fin.toLocaleDateString() : '?';
+                    
+                    let statusClass = 'bg-slate-100 text-slate-600';
+                    let statusText = r.statut.toUpperCase();
+
+                    if (r.statut.includes('attente')) {
+                        statusClass = 'bg-yellow-50 text-yellow-700 border border-yellow-100';
+                        statusText = '⏳ EN ATTENTE';
+                    } else if (r.statut.includes('valid')) {
+                        statusClass = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+                        statusText = '✅ APPROUVÉ';
+                    } else if (r.statut.includes('refus')) {
+                        statusClass = 'bg-red-50 text-red-700 border border-red-100';
+                        statusText = '❌ REFUSÉ';
+                    }
+
+                    myBody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition-colors border-b last:border-0">
+                            <td class="px-6 py-4 text-xs font-bold text-slate-700">${dStart} <span class="text-slate-400 mx-1">au</span> ${dEnd}</td>
+                            <td class="px-6 py-4 text-xs font-medium text-slate-500 capitalize">${r.type}</td>
+                            <td class="px-6 py-4 text-xs text-slate-400 italic">${r.motif.substring(0, 25) + (r.motif.length > 25 ? '...' : '')}</td>
+                            <td class="px-6 py-4 text-right">
+                                <span class="px-2.5 py-1.5 rounded-lg text-[10px] font-black ${statusClass}">${statusText}</span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // Mise à jour des graphiques si nécessaire
+        renderCharts();
+
+    } catch (e) {
+        console.error("Erreur fetchLeaveRequests:", e);
+        if(myBody) myBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-400">Erreur de chargement des congés.</td></tr>';
     }
+}
+
 
 
 
@@ -4080,56 +4460,79 @@ async function handleClockInOut() {
 
 
 
-    async function processLeave(recordId, decision) {
-        // 1. Demander confirmation à l'utilisateur
-        const confirmation = await Swal.fire({
-            title: decision === 'Validé' ? 'Approuver ce congé ?' : 'Refuser ce congé ?',
-            text: "L'employé sera informé de cette décision.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Oui, confirmer',
-            cancelButtonText: 'Annuler',
-            confirmButtonColor: decision === 'Validé' ? '#10b981' : '#ef4444'
+
+
+async function processLeave(recordId, decision, daysToDeduct = 0) {
+    // daysToDeduct est maintenant le nombre de jours calculé entre début et fin
+
+    // 1. Demander confirmation à l'utilisateur
+    const confirmation = await Swal.fire({
+        title: decision === 'Validé' ? `Approuver ${daysToDeduct} jours de congé ?` : 'Refuser ce congé ?',
+        // On affiche directement le nombre de jours dans le texte :
+        text: decision === 'Validé' ? `La déduction de ${daysToDeduct} jours sera appliquée au solde de l'employé.` : "L'employé sera informé de cette décision.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Oui, confirmer',
+        cancelButtonText: 'Annuler',
+        confirmButtonColor: decision === 'Validé' ? '#10b981' : '#ef4444'
+    });
+
+    if (confirmation.isConfirmed) {
+        // 2. Afficher un chargement
+        Swal.fire({ 
+            title: 'Traitement en cours...', 
+            allowOutsideClick: false, 
+            didOpen: () => Swal.showLoading() 
         });
 
-        if (confirmation.isConfirmed) {
-            // 2. Afficher un chargement
-            Swal.fire({ 
-                title: 'Traitement en cours...', 
-                allowOutsideClick: false, 
-                didOpen: () => Swal.showLoading() 
+        // NOUVEAU : On définit la déduction à daysToDeduct pour l'envoi à Make
+        const finalDaysDeduct = (decision === 'Validé') ? daysToDeduct : 0;
+
+        try {
+            // 3. Envoyer l'ordre au serveur Render -> Make
+            const response = await secureFetch(URL_LEAVE_ACTION, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    id: recordId, 
+                    decision: decision, 
+                    days_deduct: finalDaysDeduct, // <--- ENVOI AUTOMATIQUE DU NOMBRE
+                    agent: currentUser.nom 
+                })
             });
 
-            try {
-                // 3. Envoyer l'ordre au serveur Render -> Make
-                const response = await secureFetch(URL_LEAVE_ACTION, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        id: recordId, 
-                        decision: decision, 
-                        agent: currentUser.nom 
-                    })
+            if (response.ok) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Terminé',
+                    text: `La demande a été marquée comme ${decision.toLowerCase()} et ${finalDaysDeduct} jours ont été déduits.`,
+                    timer: 3000
                 });
-
-                if (response.ok) {
-                    // 4. Succès
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Terminé',
-                        text: `La demande a été marquée comme ${decision.toLowerCase()}.`,
-                        timer: 2000
-                    });
-                        fetchLeaveRequests(); // On ne recharge que la liste des congés
-                } else {
-                    throw new Error("Erreur du serveur");
-                }
-            } catch (e) {
-                console.error("Erreur action congé:", e);
-                Swal.fire('Erreur', "Impossible de valider l'action : " + e.message, 'error');
+                // 4. On actualise tout pour voir le nouveau solde
+                refreshAllData(true); 
+            } else {
+                throw new Error("Erreur du serveur");
             }
+        } catch (e) {
+            console.error("Erreur action congé:", e);
+            Swal.fire('Erreur', "Impossible de valider l'action : " + e.message, 'error');
         }
     }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4238,14 +4641,7 @@ async function handleClockInOut() {
 
 
 
-
-
-
-
-
-
-
-    async function fetchCandidates() {
+async function fetchCandidates() {
         const body = document.getElementById('candidates-body');
         // Petit loader sympa
         body.innerHTML = '<tr><td colspan="4" class="p-8 text-center"><i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-2xl"></i><p class="text-xs text-slate-400 mt-2 font-bold uppercase">Chargement des talents...</p></td></tr>';
@@ -4290,70 +4686,86 @@ async function handleClockInOut() {
             }
 
             // Boucle d'affichage
-            candidates.forEach(c => {
-                const safeNom = encodeURIComponent(c.nom || "Inconnu");
-                
-                // Sécurisation des liens documents
-                const cvLink = c.cv_link ? encodeURIComponent(formatGoogleLink(c.cv_link)) : '';
-                const lmLink = c.lm_link ? encodeURIComponent(formatGoogleLink(c.lm_link)) : '';
-                const dipLink = c.diploma_link ? encodeURIComponent(formatGoogleLink(c.diploma_link)) : '';
-                const attLink = c.attestation_link ? encodeURIComponent(formatGoogleLink(c.attestation_link)) : '';
+// DANS LA FONCTION fetchCandidates...
+candidates.forEach(c => {
+    const safeNom = encodeURIComponent(c.nom || "Inconnu");
 
-                // Gestion du Statut (Couleurs)
-                let badgeClass = 'bg-slate-100 text-slate-600';
-                let st = c.statut || 'Nouveau';
-                
-                if(st === 'Entretien') badgeClass = 'bg-blue-100 text-blue-700';
-                else if(st === 'Embauché' || st === 'Validé') badgeClass = 'bg-emerald-100 text-emerald-700';
-                else if(st.includes('Refus')) badgeClass = 'bg-red-50 text-red-500';
-                else if(st === 'Nouveau') badgeClass = 'bg-yellow-50 text-yellow-700';
+    // 1. RECUPERATION DES LIENS (Incluant l'ID CARD maintenant)
+    const getAttachmentUrl = (attachment) => {
+        if (!attachment) return null;
+        if (Array.isArray(attachment) && attachment.length > 0) return attachment[0].url;
+        if (typeof attachment === 'string' && attachment.startsWith('http')) return attachment;
+        return null;
+    };
 
-                const btnDocs = `
-                    <button onclick="showCandidateDocs('${safeNom}', '${c.poste || 'Candidat'}', '${cvLink}', '${lmLink}', '${dipLink}', '${attLink}')" 
-                            class="p-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all mr-2" title="Ouvrir le dossier">
-                        <i class="fa-solid fa-folder-open"></i>
-                    </button>
-                `;
+    const cvLink = getAttachmentUrl(c.cv_link);
+    const lMLink = getAttachmentUrl(c.lm_link);
+    const dipLink = getAttachmentUrl(c.diploma_link);
+    const attLink = getAttachmentUrl(c.attestation_link);
+    const idCardLink = getAttachmentUrl(c.id_card_link); // <--- AJOUT ICI
 
-                let actionButtons = '';
+    // 2. ENCODAGE SECURISE
+    const safeCv = cvLink ? encodeURIComponent(cvLink) : '';
+    const safeLm = lMLink ? encodeURIComponent(lMLink) : '';
+    const safeDip = dipLink ? encodeURIComponent(dipLink) : '';
+    const safeAtt = attLink ? encodeURIComponent(attLink) : '';
+    const safeIdCard = idCardLink ? encodeURIComponent(idCardLink) : ''; // <--- AJOUT ICI
 
-                // Logique des boutons d'action selon le statut
-                if (st === 'Nouveau' || !c.statut) {
-                    actionButtons = `
-                        ${btnDocs}
-                        <button onclick="handleCandidateAction('${c.record_id}', 'VALIDER_POUR_ENTRETIEN')" class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-blue-200 transition-all mr-2"><i class="fa-solid fa-calendar-check mr-1"></i> Entretien</button>
-                        <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_IMMEDIAT')" class="bg-white border border-red-100 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-xmark mr-1"></i> Refus</button>
-                    `;
-                } else if (st === 'Entretien') {
-                    actionButtons = `
-                        ${btnDocs}
-                        <button onclick="handleCandidateAction('${c.record_id}', 'ACCEPTER_EMBAUCHE')" class="bg-emerald-500 text-white hover:bg-emerald-600 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-emerald-200 transition-all mr-2"><i class="fa-solid fa-user-plus mr-1"></i> Embaucher</button>
-                        <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_APRES_ENTRETIEN')" class="bg-white border border-orange-100 text-orange-500 hover:bg-orange-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-thumbs-down mr-1"></i> Refus</button>
-                    `;
-                } else {
-                    actionButtons = `${btnDocs} <span class="text-[10px] font-bold text-slate-300 italic">Dossier Traité</span>`;
-                }
+    // 3. GESTION STATUT (Couleurs)
+    let badgeClass = 'bg-slate-100 text-slate-600';
+    let st = c.statut || 'Nouveau';
+    if(st === 'Entretien') badgeClass = 'bg-blue-100 text-blue-700';
+    else if(st === 'Embauché' || st === 'Validé') badgeClass = 'bg-emerald-100 text-emerald-700';
+    else if(st.includes('Refus')) badgeClass = 'bg-red-50 text-red-500';
+    else if(st === 'Nouveau') badgeClass = 'bg-yellow-50 text-yellow-700';
 
-                body.innerHTML += `
-                <tr class="border-b hover:bg-slate-50 transition-colors group">
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">${c.nom ? c.nom.charAt(0) : '?'}</div>
-                            <div>
-                                <div class="font-bold text-sm text-slate-800">${c.nom}</div>
-                                <div class="text-[10px] text-slate-400 font-mono">${c.email}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-tight">${c.poste || 'Non précisé'}</td>
-                    <td class="px-6 py-4 text-center">
-                        <span class="${badgeClass} px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide border border-black/5 shadow-sm">${st}</span>
-                    </td>
-                    <td class="px-6 py-4 text-right flex justify-end items-center">
-                        ${actionButtons}
-                    </td>
-                </tr>`;
-            });
+    // 4. BOUTON DOSSIER (Mise à jour des arguments pour inclure l'ID Card à la fin)
+    const btnDocs = `
+        <button onclick="showCandidateDocs('${safeNom}', '${c.poste || 'Candidat'}', '${safeCv}', '${safeLm}', '${safeDip}', '${safeAtt}', '${safeIdCard}')" 
+                class="p-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all mr-2" title="Ouvrir le dossier">
+            <i class="fa-solid fa-folder-open"></i>
+        </button>
+    `;
+
+    // 5. BOUTONS D'ACTION
+    let actionButtons = '';
+    if (st === 'Nouveau' || !c.statut) {
+        actionButtons = `
+            ${btnDocs}
+            <button onclick="handleCandidateAction('${c.record_id}', 'VALIDER_POUR_ENTRETIEN')" class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-blue-200 transition-all mr-2"><i class="fa-solid fa-calendar-check mr-1"></i> Entretien</button>
+            <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_IMMEDIAT')" class="bg-white border border-red-100 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-xmark mr-1"></i> Refus</button>
+        `;
+    } else if (st === 'Entretien') {
+        actionButtons = `
+            ${btnDocs}
+            <button onclick="handleCandidateAction('${c.record_id}', 'ACCEPTER_EMBAUCHE')" class="bg-emerald-500 text-white hover:bg-emerald-600 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-emerald-200 transition-all mr-2"><i class="fa-solid fa-user-plus mr-1"></i> Embaucher</button>
+            <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_APRES_ENTRETIEN')" class="bg-white border border-orange-100 text-orange-500 hover:bg-orange-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-thumbs-down mr-1"></i> Refus</button>
+        `;
+    } else {
+        actionButtons = `${btnDocs} <span class="text-[10px] font-bold text-slate-300 italic">Dossier Traité</span>`;
+    }
+
+    // 6. INJECTION HTML (Le reste ne change pas)
+    body.innerHTML += `
+    <tr class="border-b hover:bg-slate-50 transition-colors group">
+        <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">${c.nom ? c.nom.charAt(0) : '?'}</div>
+                <div>
+                    <div class="font-bold text-sm text-slate-800">${c.nom}</div>
+                    <div class="text-[10px] text-slate-400 font-mono">${c.email}</div>
+                </div>
+            </div>
+        </td>
+        <td class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-tight">${c.poste || 'Non précisé'}</td>
+        <td class="px-6 py-4 text-center">
+            <span class="${badgeClass} px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide border border-black/5 shadow-sm">${st}</span>
+        </td>
+        <td class="px-6 py-4 text-right flex justify-end items-center">
+            ${actionButtons}
+        </td>
+    </tr>`;
+});
 
         } catch (e) {
             console.error("Erreur Candidats:", e);
@@ -4373,57 +4785,198 @@ async function handleClockInOut() {
 
 
 
-    // --- POPUP DOSSIER (4 ONGLETS) ---
-    function showCandidateDocs(safeNom, poste, cv, lm, dip, att) {
-        const nom = decodeURIComponent(safeNom);
-        const docs = {
-            'cv': cv ? decodeURIComponent(cv) : null,
-            'lm': lm ? decodeURIComponent(lm) : null,
-            'dip': dip ? decodeURIComponent(dip) : null,
-            'att': att ? decodeURIComponent(att) : null
-        };
+    // Fonction DESIGN FINAL (Airtable Compatible + Scroll Vertical autorisé, Horizontal banni)
+function showCandidateDocs(safeNom, poste, cv, lm, dip, att, idCard) {
+    const nom = decodeURIComponent(safeNom);
+    
+    const docs = [
+        { id: 'cv', label: 'CV', url: cv ? decodeURIComponent(cv) : null, icon: 'fa-file-user', color: 'blue' },
+        { id: 'lm', label: 'Lettre Motiv.', url: lm ? decodeURIComponent(lm) : null, icon: 'fa-envelope-open-text', color: 'pink' },
+        { id: 'id_card', label: 'Pièce Identité', url: idCard ? decodeURIComponent(idCard) : null, icon: 'fa-id-card', color: 'purple' },
+        { id: 'dip', label: 'Diplôme', url: dip ? decodeURIComponent(dip) : null, icon: 'fa-graduation-cap', color: 'emerald' },
+        { id: 'att', label: 'Attestation', url: att ? decodeURIComponent(att) : null, icon: 'fa-file-invoice', color: 'orange' }
+    ];
 
-        // Helper pour afficher l'iframe Google Preview
-        const getViewer = (link) => {
-            if (!link || link.length < 5 || link.includes('ui-avatars')) return `<div class="h-64 flex items-center justify-center text-slate-400 italic bg-slate-50 rounded-xl border border-dashed">Document non fourni</div>`;
-            const driveId = getDriveId(link);
-            const url = driveId ? `https://drive.google.com/file/d/${driveId}/preview` : link;
-            return `<iframe src="${url}" width="100%" height="500px" class="rounded-xl border border-slate-200 bg-white mb-2"></iframe>
-                    <div class="text-right"><a href="${link}" target="_blank" class="text-xs font-bold text-blue-600 hover:underline"><i class="fa-solid fa-external-link-alt"></i> Ouvrir dans un nouvel onglet</a></div>`;
-        };
+    // --- COLONNE GAUCHE (Menu) ---
+    let buttonsHtml = '<div class="flex flex-col gap-2 overflow-y-auto pr-1 custom-scroll" style="max-height: 350px;">';
+    let firstDocUrl = null;
+    let hasDocs = false;
 
-        Swal.fire({
-            title: `<div class="text-left"><span class="text-xs text-slate-400 uppercase">Candidature</span><div class="text-2xl font-black text-slate-800">${nom}</div><div class="text-sm text-blue-600 font-bold uppercase">${poste}</div></div>`,
-            html: `
-                <div class="mt-4">
-                    <div class="flex p-1 bg-slate-100 rounded-xl mb-4 gap-1">
-                        <button onclick="switchTab('cv')" id="tab-cv" class="doc-tab flex-1 py-2 text-[10px] font-black uppercase rounded-lg bg-white shadow-sm text-slate-800 transition-all">CV</button>
-                        <button onclick="switchTab('lm')" id="tab-lm" class="doc-tab flex-1 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 hover:bg-white/50 transition-all">Lettre</button>
-                        <button onclick="switchTab('dip')" id="tab-dip" class="doc-tab flex-1 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 hover:bg-white/50 transition-all">Diplômes</button>
-                        <button onclick="switchTab('att')" id="tab-att" class="doc-tab flex-1 py-2 text-[10px] font-black uppercase rounded-lg text-slate-500 hover:bg-white/50 transition-all">Attest.</button>
+    docs.forEach(d => {
+        if (d.url && d.url !== 'null' && d.url.length > 5) {
+            hasDocs = true;
+            if (!firstDocUrl) firstDocUrl = d.url; 
+            
+            buttonsHtml += `
+                <button onclick="changePreview('${d.url}', this)" 
+                    class="doc-btn w-full flex items-center gap-2 p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all text-left group shadow-sm">
+                    <div class="w-8 h-8 shrink-0 rounded-lg bg-${d.color}-50 flex items-center justify-center text-${d.color}-600 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid ${d.icon} text-sm"></i>
                     </div>
-                    <div id="content-cv" class="doc-content block">${getViewer(docs.cv)}</div>
-                    <div id="content-lm" class="doc-content hidden">${getViewer(docs.lm)}</div>
-                    <div id="content-dip" class="doc-content hidden">${getViewer(docs.dip)}</div>
-                    <div id="content-att" class="doc-content hidden">${getViewer(docs.att)}</div>
-                </div>
-            `,
-            width: 900,
-            showConfirmButton: true,
-            confirmButtonText: 'Fermer',
-            confirmButtonColor: '#0f172a',
-            didOpen: () => {
-                // Logique locale pour les onglets
-                window.switchTab = (t) => {
-                    document.querySelectorAll('.doc-tab').forEach(b => { b.classList.remove('bg-white', 'shadow-sm', 'text-slate-800'); b.classList.add('text-slate-500'); });
-                    document.querySelectorAll('.doc-content').forEach(c => c.classList.add('hidden'));
-                    document.getElementById(`tab-${t}`).classList.add('bg-white', 'shadow-sm', 'text-slate-800');
-                    document.getElementById(`tab-${t}`).classList.remove('text-slate-500');
-                    document.getElementById(`content-${t}`).classList.remove('hidden');
-                };
-            }
-        });
+                    <div class="overflow-hidden flex-1 min-w-0">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-wide truncate">DOC</p>
+                        <p class="text-xs font-bold text-slate-700 truncate">${d.label}</p>
+                    </div>
+                </button>
+            `;
+        }
+    });
+    buttonsHtml += '</div>';
+
+    if (!hasDocs) {
+        buttonsHtml = `<div class="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-center text-slate-400 text-xs italic">Aucun document</div>`;
     }
+
+    // --- LOGIQUE D'AFFICHAGE ---
+    window.changePreview = function(url, btn) {
+        // 1. Style des boutons
+        document.querySelectorAll('.doc-btn').forEach(b => {
+            b.classList.remove('ring-2', 'ring-blue-500', 'bg-blue-50/50');
+            b.classList.add('bg-white', 'border-slate-200');
+        });
+        if(btn) {
+            btn.classList.remove('bg-white', 'border-slate-200');
+            btn.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/50');
+        }
+
+        const viewerFrame = document.getElementById('doc-viewer-frame');
+        const viewerImg = document.getElementById('doc-viewer-img');
+        const extLink = document.getElementById('external-link-btn');
+        const container = document.getElementById('preview-container');
+
+        if(extLink) extLink.href = url;
+
+        // 2. Détection IMAGE vs AUTRE (PDF)
+        // On considère comme image : les extensions classiques OU les liens Airtable hébergeant des images
+        // Les liens Airtable ressemblent souvent à v5.airtableusercontent...
+        const isImageExtension = url.match(/\.(jpeg|jpg|gif|png|webp|bmp)$/i);
+        const isAirtableImage = url.includes('airtableusercontent') && !url.toLowerCase().includes('.pdf');
+        
+        // SÉCURITÉ : Google Drive ID
+        const driveMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+        let finalUrl = url;
+        
+        if (driveMatch) {
+            // Conversion Drive -> Image directe
+            finalUrl = `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+            viewerFrame.classList.add('hidden');
+            viewerImg.classList.remove('hidden');
+            viewerImg.src = finalUrl;
+        } 
+        else if (isImageExtension || isAirtableImage) {
+            // C'EST UNE IMAGE (Airtable ou autre)
+            viewerFrame.classList.add('hidden');
+            viewerImg.classList.remove('hidden');
+            viewerImg.src = url;
+            
+            // Réglage du conteneur pour le scroll
+            container.classList.remove('overflow-hidden');
+            container.classList.add('overflow-y-auto', 'overflow-x-hidden');
+        } 
+        else {
+            // C'EST UN PDF (ou autre fichier) -> IFRAME
+            viewerImg.classList.add('hidden');
+            viewerFrame.classList.remove('hidden');
+            
+            // Ajustement URL Drive pour PDF
+            if(url.includes('drive.google.com') && url.includes('/view')) finalUrl = url.replace('/view', '/preview');
+            
+            viewerFrame.src = finalUrl;
+            
+            // Pour l'iframe, on laisse le conteneur hidden car l'iframe a son propre scroll
+            container.classList.add('overflow-hidden');
+            container.classList.remove('overflow-y-auto');
+        }
+    };
+
+    // --- HTML SWEETALERT ---
+    Swal.fire({
+        title: null, 
+        html: `
+            <div class="flex flex-col md:flex-row h-[500px] gap-4 text-left">
+                
+                <!-- GAUCHE : MENU (25%) -->
+                <div class="w-full md:w-[25%] flex flex-col h-full border-r border-slate-100 pr-2">
+                    <div class="mb-4">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Candidat</p>
+                        <h2 class="text-xl font-extrabold text-slate-800 leading-tight mb-1 truncate">${nom}</h2>
+                        <span class="inline-block bg-blue-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide">
+                            ${poste}
+                        </span>
+                    </div>
+                    
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Fichiers</p>
+                    ${buttonsHtml}
+
+                    <div class="mt-auto pt-2">
+                        <button onclick="Swal.close()" class="w-full py-2.5 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs hover:bg-slate-200 transition-colors uppercase">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DROITE : APERÇU (75%) -->
+                <!-- 
+                     id="preview-container" : C'est lui qui gère le scroll.
+                     overflow-x-hidden : TUE le scroll horizontal.
+                     overflow-y-auto : ACTIVE le scroll vertical si l'image est grande.
+                -->
+                <div id="preview-container" class="w-full md:w-[75%] h-full bg-slate-900 rounded-xl border border-slate-200 relative flex flex-col items-center shadow-inner overflow-x-hidden overflow-y-auto custom-scroll">
+                    
+                    ${hasDocs ? `
+                        <div class="absolute top-3 right-3 z-10 sticky">
+                            <a id="external-link-btn" href="${firstDocUrl || '#'}" target="_blank" class="bg-white/90 backdrop-blur text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-sm border hover:text-blue-600 transition-all flex items-center gap-1">
+                                <i class="fa-solid fa-up-right-from-square"></i> Ouvrir
+                            </a>
+                        </div>
+                        
+                        <!-- IFRAME (PDF) : Prend 100% hauteur -->
+                        <iframe id="doc-viewer-frame" src="" class="w-full h-full bg-white hidden" frameborder="0"></iframe>
+                        
+                        <!-- IMG : Largeur 100% (w-full) et Hauteur Auto (h-auto) 
+                             Cela force l'image à toucher les bords gauche/droite (pas de scroll H)
+                             mais à s'allonger vers le bas (scroll V) -->
+                        <img id="doc-viewer-img" class="w-full h-auto min-h-full bg-black/5 hidden object-top">
+
+                    ` : `
+                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-500">
+                            <i class="fa-solid fa-file-circle-xmark text-5xl opacity-20 mb-3"></i>
+                            <p class="text-xs font-medium">Aucun aperçu</p>
+                        </div>
+                    `}
+                </div>
+            </div>
+        `,
+        width: '1000px',
+        showConfirmButton: false, 
+        showCloseButton: false,
+        padding: '1.5rem',
+        customClass: { popup: 'rounded-[1.5rem]', htmlContainer: '!m-0' },
+        didOpen: () => {
+            const firstBtn = document.querySelector('.doc-btn');
+            if(firstBtn) {
+                const onclickStr = firstBtn.getAttribute('onclick');
+                const url = onclickStr.split("'")[1];
+                window.changePreview(url, firstBtn);
+            }
+        }
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4640,46 +5193,69 @@ async function handleClockInOut() {
 
 
 
-    async function fetchPayrollData() {
-        const container = document.getElementById('payroll-container');
-        if (!container || !currentUser) return;
 
-        try {
-            // On appelle ton backend Render qui va interroger le scénario Make n°1
-            const r = await secureFetch(`${URL_READ_PAYROLL}?employee_id=${encodeURIComponent(currentUser.id)}&agent=${encodeURIComponent(currentUser.nom)}`);
-            const payrolls = await r.json();
+
+                                                async function fetchPayrollData() {
+    const container = document.getElementById('payroll-container');
+    const countLabel = document.getElementById('count-payroll'); // Nouveau compteur
+    if (!container || !currentUser) return;
+
+    try {
+        const r = await secureFetch(`${URL_READ_PAYROLL}?employee_id=${encodeURIComponent(currentUser.id)}&agent=${encodeURIComponent(currentUser.nom)}`);
+        const payrolls = await r.json();
+        
+        container.innerHTML = '';
+        if(countLabel) countLabel.innerText = payrolls.length || 0;
+
+        if (!payrolls || payrolls.length === 0) {
+            container.innerHTML = '<p class="col-span-full text-[10px] text-slate-400 italic text-center py-10">Aucun bulletin disponible</p>';
+            return;
+        }
+
+        // --- TRI LONG TERME : Du plus récent au plus ancien ---
+        // On suppose qu'il y a une Année et un Mois, ou une date de création
+        // On convertit mois/année en date pour trier
+        const monthMap = { 'Janvier':1, 'Février':2, 'Mars':3, 'Avril':4, 'Mai':5, 'Juin':6, 'Juillet':7, 'Août':8, 'Septembre':9, 'Octobre':10, 'Novembre':11, 'Décembre':12 };
+        
+        payrolls.sort((a, b) => {
+            const yA = parseInt(a.Année) || 0; const yB = parseInt(b.Année) || 0;
+            const mA = monthMap[a.Mois] || 0; const mB = monthMap[b.Mois] || 0;
+            if (yA !== yB) return yB - yA; // Année décroissante
+            return mB - mA; // Mois décroissant
+        });
+
+        payrolls.forEach(p => {
+            const montant = p.Salaire_Net ? new Intl.NumberFormat('fr-FR').format(p.Salaire_Net) + ' FCFA' : '--';
+            const titre = `${p.Mois} ${p.Année}`;
             
-            container.innerHTML = '';
-
-            if (!payrolls || payrolls.length === 0) {
-                container.innerHTML = '<p class="text-[10px] text-slate-400 italic text-center py-4">Aucun bulletin disponible</p>';
-                return;
-            }
-
-            payrolls.forEach(p => {
-                const montant = p.Salaire_Net ? new Intl.NumberFormat('fr-FR').format(p.Salaire_Net) + ' FCFA' : '--';
-                const titre = `${p.Mois} ${p.Année}`;
-                
-                container.innerHTML += `
-                    <div class="flex items-center justify-between p-3 border border-slate-100 bg-slate-50 rounded-xl hover:bg-white transition-all group shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-emerald-100 text-emerald-600 p-2 rounded-lg"><i class="fa-solid fa-file-pdf"></i></div>
-                            <div>
-                                <p class="text-xs font-bold text-slate-700">${titre}</p>
-                                <p class="text-[9px] text-emerald-600 font-black uppercase">${montant}</p>
-                            </div>
+            container.innerHTML += `
+                <div class="flex flex-col justify-between p-4 border border-slate-100 bg-slate-50 rounded-xl hover:bg-white hover:border-blue-200 hover:shadow-md transition-all group">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="bg-white border border-slate-100 text-emerald-600 p-2.5 rounded-xl shadow-sm">
+                            <i class="fa-solid fa-file-invoice text-xl"></i>
                         </div>
-                        <button onclick="viewDocument('${p.Fiche_PDF}', 'Bulletin ${titre}')" class="p-2 text-blue-600 hover:bg-blue-100 rounded-lg">
+                        <button onclick="viewDocument('${p.Fiche_PDF}', 'Bulletin ${titre}')" class="text-slate-300 hover:text-blue-600 transition-colors">
                             <i class="fa-solid fa-eye"></i>
                         </button>
                     </div>
-                `;
-            });
-        } catch (e) {
-            console.warn("Erreur bulletins:", e);
-            container.innerHTML = '<p class="text-[10px] text-red-400 italic text-center py-4">Erreur de chargement</p>';
-        }
+                    <div>
+                        <p class="text-xs font-bold text-slate-700 mb-1">${titre}</p>
+                        <p class="text-[10px] text-emerald-600 font-black uppercase tracking-wide bg-emerald-50 inline-block px-2 py-1 rounded">${montant}</p>
+                    </div>
+                </div>
+            `;
+        });
+    } catch (e) {
+        console.warn("Erreur bulletins:", e);
+        container.innerHTML = '<p class="col-span-full text-[10px] text-red-400 italic text-center py-4">Erreur de chargement</p>';
     }
+}
+
+
+
+
+
+
 
 
     function exportToCSV() {
@@ -4895,45 +5471,132 @@ async function handleClockInOut() {
     // Variable temporaire pour stocker les données du rapport affiché
     let currentReportData = [];
 
-    function downloadReportCSV() {
-        if (!currentReportData || currentReportData.length === 0) {
-            return Swal.fire('Erreur', 'Aucune donnée à exporter.', 'warning');
-        }
+    function downloadReportCSV(period = 'monthly') {
+    if (!currentReportData || currentReportData.length === 0) {
+        return Swal.fire('Erreur', 'Aucune donnée à exporter.', 'warning');
+    }
 
-        // 1. En-têtes du fichier Excel
-        const headers = ["Mois/Annee", "Employe", "Jours Presence", "Total Heures", "Statut"];
+    let headers = [];
+    let csvContent = "";
+
+    if (period === 'today') {
+        // En-têtes pour le rapport du jour
+        headers = ["Employe", "Heure Arrivee", "Zone", "Statut"];
+        csvContent = headers.join(";") + "\n";
         
-        // 2. Construction du contenu CSV (Séparateur point-virgule pour Excel français)
-        let csvContent = headers.join(";") + "\n";
+        currentReportData.forEach(row => {
+            const clean = (text) => String(text).replace(/;/g, ",").replace(/\n/g, " ");
+            let heureAffichee = row.heure_arrivee.match(/(\d{2}:\d{2})/) ? row.heure_arrivee.match(/(\d{2}:\d{2})/)[1] : row.heure_arrivee;
+            
+            const rowData = [
+                clean(row.nom),
+                clean(heureAffichee),
+                clean(row.zone),
+                'PRÉSENT' 
+            ];
+            const cleanRow = rowData.map(val => `"${String(val).replace(/"/g, '""')}"`);
+            csvContent += cleanRow.join(";") + "\n";
+        });
+        
+    } else {
+        // En-têtes pour le rapport mensuel (Ton code qui marche bien)
+        headers = ["Mois/Annee", "Employe", "Jours Presence", "Total Heures", "Statut"];
+        csvContent = headers.join(";") + "\n";
 
         currentReportData.forEach(row => {
-            // On nettoie les données pour éviter les bugs (guillemets, etc.)
             const clean = (text) => String(text).replace(/;/g, ",").replace(/\n/g, " ");
             
-            const line = [
+            const rowData = [
                 clean(row.mois),
                 clean(row.nom),
                 clean(row.jours),
-                clean(row.heures).replace('h', ''), // On enlève le 'h' pour avoir un chiffre
+                clean(row.heures).replace('h', ''), 
                 clean(row.statut)
             ];
-            csvContent += line.join(";") + "\n";
+            const cleanRow = rowData.map(val => `"${String(val).replace(/"/g, '""')}"`);
+            csvContent += cleanRow.join(";") + "\n";
         });
-
-        // 3. Création et téléchargement du fichier
-        // Le BOM \ufeff permet à Excel d'afficher correctement les accents
-        const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        
-        const dateStr = new Date().toLocaleDateString('fr-FR').replace(/\//g, "-");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `Rapport_Presence_${dateStr}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
     }
+
+    // 3. Créer le fichier et le télécharger
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    const dateStr = new Date().toLocaleDateString('fr-FR').replace(/\//g, "-");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Rapport_Presence_${dateStr}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 3000});
+    Toast.fire({ icon: 'success', title: 'Exportation réussie !' });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// CONFIGURATION DES LIENS DU FORMULAIRE
+const AIRTABLE_FORM_PUBLIC_LINK = "https://airtable.com/appMZ85rH1jnHtiyo/pagaxgodARPVOvib4/form"; // Remplacez par votre lien de partage
+const AIRTABLE_FORM_EDIT_LINK = "https://airtable.com/appMZ85rH1jnHtiyo/pagaxgodARPVOvib4/edit"; // Remplacez par le lien de votre vue formulaire sur Airtable
+
+// Fonction pour copier le lien public
+function copyFormLink() {
+    navigator.clipboard.writeText(AIRTABLE_FORM_PUBLIC_LINK).then(() => {
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+        
+        Toast.fire({
+            icon: 'success',
+            title: 'Lien copié !',
+            text: 'Vous pouvez maintenant l\'envoyer au candidat.'
+        });
+    }).catch(err => {
+        Swal.fire('Erreur', 'Impossible de copier le lien automatiquement.', 'error');
+    });
+}
+
+// Fonction pour ouvrir l'éditeur Airtable
+function openFormEditor() {
+    Swal.fire({
+        title: 'Modifier le formulaire ?',
+        text: "Vous allez être redirigé vers l'interface de modification d'Airtable.",
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Y aller',
+        cancelButtonText: 'Annuler',
+        confirmButtonColor: '#0f172a'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.open(AIRTABLE_FORM_EDIT_LINK, '_blank');
+        }
+    });
+}
+
+
+
     </script>
 
 
@@ -4949,5 +5612,16 @@ async function handleClockInOut() {
                 });
             }
         </script>
+
+
+
+
+
+
+
+
+
+
+
     </body>
     </html>
