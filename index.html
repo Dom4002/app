@@ -4641,142 +4641,121 @@ async function processLeave(recordId, decision, daysToDeduct = 0) {
 
 
 
-async function fetchCandidates() {
-        const body = document.getElementById('candidates-body');
-        // Petit loader sympa
-        body.innerHTML = '<tr><td colspan="4" class="p-8 text-center"><i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-2xl"></i><p class="text-xs text-slate-400 mt-2 font-bold uppercase">Chargement des talents...</p></td></tr>';
 
-        try {
-            const r = await secureFetch(`${URL_READ_CANDIDATES}?agent=${encodeURIComponent(currentUser.nom)}`);
-            
-            // On récupère la réponse
-            let rawData = await r.json();
-            
-            // DEBUG : Regardez dans votre console (F12) ce qui s'affiche ici
-            console.log("CANDIDATS REÇUS (BRUT) :", rawData);
 
-            let candidates = [];
 
-            // CAS 1 : C'est déjà une liste parfaite (Cas idéal avec Array Aggregator)
-            if (Array.isArray(rawData)) {
-                candidates = rawData;
-            } 
-            // CAS 2 : C'est un objet unique (Make sans Aggregator)
-            else if (typeof rawData === 'object' && rawData !== null) {
-                // Si l'objet contient une propriété "nom" ou "id", c'est un candidat seul
-                if (rawData.nom || rawData.record_id || rawData.id) {
-                    candidates = [rawData];
-                } 
-                // CAS 3 : Make renvoie parfois { "items": [...] } ou { "data": [...] }
-                else if (rawData.items && Array.isArray(rawData.items)) {
-                    candidates = rawData.items;
-                }
-                else if (rawData.data && Array.isArray(rawData.data)) {
-                    candidates = rawData.data;
-                }
+    async function fetchCandidates() {
+    const body = document.getElementById('candidates-body');
+    body.innerHTML = '<tr><td colspan="4" class="p-8 text-center"><i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-2xl"></i><p class="text-xs text-slate-400 mt-2 font-bold uppercase">Chargement des talents...</p></td></tr>';
+
+    try {
+        const r = await secureFetch(`${URL_READ_CANDIDATES}?agent=${encodeURIComponent(currentUser.nom)}`);
+        let rawData = await r.json();
+        
+        let candidates = [];
+        if (Array.isArray(rawData)) {
+            candidates = rawData;
+        } else if (typeof rawData === 'object' && rawData !== null) {
+            if (rawData.nom || rawData.record_id || rawData.id) {
+                candidates = [rawData];
+            } else if (rawData.items && Array.isArray(rawData.items)) {
+                candidates = rawData.items;
+            } else if (rawData.data && Array.isArray(rawData.data)) {
+                candidates = rawData.data;
             }
-
-            console.log("CANDIDATS TRAITÉS (LISTE) :", candidates);
-
-            body.innerHTML = '';
-
-            if (candidates.length === 0) {
-                body.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 font-bold bg-slate-50 rounded-xl border border-dashed border-slate-200">Aucune candidature en attente</td></tr>';
-                return;
-            }
-
-            // Boucle d'affichage
-// DANS LA FONCTION fetchCandidates...
-candidates.forEach(c => {
-    const safeNom = encodeURIComponent(c.nom || "Inconnu");
-
-    // 1. RECUPERATION DES LIENS (Incluant l'ID CARD maintenant)
-    const getAttachmentUrl = (attachment) => {
-        if (!attachment) return null;
-        if (Array.isArray(attachment) && attachment.length > 0) return attachment[0].url;
-        if (typeof attachment === 'string' && attachment.startsWith('http')) return attachment;
-        return null;
-    };
-
-    const cvLink = getAttachmentUrl(c.cv_link);
-    const lMLink = getAttachmentUrl(c.lm_link);
-    const dipLink = getAttachmentUrl(c.diploma_link);
-    const attLink = getAttachmentUrl(c.attestation_link);
-    const idCardLink = getAttachmentUrl(c.id_card_link); // <--- AJOUT ICI
-
-    // 2. ENCODAGE SECURISE
-    const safeCv = cvLink ? encodeURIComponent(cvLink) : '';
-    const safeLm = lMLink ? encodeURIComponent(lMLink) : '';
-    const safeDip = dipLink ? encodeURIComponent(dipLink) : '';
-    const safeAtt = attLink ? encodeURIComponent(attLink) : '';
-    const safeIdCard = idCardLink ? encodeURIComponent(idCardLink) : ''; // <--- AJOUT ICI
-
-    // 3. GESTION STATUT (Couleurs)
-    let badgeClass = 'bg-slate-100 text-slate-600';
-    let st = c.statut || 'Nouveau';
-    if(st === 'Entretien') badgeClass = 'bg-blue-100 text-blue-700';
-    else if(st === 'Embauché' || st === 'Validé') badgeClass = 'bg-emerald-100 text-emerald-700';
-    else if(st.includes('Refus')) badgeClass = 'bg-red-50 text-red-500';
-    else if(st === 'Nouveau') badgeClass = 'bg-yellow-50 text-yellow-700';
-
-    // 4. BOUTON DOSSIER (Mise à jour des arguments pour inclure l'ID Card à la fin)
-    const btnDocs = `
-        <button onclick="showCandidateDocs('${safeNom}', '${c.poste || 'Candidat'}', '${safeCv}', '${safeLm}', '${safeDip}', '${safeAtt}', '${safeIdCard}')" 
-                class="p-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all mr-2" title="Ouvrir le dossier">
-            <i class="fa-solid fa-folder-open"></i>
-        </button>
-    `;
-
-    // 5. BOUTONS D'ACTION
-    let actionButtons = '';
-    if (st === 'Nouveau' || !c.statut) {
-        actionButtons = `
-            ${btnDocs}
-            <button onclick="handleCandidateAction('${c.record_id}', 'VALIDER_POUR_ENTRETIEN')" class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-blue-200 transition-all mr-2"><i class="fa-solid fa-calendar-check mr-1"></i> Entretien</button>
-            <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_IMMEDIAT')" class="bg-white border border-red-100 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-xmark mr-1"></i> Refus</button>
-        `;
-    } else if (st === 'Entretien') {
-        actionButtons = `
-            ${btnDocs}
-            <button onclick="handleCandidateAction('${c.record_id}', 'ACCEPTER_EMBAUCHE')" class="bg-emerald-500 text-white hover:bg-emerald-600 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-emerald-200 transition-all mr-2"><i class="fa-solid fa-user-plus mr-1"></i> Embaucher</button>
-            <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_APRES_ENTRETIEN')" class="bg-white border border-orange-100 text-orange-500 hover:bg-orange-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-thumbs-down mr-1"></i> Refus</button>
-        `;
-    } else {
-        actionButtons = `${btnDocs} <span class="text-[10px] font-bold text-slate-300 italic">Dossier Traité</span>`;
-    }
-
-    // 6. INJECTION HTML (Le reste ne change pas)
-    body.innerHTML += `
-    <tr class="border-b hover:bg-slate-50 transition-colors group">
-        <td class="px-6 py-4">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">${c.nom ? c.nom.charAt(0) : '?'}</div>
-                <div>
-                    <div class="font-bold text-sm text-slate-800">${c.nom}</div>
-                    <div class="text-[10px] text-slate-400 font-mono">${c.email}</div>
-                </div>
-            </div>
-        </td>
-        <td class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-tight">${c.poste || 'Non précisé'}</td>
-        <td class="px-6 py-4 text-center">
-            <span class="${badgeClass} px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide border border-black/5 shadow-sm">${st}</span>
-        </td>
-        <td class="px-6 py-4 text-right flex justify-end items-center">
-            ${actionButtons}
-        </td>
-    </tr>`;
-});
-
-        } catch (e) {
-            console.error("Erreur Candidats:", e);
-            body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500 font-bold text-sm bg-red-50 rounded-xl border border-red-100">Erreur de chargement : ${e.message}</td></tr>`;
         }
+
+        body.innerHTML = '';
+
+        if (candidates.length === 0) {
+            body.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-slate-400 font-bold bg-slate-50 rounded-xl border border-dashed border-slate-200">Aucune candidature en attente</td></tr>';
+            return;
+        }
+
+        candidates.forEach(c => {
+            const safeNom = encodeURIComponent(c.nom || "Inconnu");
+
+            const getAttachmentUrl = (attachment) => {
+                if (!attachment) return null;
+                if (Array.isArray(attachment) && attachment.length > 0) return attachment[0].url;
+                if (typeof attachment === 'string' && attachment.startsWith('http')) return attachment;
+                return null;
+            };
+
+            const cvLink = getAttachmentUrl(c.cv_link);
+            const lMLink = getAttachmentUrl(c.lm_link);
+            const dipLink = getAttachmentUrl(c.diploma_link);
+            const attLink = getAttachmentUrl(c.attestation_link);
+            const idCardLink = getAttachmentUrl(c.id_card_link);
+
+            const safeCv = cvLink ? encodeURIComponent(cvLink) : '';
+            const safeLm = lMLink ? encodeURIComponent(lMLink) : '';
+            const safeDip = dipLink ? encodeURIComponent(dipLink) : '';
+            const safeAtt = attLink ? encodeURIComponent(attLink) : '';
+            const safeIdCard = idCardLink ? encodeURIComponent(idCardLink) : '';
+
+            // --- CORRECTION DE LA LOGIQUE DE STATUT ---
+            let stRaw = c.statut || 'Nouveau';
+            let stLogic = stRaw.toString().toLowerCase().trim(); // On transforme en minuscules pour la comparaison
+            
+            let badgeClass = 'bg-slate-100 text-slate-600';
+            
+            if(stLogic.includes('entretien')) badgeClass = 'bg-blue-100 text-blue-700';
+            else if(stLogic.includes('embauché') || stLogic.includes('validé')) badgeClass = 'bg-emerald-100 text-emerald-700';
+            else if(stLogic.includes('refus')) badgeClass = 'bg-red-50 text-red-500';
+            else if(stLogic.includes('nouveau')) badgeClass = 'bg-yellow-50 text-yellow-700';
+
+            const btnDocs = `
+                <button onclick="showCandidateDocs('${safeNom}', '${c.poste || 'Candidat'}', '${safeCv}', '${safeLm}', '${safeDip}', '${safeAtt}', '${safeIdCard}')" 
+                        class="p-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:text-blue-600 hover:border-blue-200 shadow-sm transition-all mr-2" title="Ouvrir le dossier">
+                    <i class="fa-solid fa-folder-open"></i>
+                </button>
+            `;
+
+            let actionButtons = '';
+            // On utilise stLogic (minuscules) pour les tests IF
+            if (stLogic === 'nouveau' || !c.statut) {
+                actionButtons = `
+                    ${btnDocs}
+                    <button onclick="handleCandidateAction('${c.record_id}', 'VALIDER_POUR_ENTRETIEN')" class="bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-blue-200 transition-all mr-2"><i class="fa-solid fa-calendar-check mr-1"></i> Entretien</button>
+                    <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_IMMEDIAT')" class="bg-white border border-red-100 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-xmark mr-1"></i> Refus</button>
+                `;
+            } else if (stLogic === 'entretien') {
+                actionButtons = `
+                    ${btnDocs}
+                    <button onclick="handleCandidateAction('${c.record_id}', 'ACCEPTER_EMBAUCHE')" class="bg-emerald-500 text-white hover:bg-emerald-600 px-3 py-2 rounded-lg text-[10px] font-bold uppercase shadow-md shadow-emerald-200 transition-all mr-2"><i class="fa-solid fa-user-plus mr-1"></i> Embaucher</button>
+                    <button onclick="handleCandidateAction('${c.record_id}', 'REFUS_APRES_ENTRETIEN')" class="bg-white border border-orange-100 text-orange-500 hover:bg-orange px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"><i class="fa-solid fa-thumbs-down mr-1"></i> Refus</button>
+                `;
+            } else {
+                actionButtons = `${btnDocs} <span class="text-[10px] font-bold text-slate-300 italic">Dossier Traité</span>`;
+            }
+
+            body.innerHTML += `
+            <tr class="border-b hover:bg-slate-50 transition-colors group">
+                <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">${c.nom ? c.nom.charAt(0) : '?'}</div>
+                        <div>
+                            <div class="font-bold text-sm text-slate-800">${c.nom}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">${c.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-xs font-bold text-slate-600 uppercase tracking-tight">${c.poste || 'Non précisé'}</td>
+                <td class="px-6 py-4 text-center">
+                    <span class="${badgeClass} px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wide border border-black/5 shadow-sm">${stRaw}</span>
+                </td>
+                <td class="px-6 py-4 text-right flex justify-end items-center">
+                    ${actionButtons}
+                </td>
+            </tr>`;
+        });
+
+    } catch (e) {
+        console.error("Erreur Candidats:", e);
+        body.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-red-500 font-bold text-sm bg-red-50 rounded-xl border border-red-100">Erreur de chargement : ${e.message}</td></tr>`;
     }
-
-
-
-
-
+}
 
 
 
@@ -4993,40 +4972,67 @@ function showCandidateDocs(safeNom, poste, cv, lm, dip, att, idCard) {
         return "";
     }
 
-    // --- GESTION DES ACTIONS ---
-    async function handleCandidateAction(id, action) {
-        const conf = {
-            'VALIDER_POUR_ENTRETIEN': { t: 'Inviter en entretien ?', c: '#2563eb', txt: "Un email d'invitation sera envoyé." },
-            'REFUS_IMMEDIAT': { t: 'Refuser la candidature ?', c: '#ef4444', txt: "Un email de refus immédiat sera envoyé." },
-            'ACCEPTER_EMBAUCHE': { t: 'Confirmer l\'embauche ?', c: '#10b981', txt: 'Cela créera automatiquement le profil employé et enverra les accès. Les informations restantes devront être mises à jour par la suite' },
-            'REFUS_APRES_ENTRETIEN': { t: 'Refuser après entretien ?', c: '#f97316', txt: "Un email personnalisé sera envoyé." }
-        }[action];
 
-        const res = await Swal.fire({ 
-            title: conf.t, 
-            text: conf.txt, 
-            icon: 'question', 
-            showCancelButton: true, 
-            confirmButtonColor: conf.c, 
-            confirmButtonText: 'Oui, confirmer' 
+
+    
+async function handleCandidateAction(id, action) {
+    const conf = {
+        'VALIDER_POUR_ENTRETIEN': { t: 'Inviter en entretien ?', c: '#2563eb', txt: "Un email d'invitation sera envoyé automatiquement." },
+        'REFUS_IMMEDIAT': { t: 'Refuser la candidature ?', c: '#ef4444', txt: "Un email de refus immédiat sera envoyé." },
+        'ACCEPTER_EMBAUCHE': { t: 'Confirmer l\'embauche ?', c: '#10b981', txt: 'Cela créera le profil employé et enverra les accès.' },
+        'REFUS_APRES_ENTRETIEN': { t: 'Refuser après entretien ?', c: '#f97316', txt: "Un email de refus personnalisé sera envoyé." }
+    }[action];
+
+    const res = await Swal.fire({ 
+        title: conf.t, 
+        text: conf.txt, 
+        icon: 'question', 
+        showCancelButton: true, 
+        confirmButtonColor: conf.c, 
+        confirmButtonText: 'Oui, confirmer',
+        cancelButtonText: 'Annuler'
+    });
+    
+    if (res.isConfirmed) {
+        // Affichage du loader persistant
+        Swal.fire({ 
+            title: 'Action en cours...', 
+            text: 'Mise à jour du dossier et envoi des notifications...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading() 
         });
-        
-        if (res.isConfirmed) {
-            Swal.fire({ title: 'En cours...', didOpen: () => Swal.showLoading() });
-            try {
-                await secureFetch(URL_CANDIDATE_ACTION, {
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: id, action: action, agent: currentUser.nom })
-                });
-                Swal.fire('Succès', 'Action effectuée', 'success');
-                fetchCandidates(); // On recharge les candidats
-                    if(action === 'ACCEPTER_EMBAUCHE') fetchData(true); // Si on embauche, on recharge aussi les employés
-            } catch(e) { 
-                Swal.fire('Erreur', e.message, 'error'); 
-            }
-        }
-    }   
+
+      try {
+    const response = await secureFetch(URL_CANDIDATE_ACTION, {
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ id: id, action: action, agent: currentUser.nom })
+    });
+
+    // 1. On récupère le texte/JSON envoyé par Make
+    const result = await response.json();
+
+    // 2. On vérifie si Make a envoyé le message de succès réel
+    if (result && result.status === "success") {
+        Swal.fire('Succès', 'Action effectuée avec succès.', 'success');
+        fetchCandidates(); 
+        if(action === 'ACCEPTER_EMBAUCHE') fetchData(true);
+    } else {
+        // Si Make n'a pas de crédits, result.status ne sera pas "success"
+        // ou le JSON sera vide.
+        throw new Error("Le serveur n'a pas confirmé l'action (Crédits épuisés ?)");
+    }
+
+} catch(e) { 
+    // Ici, on affiche l'erreur réelle
+    Swal.fire('Échec du traitement', e.message, 'error'); 
+}
+    }
+}
+
+
+
+
 
 
 
